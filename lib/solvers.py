@@ -231,7 +231,7 @@ class LinearLMESolver:
         k_beta = problem.num_features
 
         if gamma0 is None:
-            gamma = np.zeros(k_gamma)
+            gamma = np.ones(k_gamma)
         else:
             assert len(gamma0) == k_gamma
             gamma = gamma0
