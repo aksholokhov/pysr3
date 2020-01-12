@@ -206,41 +206,55 @@ class LMEModelVisualizer:
     def plot_gamma_trace(self, ax, loss_rml=False):
         assert len(self.model.gamma) == 2
         gamma0 = np.ones(2)
-        gamma_trace = np.array(self.logger["gamma"]).T
-        cmap = np.linspace(0.1, 0.9, len(gamma_trace[0]))
-        ax.scatter(gamma_trace[0], gamma_trace[1], c=cmap, label=self.model.method)
-        ax.scatter(gamma0[0], gamma0[1], c='g', label='start point')
-        true_gamma = self.true_parameters["gamma"]
-        ax.scatter(true_gamma[0], true_gamma[1], c='r', label='true gamma')
+        #gamma_trace = np.array(self.logger["gamma"]).T
+        #cmap = np.linspace(0.1, 0.9, len(gamma_trace[0]))
+        #ax.scatter(gamma_trace[0], gamma_trace[1], c=cmap, label=self.model.method)
+        #ax.scatter(gamma0[0], gamma0[1], c='g', label='start point')
+        #true_gamma = self.true_parameters["gamma"]
+        #ax.scatter(true_gamma[0], true_gamma[1], c='r', label='true gamma')
         true_random_effects = self.true_parameters["random_effects"]
         empirical_gamma = np.sum(true_random_effects ** 2, axis=0) / self.train.num_studies
-        ax.scatter(empirical_gamma[0], empirical_gamma[1], c='pink', label='empirical gamma')
-        xlims = ax.get_xlim()
-        ylims = ax.get_ylim()
+        #ax.scatter(empirical_gamma[0], empirical_gamma[1], c='pink', label='empirical gamma')
+        xlims = [0, 3.5] #ax.get_xlim()
+        ylims = [0, 3] #ax.get_ylim()
         if not loss_rml:
             eps = 1
         else:
             eps = 1
-        x = np.linspace(0, xlims[1] + eps, 100)
-        y = np.linspace(0, ylims[1] + eps, 100)
-        beta = self.logger['beta'][-1]
-        # z = np.array([[self.model.loss(self.model.beta, np.array([g1, g2])) for g1 in x] for g2 in y])
-        #prev_mode = self.model.mode
-        #self.model.mode = 'naive'
-        if loss_rml:
-            z = np.array([[self.model.rml_loss(beta, np.array([g1, g2])) for g1 in x] for g2 in y])
-        else:
+        plot_resolution = 100
+        x = np.linspace(0, xlims[1] + eps, plot_resolution)
+        y = np.linspace(0, ylims[1] + eps, plot_resolution)
+        z = np.zeros((plot_resolution, plot_resolution))
+        zh = np.zeros((plot_resolution, plot_resolution))
+        def psd(hessian):
+            eigvals = np.linalg.eigvals(hessian)
+            if np.linalg.norm(np.imag(eigvals)) > 1e-15:
+                return -1
+            min_eigval = min(np.real(eigvals))
+            if min_eigval < 0:
+                return -1
+            else:
+                return min_eigval
+        for i, g2 in enumerate(y):
+            for j, g1 in enumerate(x):
+                gamma0 = np.array([g1, g2])
+                beta0 = self.model.optimal_beta(gamma0)
+                if loss_rml:
+                    z[i, j] = self.model.rml_loss(beta0, gamma0)
+                else:
+                    z[i, j] = self.model.loss(beta0, gamma0)
+                    hessian = self.model.hessian_gamma(beta0, gamma0)
+                    zh[i, j] = psd(hessian)
 
-            z = np.array([[self.model.loss(beta, np.array([g1, g2])) for g1 in x] for g2 in y])
-        #self.model.mode = prev_mode
-        # z = np.log10(z - self.min_z + 1e-16)
+        csh = ax.contourf(x, y, zh, levels=[0, 1e13], colors="lightgreen")
 
         levels = np.min(z) + np.array([1e-2, 1e-1, 1e0, 1e1, 1e2])
         cs = ax.contour(x, y, z, levels=levels)
         plt.clabel(cs, fontsize=8)
-        ax.legend()
+        #ax.legend()
         if not loss_rml:
             self.min_z = np.min(z)
+        return csh
 
     def plot_hessian(self, ax, sufficient_criterion=False):
         assert len(self.model.gamma) == 2

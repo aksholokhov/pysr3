@@ -325,7 +325,7 @@ class LinearLMESolver:
                 # gamma = np.var(us, axis=0)
 
                 # Correct naive vay of doing that:
-                gamma = np.sum(us ** 2, axis=0) / problem.num_studies
+                gamma = np.sum(us ** 2, axis=0) / (problem.num_studies)
 
             gamma = np.clip(gamma, 0.01, None)
             self.recalculate_inverse_matrices(gamma)
