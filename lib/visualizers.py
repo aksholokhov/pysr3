@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 from lib.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
 from lib.problems import LinearLMEProblem
-from lib.solvers import LinearLMESolver
+from lib.old_solvers import LinearLMESolver
 
 
 # from deprecated import deprecated
@@ -206,15 +206,15 @@ class LMEModelVisualizer:
     def plot_gamma_trace(self, ax, loss_rml=False):
         assert len(self.model.gamma) == 2
         gamma0 = np.ones(2)
-        #gamma_trace = np.array(self.logger["gamma"]).T
-        #cmap = np.linspace(0.1, 0.9, len(gamma_trace[0]))
-        #ax.scatter(gamma_trace[0], gamma_trace[1], c=cmap, label=self.model.method)
-        #ax.scatter(gamma0[0], gamma0[1], c='g', label='start point')
-        #true_gamma = self.true_parameters["gamma"]
-        #ax.scatter(true_gamma[0], true_gamma[1], c='r', label='true gamma')
+        gamma_trace = np.array(self.logger["gamma"]).T
+        cmap = np.linspace(0.1, 0.9, len(gamma_trace[0]))
+        ax.scatter(gamma_trace[0], gamma_trace[1], c=cmap, label=self.model.method)
+        ax.scatter(gamma0[0], gamma0[1], c='g', label='start point')
+        true_gamma = self.true_parameters["gamma"]
+        ax.scatter(true_gamma[0], true_gamma[1], c='r', label='true gamma')
         true_random_effects = self.true_parameters["random_effects"]
         empirical_gamma = np.sum(true_random_effects ** 2, axis=0) / self.train.num_studies
-        #ax.scatter(empirical_gamma[0], empirical_gamma[1], c='pink', label='empirical gamma')
+        ax.scatter(empirical_gamma[0], empirical_gamma[1], c='pink', label='empirical gamma')
         xlims = [0, 3.5] #ax.get_xlim()
         ylims = [0, 3] #ax.get_ylim()
         if not loss_rml:
@@ -251,7 +251,7 @@ class LMEModelVisualizer:
         levels = np.min(z) + np.array([1e-2, 1e-1, 1e0, 1e1, 1e2])
         cs = ax.contour(x, y, z, levels=levels)
         plt.clabel(cs, fontsize=8)
-        #ax.legend()
+        ax.legend()
         if not loss_rml:
             self.min_z = np.min(z)
         return csh
