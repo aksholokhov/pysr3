@@ -78,7 +78,7 @@ class LinearLMEOracle:
             raise Exception("Unknown mode: %s" % self.mode)
         return result
 
-    def grad_loss_gamma(self, beta: np.ndarray, gamma: np.ndarray) -> np.ndarray:
+    def gradient_gamma(self, beta: np.ndarray, gamma: np.ndarray) -> np.ndarray:
         if self.mode == 'naive':
             gamma_mat = np.diag(gamma)
             grad_gamma = np.zeros(len(gamma))
@@ -129,7 +129,7 @@ class LinearLMEOracle:
         else:
             raise Exception("Unknown mode: %s" % self.mode)
 
-    def optimal_beta(self, gamma: np.ndarray): #, force_naive=False):
+    def optimal_beta(self, gamma: np.ndarray):  # , force_naive=False):
         omega = 0
         tail = 0
         if self.mode == 'naive':
@@ -152,7 +152,8 @@ class LinearLMEOracle:
         for x, y, z, l in self.problem:
             # TODO: Figure out the situation when gamma_i = 0
             inv_g = np.diag(np.array([0 if g == 0 else 1 / g for g in gamma]))
-            u = np.linalg.inv(inv_g + z.T.dot(np.linalg.inv(l)).dot(z)).dot(z.T.dot(np.linalg.inv(l)).dot(y - x.dot(beta)))
+            u = np.linalg.inv(inv_g + z.T.dot(np.linalg.inv(l)).dot(z)).dot(
+                z.T.dot(np.linalg.inv(l)).dot(y - x.dot(beta)))
             random_effects.append(u)
         return np.array(random_effects)
 
@@ -166,8 +167,54 @@ class LinearLMEOracle:
 
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
-    def __init__(self, problem: LinearLMEProblem, mode='fast', lb=0.1, lg1=0.1, lg2=0.1):
+    def __init__(self, problem: LinearLMEProblem, mode='fast', lb=0.1, lg1=0.1, lg2=0.1, k=3):
         super().__init__(problem, mode)
-        self.lb=0.1
+        self.lb = lb
+        self.lg1 = lg1
+        self.lg2 = lg2
+        self.k = k
 
-    #def optimal_beta_reg(self, gamma, tbeta):
+    def optimal_beta_reg(self, gamma, tbeta):
+        omega = 0
+        tail = 0
+        if self.mode == 'naive':
+            gamma_mat = np.diag(gamma)
+            for x, y, z, l in self.problem:
+                omega_i = z.dot(gamma_mat).dot(z.T) + l
+                omega += x.T.dot(np.linalg.inv(omega_i)).dot(x)
+                tail += x.T.dot(np.linalg.inv(omega_i)).dot(y)
+        elif self.mode == 'fast':
+            if not (self.old_gamma == gamma).all():
+                self.recalculate_inverse_matrices(gamma)
+            omega = np.sum(self.xTomegas_invX, axis=0)
+            tail = np.sum(self.xTomegas_invY, axis=0)
+        else:
+            raise Exception("Unexpected mode: %s" % self.mode)
+        return np.linalg.inv(self.lb * np.eye(self.problem.num_random_effects) + omega).dot(self.lb * tbeta + tail)
+
+    @staticmethod
+    def take_only_k_max(a: np.ndarray, k: int):
+        b = np.zeros(len(a))
+        idx_k_max = a.argsort()[-k:]
+        b[idx_k_max] = a[idx_k_max]
+        return b
+
+    @staticmethod
+    def prox_first_norm(a: np.ndarray, lam):
+        return (a - lam).clip(0, None) - (-a - lam).clip(0, None)
+
+    def optimal_tbeta(self, beta: np.ndarray):
+        return self.take_only_k_max(beta, self.k)
+
+    def loss_reg(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray, tgamma: np.ndarray):
+        return self.gradient_gamma(beta, gamma) + self.lb / 2 * sum((beta - tbeta) ** 2) + \
+               self.lg2 / 2 * (sum((gamma - tgamma) ** 2) + self.lg1 * np.abs(tgamma).sum())
+
+    def gradient_gamma_reg(self, beta: np.ndarray, gamma: np.ndarray, tgamma: np.ndarray) -> np.ndarray:
+        return self.gradient_gamma(beta, gamma) + self.lg2 * (gamma - tgamma)
+
+    def hessian_gamma_reg(self, beta: np.ndarray, gamma: np.ndarray) -> np.ndarray:
+        return self.hessian_gamma(beta, gamma) + self.lg2*np.eye(self.problem.num_random_effects)
+
+    def optimal_tgamma(self, gamma):
+        return self.prox_first_norm(self.take_only_k_max(gamma, self.k), self.lg1)

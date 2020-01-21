@@ -19,7 +19,7 @@ class TestLinearLMESolver(TestCase):
             A = np.random.rand(100, 2)
             dx = 1e-7
             beta = np.random.rand(len(beta))
-            C = np.array([oracle.grad_loss_gamma(beta, g) for g in A])
+            C = np.array([oracle.gradient_gamma(beta, g) for g in A])
             D = np.array([derivative(lambda x: oracle.loss(beta, np.array([x, g[1]])), g[0], dx=dx) for g in A])
             E = np.array([derivative(lambda x: oracle.loss(beta, np.array([g[0], x])), g[1], dx=dx) for g in A])
             for a, c, d, e in zip(A, C, D, E):
@@ -36,8 +36,8 @@ class TestLinearLMESolver(TestCase):
         for i in range(trials):
             beta = np.random.rand(problem.num_features)
             gamma = np.random.rand(problem.num_random_effects)
-            true_grad_gamma = slow_oracle.grad_loss_gamma(beta, gamma)
-            maybe_grad_gamma = fast_oracle.grad_loss_gamma(beta, gamma)
+            true_grad_gamma = slow_oracle.gradient_gamma(beta, gamma)
+            maybe_grad_gamma = fast_oracle.gradient_gamma(beta, gamma)
             for true_g, pred_g in zip(true_grad_gamma, maybe_grad_gamma):
                 self.assertAlmostEqual(true_g, pred_g, delta=1e-8)
 
@@ -55,8 +55,8 @@ class TestLinearLMESolver(TestCase):
             dg = np.random.rand(problem.num_random_effects)
             hess = fast_oracle.hessian_gamma(beta, gamma)
             maybe_dir = hess.dot(dg)
-            true_dir = (slow_oracle.grad_loss_gamma(beta, gamma + r * dg) - slow_oracle.grad_loss_gamma(beta,
-                                                                                                  gamma - r * dg)) / (
+            true_dir = (slow_oracle.gradient_gamma(beta, gamma + r * dg) - slow_oracle.gradient_gamma(beta,
+                                                                                                      gamma - r * dg)) / (
                                2 * r)
             err = np.linalg.norm(maybe_dir - true_dir)
             self.assertAlmostEqual(err, 0, delta=10 * r)
@@ -88,7 +88,7 @@ class TestLinearLMESolver(TestCase):
             beta = np.random.rand(problem.num_features)
             gamma = np.random.rand(problem.num_random_effects)
             true_beta = slow_oracle.optimal_beta(gamma)
-            _ = fast_oracle.grad_loss_gamma(beta, gamma)
+            _ = fast_oracle.gradient_gamma(beta, gamma)
             maybe_beta = fast_oracle.optimal_beta(gamma)
             self.assertAlmostEqual(np.linalg.norm(true_beta - maybe_beta), 0)
 
