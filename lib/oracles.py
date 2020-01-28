@@ -147,13 +147,19 @@ class LinearLMEOracle:
             raise Exception("Unexpected mode: %s" % self.mode)
         return np.linalg.inv(omega).dot(tail)
 
-    def optimal_random_effects(self, beta, gamma):
+    def optimal_random_effects(self, beta: np.ndarray, gamma: np.ndarray):
         random_effects = []
         for x, y, z, l in self.problem:
-            # TODO: Figure out the situation when gamma_i = 0
+            # This is an ad-hoc to make the matrix gamma invertible even when
+            # some \gamma_i are zero. We fix it shortly after.
+            # TODO: implement better account for zero gamma (need to del. resp. rows and columns from all the matrices)
             inv_g = np.diag(np.array([0 if g == 0 else 1 / g for g in gamma]))
             u = np.linalg.inv(inv_g + z.T.dot(np.linalg.inv(l)).dot(z)).dot(
                 z.T.dot(np.linalg.inv(l)).dot(y - x.dot(beta)))
+            # Here we put all the random effects for zero gammas to be zero
+            for i, g in enumerate(gamma):
+                if g == 0:
+                    u[i] = 0
             random_effects.append(u)
         return np.array(random_effects)
 
@@ -190,7 +196,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             tail = np.sum(self.xTomegas_invY, axis=0)
         else:
             raise Exception("Unexpected mode: %s" % self.mode)
-        return np.linalg.inv(self.lb * np.eye(self.problem.num_random_effects) + omega).dot(self.lb * tbeta + tail)
+        return np.linalg.inv(self.lb * np.eye(self.problem.num_features) + omega).dot(self.lb * tbeta + tail)
 
     @staticmethod
     def take_only_k_max(a: np.ndarray, k: int):
@@ -207,7 +213,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         return self.take_only_k_max(beta, self.k)
 
     def loss_reg(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray, tgamma: np.ndarray):
-        return self.gradient_gamma(beta, gamma) + self.lb / 2 * sum((beta - tbeta) ** 2) + \
+        return self.loss(beta, gamma) + self.lb / 2 * sum((beta - tbeta) ** 2) + \
                self.lg2 / 2 * (sum((gamma - tgamma) ** 2) + self.lg1 * np.abs(tgamma).sum())
 
     def gradient_gamma_reg(self, beta: np.ndarray, gamma: np.ndarray, tgamma: np.ndarray) -> np.ndarray:
@@ -216,5 +222,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
     def hessian_gamma_reg(self, beta: np.ndarray, gamma: np.ndarray) -> np.ndarray:
         return self.hessian_gamma(beta, gamma) + self.lg2*np.eye(self.problem.num_random_effects)
 
-    def optimal_tgamma(self, gamma):
-        return self.prox_first_norm(self.take_only_k_max(gamma, self.k), self.lg1)
+    def optimal_tgamma(self, tbeta, gamma):
+        tgamma = np.zeros(len(gamma))
+        idx = tbeta != 0
+        tgamma[idx] = gamma[idx]
+        return self.prox_first_norm(tgamma, self.lg1)
+
