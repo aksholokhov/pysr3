@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Union, Iterable, Sized, List
 
 
 class LMEProblem:
@@ -43,9 +44,11 @@ class LinearLMEProblem(LMEProblem):
 
     # TODO: fix obs_std name
     @staticmethod
-    def generate(num_studies=None, study_sizes=None, obs_std=0.1, beta=None, gamma=None, true_random_effects=None,
-                 num_features=None, num_random_effects=None,
-                 intercept=True, seed=None, return_true_parameters=True):
+    def generate(num_studies: int = None, num_features: int = None, num_random_effects: int = None,
+                 study_sizes: List[int] = None, obs_std: Union[int, float, Sized] = 0.1,
+                 beta: np.ndarray = None, gamma: np.ndarray = None, true_random_effects: np.ndarray = None,
+                 intercept: bool = True, seed: int = None, return_true_parameters: bool = True,
+                 how_close_z_to_x = 1):
 
         if seed is not None:
             np.random.seed(seed)
@@ -74,8 +77,8 @@ class LinearLMEProblem(LMEProblem):
             assert len(beta) == num_features, "len(beta) and num_features don't match"
 
         if gamma is None and num_random_effects is not None:
-            gamma = np.random.rand(
-                num_random_effects) + 0.1  # the problem is unstable when gamma is toooo small TODO: figure out why
+            # the problem is unstable when gamma is toooo small TODO: figure out why
+            gamma = np.random.rand(num_random_effects) + 0.1
         elif gamma is not None and num_random_effects is None:
             num_random_effects = gamma.size
         elif gamma is None and num_random_effects is None:
@@ -94,6 +97,10 @@ class LinearLMEProblem(LMEProblem):
             random_features = np.ones((num_obs, 1))
         else:
             random_features = np.random.rand(num_obs, num_random_effects)
+
+        if how_close_z_to_x != 1:
+            assert num_features == num_random_effects, "Num features is not equal to num random effects"
+            random_features = how_close_z_to_x*random_features + (1 - how_close_z_to_x)*features
 
         random_effects_by_study = []
         random_effects_impact = np.zeros(num_obs)
@@ -147,15 +154,6 @@ class LinearLMEProblem(LMEProblem):
             return LinearLMEProblem(**data), beta, gamma, random_effects_by_study, measurements_errors_by_study
         else:
             return LinearLMEProblem(**data)
-
-    # def __str__(self):
-    #     output = "LinearLMEProblem \n"
-    #     output += " Beta: " + ' '.join([str(t) for t in self.__beta]) + '\n'
-    #     output += " Gamma: " + ' '.join([str(t) for t in self.__gamma]) + '\n'
-    #     output += " Random effects: \n "
-    #     output += '\n '.join([str(t) for t in self.__random_effects])
-    #     output += '\n ' + 'Study sizes: %s' % self.study_sizes
-    #     return output
 
 
 if __name__ == '__main__':
