@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import minimize
 
 from lib.problems import LinearLMEProblem
 
@@ -173,14 +174,14 @@ class LinearLMEOracle:
 
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
-    def __init__(self, problem: LinearLMEProblem, mode='fast', lb=0.1, lg1=0.1, lg2=0.1, k=3):
+    def __init__(self, problem: LinearLMEProblem, mode='fast', lb=0.1, lg=0.1, k=3, j=3):
         super().__init__(problem, mode)
         self.lb = lb
-        self.lg1 = lg1
-        self.lg2 = lg2
+        self.lg = lg
         self.k = k
+        self.j = j
 
-    def optimal_beta_reg(self, gamma, tbeta):
+    def optimal_beta_reg(self, gamma: np.ndarray, tbeta: np.ndarray):
         omega = 0
         tail = 0
         if self.mode == 'naive':
@@ -205,26 +206,49 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         b[idx_k_max] = a[idx_k_max]
         return b
 
-    @staticmethod
-    def prox_first_norm(a: np.ndarray, lam):
-        return (a - lam).clip(0, None) - (-a - lam).clip(0, None)
-
     def optimal_tbeta(self, beta: np.ndarray):
         return self.take_only_k_max(beta, self.k)
 
     def loss_reg(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray, tgamma: np.ndarray):
         return self.loss(beta, gamma) + self.lb / 2 * sum((beta - tbeta) ** 2) + \
-               self.lg2 / 2 * (sum((gamma - tgamma) ** 2) + self.lg1 * np.abs(tgamma).sum())
+               self.lg / 2 * sum((gamma - tgamma) ** 2)
 
     def gradient_gamma_reg(self, beta: np.ndarray, gamma: np.ndarray, tgamma: np.ndarray) -> np.ndarray:
-        return self.gradient_gamma(beta, gamma) + self.lg2 * (gamma - tgamma)
+        return self.gradient_gamma(beta, gamma) + self.lg * (gamma - tgamma)
 
     def hessian_gamma_reg(self, beta: np.ndarray, gamma: np.ndarray) -> np.ndarray:
-        return self.hessian_gamma(beta, gamma) + self.lg2*np.eye(self.problem.num_random_effects)
+        return self.hessian_gamma(beta, gamma) + self.lg * np.eye(self.problem.num_random_effects)
 
     def optimal_tgamma(self, tbeta, gamma):
         tgamma = np.zeros(len(gamma))
         idx = tbeta != 0
         tgamma[idx] = gamma[idx]
-        return self.prox_first_norm(tgamma, self.lg1)
+        return self.take_only_k_max(tgamma, self.j)
 
+    def good_lambda_gamma(self, mode="upperbound"):
+        if mode == "upperbound":
+            return sum([np.linalg.norm(self.problem.random_features[i]) ** 4 / np.max(
+                self.problem.observations_cov_matrices[i] ** 2)
+                        for i in range(self.problem.num_studies)])
+
+        elif mode == "exact":
+            def minus_max_eig(gamma: np.ndarray):
+                self.recalculate_inverse_matrices(gamma)
+                A = np.sum([s * s for s in self.zTomegas_invZ], axis=0)
+                return -max(np.linalg.eigvals(A))
+
+            gamma_opt = minimize(minus_max_eig, np.ones(self.problem.num_random_effects),
+                                 bounds=[(0, None)] * self.problem.num_random_effects).x
+            return -minus_max_eig(gamma_opt)
+
+        elif mode == "exact_full_hess":
+            def minus_max_eig(gamma: np.ndarray):
+                beta = self.optimal_beta(gamma)
+                return np.min(np.linalg.eigvals(self.hessian_gamma(beta, gamma)))
+
+            gamma_opt = minimize(minus_max_eig, np.ones(self.problem.num_random_effects),
+                                 bounds=[(0, 5)] * self.problem.num_random_effects).x
+            return -minus_max_eig(gamma_opt), gamma_opt
+
+        else:
+            raise Exception("Unknown mode: %s" % mode)
