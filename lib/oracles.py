@@ -243,8 +243,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
         elif mode == "exact_full_hess":
             def minus_max_eig(gamma: np.ndarray):
-                beta = self.optimal_beta(gamma)
-                return np.min(np.linalg.eigvals(self.hessian_gamma(beta, gamma)))
+                tbeta = np.zeros(self.problem.num_features)
+                beta = self.optimal_beta_reg(gamma, tbeta)
+                return np.min(np.linalg.eigvals(self.hessian_gamma_reg(beta, gamma)))
 
             gamma_opt = minimize(minus_max_eig, np.ones(self.problem.num_random_effects),
                                  bounds=[(0, 5)] * self.problem.num_random_effects).x

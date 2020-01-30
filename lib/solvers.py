@@ -8,7 +8,7 @@ supported_logger_keys = ('loss', 'beta', 'gamma', 'test_loss', 'grad_gamma', 'he
 
 
 class LinearLMESolver:
-    def __init__(self, tol: float = 1e-4, max_iter: int = 1000, logger_keys=('loss', 'beta', 'gamma', 'grad_gamma', 'test_loss')):
+    def __init__(self, tol: float = 1e-4, max_iter: int = 1000, logger_keys=('loss', 'beta', 'gamma', 'grad_gamma', 'grad_gamma_norm', 'test_loss')):
         self.tol = tol
         self.max_iter = max_iter
         self.loss = None
@@ -36,13 +36,15 @@ class LinearLMESolver:
             self.logger['test_loss'].append(self.test_loss)
         if "grad_gamma" in self.logger.keys():
             self.logger['grad_gamma'].append(self.grad_gamma)
+        if "grad_gamma_norm" in self.logger.keys():
+            self.logger['grad_gamma_norm'].append(np.linalg.norm(self.grad_gamma))
         if "hess_gamma" in self.logger.keys():
             self.logger['hess_gamma'].append(self.hess_gamma)
 
     def clean_copy(self):
         return LinearLMESolver(self.tol, self.max_iter)
 
-    def fit(self, train: LinearLMEOracle, test: LinearLMEOracle = None, beta0=None, gamma0=None, method='EM', **kwargs):
+    def fit(self, train: LinearLMEOracle, test: LinearLMEOracle = None, initializer="None", beta0=None, gamma0=None, method='EM', **kwargs):
 
         assert method in supported_methods, \
             "Method %s is not from %s" % (method, sorted(supported_methods, key=lambda x: x[0]))
@@ -63,13 +65,19 @@ class LinearLMESolver:
             assert len(beta0) == k_beta
             self.beta = beta0
 
-        gamma_step_length = (0.01 / i for i in range(1, self.max_iter))
+        if initializer == "EM":
+            self.beta = train.optimal_beta(self.gamma)
+            self.us = train.optimal_random_effects(self.beta, self.gamma)
+            self.gamma = np.sum(self.us ** 2, axis=0) / train.problem.num_studies
+
+        gamma_step_length = (1 / i for i in range(1, self.max_iter))
 
         self.loss = train.loss(self.beta, self.gamma)
         self.grad_gamma = train.gradient_gamma(self.beta, self.gamma)
         self.log()
         # y_old = 0
         iteration = 0
+        prev_gamma = np.infty
         while np.linalg.norm(self.grad_gamma) > self.tol and iteration < self.max_iter:
             iteration += 1
             if iteration >= self.max_iter:
@@ -77,15 +85,16 @@ class LinearLMESolver:
                 self.logger["converged"] = 0
                 return self.logger
 
-            self.beta = train.optimal_beta(self.gamma)
+            prev_gamma = self.gamma
 
+            self.beta = train.optimal_beta(self.gamma)
             if method == 'GradDescent':
-                # self.grad_gamma = train.gradient_gamma(self.beta, self.gamma)
+                self.grad_gamma = train.gradient_gamma(self.beta, self.gamma)
                 step_len = next(gamma_step_length)
                 self.gamma = self.gamma - step_len * self.grad_gamma
             elif method == 'NewtonRaphson':
                 self.hess_gamma = train.hessian_gamma(self.beta, self.gamma)
-                # self.grad_gamma = train.gradient_gamma(self.beta, self.gamma)
+                self.grad_gamma = train.gradient_gamma(self.beta, self.gamma)
                 self.gamma = self.gamma - np.linalg.solve(self.hess_gamma, self.grad_gamma)
             # elif method == 'AccGradDescent':
             #     # self.grad_gamma = train.gradient_gamma(self.beta, self.gamma)
@@ -115,8 +124,7 @@ class LinearLMESolver:
             else:
                 raise Exception("Unknown Method")
 
-            # TODO: Figure out how to ensure the positive constraint for gamma correctly
-            self.gamma = np.clip(self.gamma, 0.01, None)
+            self.gamma = np.clip(self.gamma, 0, None)
 
             self.grad_gamma = train.gradient_gamma(self.beta, self.gamma)
             self.loss = train.loss(self.beta, self.gamma)
@@ -141,7 +149,7 @@ class LinearLMESolver:
 class LinearLMERegSolver(LinearLMESolver):
 
     def fit(self, train: LinearLMEOracleRegularized, test: LinearLMEOracleRegularized = None, beta0=None, gamma0=None,
-            method='VariableProjectionNR', tbeta: np.ndarray = 0, tgamma: np.ndarray = 0, **kwargs):
+            method='VariableProjectionNR', initializer="None", tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
 
         assert method in supported_methods, \
             "Method %s is not from %s" % (method, sorted(supported_methods, key=lambda x: x[0]))
@@ -163,29 +171,52 @@ class LinearLMERegSolver(LinearLMESolver):
             assert len(beta0) == k_beta
             self.beta = beta0
 
-        self.tbeta = tbeta
-        self.tgamma = tgamma
+        if tgamma is None:
+            self.tgamma = np.zeros(k_gamma)
+        else:
+            assert len(tgamma) == k_gamma
+            self.tgamma = tgamma
 
-        self.loss = train.loss_reg(self.beta, self.gamma, tbeta, tgamma)
-        self.grad_gamma = train.gradient_gamma_reg(self.beta, self.gamma, tgamma)
+        if tbeta is None:
+            self.tbeta = np.zeros(k_beta)
+        else:
+            assert len(tbeta) == k_beta
+            self.tbeta = tbeta
+
+
+        if initializer == "EM":
+            self.beta = train.optimal_beta(self.gamma)
+            self.us = train.optimal_random_effects(self.beta, self.gamma)
+            self.gamma = np.sum(self.us ** 2, axis=0) / train.problem.num_studies
+            #self.tgamma = self.gamma
+
+
+        self.loss = train.loss_reg(self.beta, self.gamma, self.tbeta, self.tgamma)
+        self.grad_gamma = train.gradient_gamma_reg(self.beta, self.gamma, self.tgamma)
         self.log()
 
+        prev_gamma = np.infty
         iteration = 0
-        while np.linalg.norm(self.grad_gamma) > self.tol and iteration < self.max_iter:
+        while np.linalg.norm(self.gamma - prev_gamma) > self.tol and iteration < self.max_iter:
             iteration += 1
             if iteration >= self.max_iter:
                 self.us = train.optimal_random_effects(self.beta, self.gamma)
                 self.logger["converged"] = 0
                 return self.logger
 
+            prev_gamma = self.gamma
             if method == 'VariableProjectionNR':
                 self.beta = train.optimal_beta_reg(self.gamma, self.tbeta)
                 self.grad_gamma = train.gradient_gamma_reg(self.beta, self.gamma, self.tgamma)
-                self.hess_gamma = train.hessian_gamma_reg(self.beta, self.gamma)
-                self.gamma = self.gamma - np.linalg.solve(self.hess_gamma, self.grad_gamma)
+                # self.hess_gamma = train.hessian_gamma_reg(self.beta, self.gamma)
+                #direction = -np.linalg.solve(self.hess_gamma, self.grad_gamma)
+                #direction = -np.linalg.solve(self.hess_gamma.T.dot(self.hess_gamma), self.hess_gamma.T.dot(self.grad_gamma))
+                direction = -1/iteration*self.grad_gamma
+                self.gamma = self.gamma + direction
 
-            # TODO: Figure out how to ensure the positive constraint for gamma correctly
-            self.gamma = np.clip(self.gamma, 0.01, None)
+            # projection
+
+            self.gamma = np.clip(self.gamma, 0, None)
 
             self.grad_gamma = train.gradient_gamma_reg(self.beta, self.gamma, self.tgamma)
             self.loss = train.loss_reg(self.beta, self.gamma, self.tbeta, self.tgamma)
@@ -204,20 +235,21 @@ if __name__ == '__main__':
     from lib.problems import LinearLMEProblem
 
     random_seed = 212
-    study_sizes = [100, 50, 10]
+    study_sizes = [300, 100, 50]
     test_study_sizes = [10, 10, 10]
-    num_features = 6
-    num_random_effects = 6
+    num_features = 10
+    num_random_effects = 10
     obs_std = 5e-2
-    method = "VariableProjectionNR"
+    method = "NewtonRaphson"
+    initializer = "EM"
     lb = 1
     how_close = 1
     tol = 1e-4
 
     beta = np.ones(num_features)
-    #beta[-1] = 0
+    #beta[-2:] = 0
     gamma = np.ones(num_random_effects)
-    #gamma[-1] = 0
+    gamma[-2:] = 0
     train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(study_sizes=study_sizes,
                                                                          num_features=num_features,
                                                                          beta=beta,
@@ -246,25 +278,22 @@ if __name__ == '__main__':
     }
 
     if method == "VariableProjectionNR":
-        train_oracle = LinearLMEOracleRegularized(train, lb=lb)
-        test_oracle = LinearLMEOracleRegularized(test, lb=lb)
+        train_oracle = LinearLMEOracleRegularized(train, lb=0, lg=0, k=num_features, j=num_random_effects)
+        test_oracle = LinearLMEOracleRegularized(test, lb=0, lg=0, k=num_features, j=num_random_effects)
+        #gamma_reg_exact_full, g_opt = train_oracle.good_lambda_gamma(mode="exact_full_hess")
+        gamma_reg_exact_full = 1e3
+        train_oracle.lg = gamma_reg_exact_full
+        test_oracle.lg = gamma_reg_exact_full
         model = LinearLMERegSolver(tol=tol, max_iter=1000)
     else:
         train_oracle = LinearLMEOracle(train)
         test_oracle = LinearLMEOracle(test)
         model = LinearLMESolver(tol=tol, max_iter=1000)
 
-        #     gamma_reg_upperbound = train_oracle.good_lambda_gamma(mode="upperbound")
-        #     gamma_reg_exact = train_oracle.good_lambda_gamma(mode="exact")
-    gamma_reg_exact_full, g_opt = train_oracle.good_lambda_gamma(mode="exact_full_hess")
-    #     print("Upperbound: ", gamma_reg_upperbound)
-    #     print("Exact: ", gamma_reg_exact)
-    print(r"$\lambda_\gamma$ adjustment: ", gamma_reg_exact_full)
-    #     print(g_opt)
-    #     print(gamma_reg_upperbound/gamma_reg_exact)
+    tbeta = np.zeros(num_features)
+    tgamma = np.ones(num_random_effects)
 
-    train_oracle.lg = gamma_reg_exact_full
-    test_oracle.lg = gamma_reg_exact_full
+    logger = model.fit(train_oracle, test_oracle, method=method, initializer=initializer, tbeta=tbeta, tgamma=tgamma)
 
     parameters = {
         (num_features + 1, num_random_effects): (np.ones(num_features), np.zeros(num_random_effects) + 0.1, None)
