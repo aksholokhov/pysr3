@@ -3,12 +3,13 @@ from matplotlib import pyplot as plt
 
 from lib.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 
-supported_methods = ('EM', 'GradDescent', 'AccGradDescent', 'NewtonRaphson', 'VariableProjectionNR')
+supported_methods = ('EM', 'GradDescent', 'AccGradDescent', 'NewtonRaphson', 'VariableProjectionNR', "VariableProjectionGD")
 supported_logger_keys = ('loss', 'beta', 'gamma', 'test_loss', 'grad_gamma', 'hess_gamma')
 
 
 class LinearLMESolver:
-    def __init__(self, tol: float = 1e-4, max_iter: int = 1000, logger_keys=('loss', 'beta', 'gamma', 'grad_gamma', 'grad_gamma_norm', 'test_loss')):
+    def __init__(self, tol: float = 1e-4, max_iter: int = 1000,
+                 logger_keys=('loss', 'beta', 'gamma', 'grad_gamma', 'grad_gamma_norm', 'test_loss')):
         self.tol = tol
         self.max_iter = max_iter
         self.loss = None
@@ -37,14 +38,17 @@ class LinearLMESolver:
         if "grad_gamma" in self.logger.keys():
             self.logger['grad_gamma'].append(self.grad_gamma)
         if "grad_gamma_norm" in self.logger.keys():
-            self.logger['grad_gamma_norm'].append(np.linalg.norm(self.grad_gamma))
+            proj_grad = self.grad_gamma.copy()
+            proj_grad[self.gamma == 0] = 0
+            self.logger['grad_gamma_norm'].append(np.linalg.norm(proj_grad))
         if "hess_gamma" in self.logger.keys():
             self.logger['hess_gamma'].append(self.hess_gamma)
 
     def clean_copy(self):
         return LinearLMESolver(self.tol, self.max_iter)
 
-    def fit(self, train: LinearLMEOracle, test: LinearLMEOracle = None, initializer="None", beta0=None, gamma0=None, method='EM', **kwargs):
+    def fit(self, train: LinearLMEOracle, test: LinearLMEOracle = None, initializer="None", beta0=None, gamma0=None,
+            method='EM', **kwargs):
 
         assert method in supported_methods, \
             "Method %s is not from %s" % (method, sorted(supported_methods, key=lambda x: x[0]))
@@ -148,8 +152,17 @@ class LinearLMESolver:
 
 class LinearLMERegSolver(LinearLMESolver):
 
-    def fit(self, train: LinearLMEOracleRegularized, test: LinearLMEOracleRegularized = None, beta0=None, gamma0=None,
-            method='VariableProjectionNR', initializer="None", tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
+    def fit(self,
+                train: LinearLMEOracleRegularized,
+                test: LinearLMEOracleRegularized = None,
+                beta0=None,
+                gamma0=None,
+                method='VariableProjectionGD',
+                initializer="None",
+                tbeta: np.ndarray = None,
+                tgamma: np.ndarray = None,
+                use_line_search=False,
+                init_step_len=1, **kwargs):
 
         assert method in supported_methods, \
             "Method %s is not from %s" % (method, sorted(supported_methods, key=lambda x: x[0]))
@@ -183,42 +196,57 @@ class LinearLMERegSolver(LinearLMESolver):
             assert len(tbeta) == k_beta
             self.tbeta = tbeta
 
-
+        # initializing beta and gamma with one naive iteration of EM algorithm
         if initializer == "EM":
             self.beta = train.optimal_beta(self.gamma)
             self.us = train.optimal_random_effects(self.beta, self.gamma)
             self.gamma = np.sum(self.us ** 2, axis=0) / train.problem.num_studies
-            #self.tgamma = self.gamma
-
+            # self.tgamma = self.gamma
 
         self.loss = train.loss_reg(self.beta, self.gamma, self.tbeta, self.tgamma)
         self.grad_gamma = train.gradient_gamma_reg(self.beta, self.gamma, self.tgamma)
+        projected_gradient = self.grad_gamma.copy()
         self.log()
 
-        prev_gamma = np.infty
         iteration = 0
-        while np.linalg.norm(self.gamma - prev_gamma) > self.tol and iteration < self.max_iter:
+        while np.linalg.norm(projected_gradient) > self.tol and iteration < self.max_iter:
             iteration += 1
             if iteration >= self.max_iter:
                 self.us = train.optimal_random_effects(self.beta, self.gamma)
                 self.logger["converged"] = 0
                 return self.logger
 
-            prev_gamma = self.gamma
-            if method == 'VariableProjectionNR':
+            if method == 'VariableProjectionGD':
                 self.beta = train.optimal_beta_reg(self.gamma, self.tbeta)
                 self.grad_gamma = train.gradient_gamma_reg(self.beta, self.gamma, self.tgamma)
                 # self.hess_gamma = train.hessian_gamma_reg(self.beta, self.gamma)
-                #direction = -np.linalg.solve(self.hess_gamma, self.grad_gamma)
-                #direction = -np.linalg.solve(self.hess_gamma.T.dot(self.hess_gamma), self.hess_gamma.T.dot(self.grad_gamma))
-                direction = -1/iteration*self.grad_gamma
-                self.gamma = self.gamma + direction
+                # direction = -np.linalg.solve(self.hess_gamma, self.grad_gamma)
+                # direction = -np.linalg.solve(self.hess_gamma.T.dot(self.hess_gamma), self.hess_gamma.T.dot(self.grad_gamma))
+                #direction = -self.grad_gamma
+                projected_gradient = self.grad_gamma.copy()
+                projected_gradient[self.gamma == 0] = 0
+                direction = -projected_gradient
+                if use_line_search:
+                    # line search method
+                    step_len = init_step_len  # min(1, np.max(-self.gamma/direction))
+                    current_loss = train.loss_reg(self.beta, self.gamma, self.tbeta, self.tgamma)
+                    while train.loss_reg(self.beta, self.gamma + step_len * direction, self.tbeta,
+                                         self.tgamma) >= current_loss:
+                        step_len *= 0.5
+                        if step_len <= 1e-9:
+                            break
+                else:
+                    # fixed step size
+                    step_len = 1 / iteration
+                self.gamma = self.gamma + step_len*direction
 
             # projection
 
             self.gamma = np.clip(self.gamma, 0, None)
 
             self.grad_gamma = train.gradient_gamma_reg(self.beta, self.gamma, self.tgamma)
+            projected_gradient = self.grad_gamma.copy()
+            projected_gradient[self.gamma == 0] = 0
             self.loss = train.loss_reg(self.beta, self.gamma, self.tbeta, self.tgamma)
             if "test_loss" in self.logger.keys():
                 self.test_loss = test.loss_reg(self.beta, self.gamma, self.tbeta, self.tgamma)
@@ -237,19 +265,26 @@ if __name__ == '__main__':
     random_seed = 212
     study_sizes = [300, 100, 50]
     test_study_sizes = [10, 10, 10]
-    num_features = 10
-    num_random_effects = 10
+    num_features = 6
+    num_random_effects = 6
     obs_std = 5e-2
-    method = "NewtonRaphson"
+    method = "VariableProjectionGD"
     initializer = "EM"
     lb = 1
+    lg = 1
     how_close = 1
     tol = 1e-4
+    max_iter = 100
 
     beta = np.ones(num_features)
-    #beta[-2:] = 0
     gamma = np.ones(num_random_effects)
-    gamma[-2:] = 0
+
+    # beta is [0, 1, 1, 1 ...]
+    # gamma is [0, 1, 1, ..., 1, 0]
+    beta[0] = 0
+    gamma[0] = 0
+    gamma[-1] = 0
+
     train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(study_sizes=study_sizes,
                                                                          num_features=num_features,
                                                                          beta=beta,
@@ -277,56 +312,68 @@ if __name__ == '__main__':
         "seed": random_seed
     }
 
-    if method == "VariableProjectionNR":
-        train_oracle = LinearLMEOracleRegularized(train, lb=0, lg=0, k=num_features, j=num_random_effects)
-        test_oracle = LinearLMEOracleRegularized(test, lb=0, lg=0, k=num_features, j=num_random_effects)
-        #gamma_reg_exact_full, g_opt = train_oracle.good_lambda_gamma(mode="exact_full_hess")
-        gamma_reg_exact_full = 1e3
-        train_oracle.lg = gamma_reg_exact_full
-        test_oracle.lg = gamma_reg_exact_full
-        model = LinearLMERegSolver(tol=tol, max_iter=1000)
+    if method == "VariableProjectionGD":
+        # these are oracle and method which are capable of performing feature selection
+        train_oracle = LinearLMEOracleRegularized(train, lb=lb, lg=lg)
+        test_oracle = LinearLMEOracleRegularized(test, lb=lb, lg=lg)
+        model = LinearLMERegSolver(tol=tol, max_iter=max_iter)
+        # this says what regularizer we need to put in order to make the hessian PSD everywhere
+        # UPD: we don't use it, because we don't use NR anymore (we use GD instead)
+        # gamma_reg_exact_full, g_opt = train_oracle.good_lambda_gamma(mode="exact_full_hess")
+        # print(r"Suggested $\lambda_\gamma$ adjustment: ", gamma_reg_exact_full)
+        # print(r"Used $\lambda_\gamma$: ", lg)
     else:
+        # these methods are left here for experimenting, they don't work for feature selection
+        # because they behave badly near the boundaries
         train_oracle = LinearLMEOracle(train)
         test_oracle = LinearLMEOracle(test)
-        model = LinearLMESolver(tol=tol, max_iter=1000)
+        model = LinearLMESolver(tol=tol, max_iter=max_iter)
 
-    tbeta = np.zeros(num_features)
-    tgamma = np.ones(num_random_effects)
+    # We start the feature selection process from a "one EM iteration" initial point
+    model.max_iter = 0
+    logger = model.fit(train_oracle,
+                       test_oracle,
+                       beta0=np.ones(num_features),
+                       gamma0=np.ones(num_random_effects),
+                       initializer="EM",
+                       )
+    model.max_iter = max_iter
 
-    logger = model.fit(train_oracle, test_oracle, method=method, initializer=initializer, tbeta=tbeta, tgamma=tgamma)
-
+    # These are initial parameters for the very first iteration
     parameters = {
-        (num_features + 1, num_random_effects): (np.ones(num_features), np.zeros(num_random_effects) + 0.1, None)
+        (num_features + 1, num_random_effects): (model.beta, model.gamma, None)
     }
 
+    # k is how much non-zero elements of beta we want to get
     for k in range(num_features, 0, -1):
         train_oracle.k = k
         test_oracle.k = k
-        if k == num_features:
-            train_oracle.lb = 0
-            test_oracle.lb = 0
-            tbeta = np.zeros(num_features)
-        else:
-            train_oracle.lb = lb
-            test_oracle.lb = lb
-            prev_beta, *rest = parameters[(k + 1, k)]
-            tbeta = train_oracle.take_only_k_max(prev_beta, k)
+        prev_beta, *rest = parameters[(k + 1, k)]
+        tbeta = train_oracle.take_only_k_max(prev_beta, k)
+
         for j in range(k, 0, -1):
             train_oracle.j = j
             test_oracle.j = j
             if j == k:
-                prev_beta, prev_gamma, *rest = parameters[(k + 1, j)]
+                prev_beta, prev_gamma, *rest = parameters[(k + 1, k)]
             else:
                 prev_beta, prev_gamma, *rest = parameters[(k, j + 1)]
-            tgamma = train_oracle.take_only_k_max(prev_gamma, j)
+
+            tgamma = prev_gamma
+            tgamma[tbeta == 0] = 0
+            tgamma = train_oracle.take_only_k_max(tgamma, j)
 
             logger = model.fit(train_oracle,
                                test_oracle,
                                beta0=prev_beta,
                                gamma0=prev_gamma,
                                tbeta=tbeta,
-                               tgamma=tgamma
+                               tgamma=tgamma,
+                               method=method,
+                               initializer=None,
+                               use_line_search=True
                                )
+
             train_loss = train_oracle.loss_reg(model.beta, model.gamma, tbeta, tgamma)
             test_loss = test_oracle.loss_reg(model.beta, model.gamma, tbeta, tgamma)
             if not logger["converged"]:
@@ -334,7 +381,30 @@ if __name__ == '__main__':
             else:
                 parameters[(k, j)] = (model.beta, model.gamma, model.tbeta, model.tgamma, logger, train_loss, test_loss)
 
+    train_error = np.zeros((num_features, num_features))
+    test_error = np.zeros((num_features, num_features))
+    converged = np.zeros((num_features, num_features))
+    coefficients = np.zeros((num_features * num_features, 2 * num_features))
+    dense_coefficients = np.zeros((num_features * num_features, 2 * num_features))
+    for k in range(num_features, 0, -1):
+        for j in range(k, 0, -1):
+            beta, gamma, tbeta, tgamma, logger, train_loss, test_loss = parameters[(k, j)]
+            train_error[k - 1, j - 1] = train_loss
+            test_error[k - 1, j - 1] = test_loss
+            converged[k - 1, j - 1] = logger["converged"]
 
+            dense_coefficients[(k - 1) * num_features:k * num_features, 2 * (j - 1)] = beta
+            dense_coefficients[(k - 1) * num_features:k * num_features, 2 * (j - 1) + 1] = gamma
 
+            if k == num_features:
+                coefficients[(k - 1) * num_features:k * num_features, 2 * (j - 1)] = beta
+                coefficients[(k - 1) * num_features:k * num_features, 2 * (j - 1) + 1] = tgamma
+            else:
+                coefficients[(k - 1) * num_features:k * num_features, 2 * (j - 1)] = tbeta
+                coefficients[(k - 1) * num_features:k * num_features, 2 * (j - 1) + 1] = tgamma
 
+    coefficients[:num_features, 2 * (num_features - 1)] = true_parameters["beta"]
+    coefficients[:num_features, 2 * (num_features - 1) + 1] = empirical_gamma
 
+    dense_coefficients[:num_features, 2 * (num_features - 1)] = true_parameters["beta"]
+    dense_coefficients[:num_features, 2 * (num_features - 1) + 1] = empirical_gamma
