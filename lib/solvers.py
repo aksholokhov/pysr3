@@ -161,8 +161,9 @@ class LinearLMERegSolver(LinearLMESolver):
                 initializer="None",
                 tbeta: np.ndarray = None,
                 tgamma: np.ndarray = None,
-                use_line_search=False,
+                use_line_search=True,
                 init_step_len=1, **kwargs):
+
 
         assert method in supported_methods, \
             "Method %s is not from %s" % (method, sorted(supported_methods, key=lambda x: x[0]))
