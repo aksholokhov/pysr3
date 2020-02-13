@@ -255,6 +255,7 @@ class LinearLMERegSolver(LinearLMESolver):
 
         self.us = train.optimal_random_effects(self.beta, self.gamma)
         self.logger['converged'] = 1
+        self.logger['iterations'] = iteration
 
         return self.logger
 
