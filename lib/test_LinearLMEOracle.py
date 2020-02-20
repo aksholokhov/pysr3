@@ -7,7 +7,8 @@ from scipy.misc import derivative
 from lib.oracles import LinearLMEOracle
 from lib.problems import LinearLMEProblem
 
-class TestLinearLMESolver(TestCase):
+
+class TestLinearLMEOracle(TestCase):
 
     def test_gamma_derivatives(self):
         trials = 5
