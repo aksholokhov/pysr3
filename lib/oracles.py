@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
+from scipy.linalg.lapack import get_lapack_funcs
 
 from lib.problems import LinearLMEProblem
 
@@ -133,6 +134,7 @@ class LinearLMEOracle:
     def optimal_beta(self, gamma: np.ndarray):  # , force_naive=False):
         omega = 0
         tail = 0
+
         if self.mode == 'naive':
             gamma_mat = np.diag(gamma)
             for x, y, z, l in self.problem:
@@ -184,12 +186,18 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
     def optimal_beta_reg(self, gamma: np.ndarray, tbeta: np.ndarray):
         omega = 0
         tail = 0
+        invert_upper_triangular = get_lapack_funcs("trtri")
         if self.mode == 'naive':
             gamma_mat = np.diag(gamma)
             for x, y, z, l in self.problem:
                 omega_i = z.dot(gamma_mat).dot(z.T) + l
+                L = np.linalg.cholesky(omega_i)
+                #L_inv = invert_upper_triangular(L.T)[0].T
+                #Lx = L_inv.dot(x)
+                #omega += Lx.T.dot(Lx)
                 omega += x.T.dot(np.linalg.inv(omega_i)).dot(x)
-                tail += x.T.dot(np.linalg.inv(omega_i)).dot(y)
+                #omega += np.diag(1/gamma)
+                tail += x.T.dot(np.linalg.solve(omega_i, y))
         elif self.mode == 'fast':
             if not (self.old_gamma == gamma).all():
                 self.recalculate_inverse_matrices(gamma)
@@ -197,7 +205,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             tail = np.sum(self.xTomegas_invY, axis=0)
         else:
             raise Exception("Unexpected mode: %s" % self.mode)
-        return np.linalg.inv(self.lb * np.eye(self.problem.num_features) + omega).dot(self.lb * tbeta + tail)
+        return np.linalg.solve(self.lb * np.eye(self.problem.num_features) + omega, self.lb * tbeta + tail)
 
     @staticmethod
     def take_only_k_max(a: np.ndarray, k: int):

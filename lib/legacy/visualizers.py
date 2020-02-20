@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 from lib.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
 from lib.problems import LinearLMEProblem
-from lib.old_solvers import LinearLMESolver
+from lib.legacy.old_solvers import LinearLMESolver
 
 
 # from deprecated import deprecated
