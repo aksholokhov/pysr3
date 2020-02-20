@@ -4,7 +4,7 @@ import numpy as np
 from dask.distributed import Client, as_completed
 from matplotlib import pyplot as plt
 
-from lib.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
+from lib.legacy.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
 from lib.problems import LinearLMEProblem
 from lib.legacy.old_solvers import LinearLMESolver
 

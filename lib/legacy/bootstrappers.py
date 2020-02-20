@@ -1,7 +1,7 @@
 import numpy as np
 
 from lib.problems import LinearLMEProblem
-from lib.old_solvers import LinearLMESolver
+from lib.legacy.old_solvers import LinearLMESolver
 
 
 class LMEBootstrapper:
