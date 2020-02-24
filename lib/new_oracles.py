@@ -202,7 +202,6 @@ class LinearLMEOracle:
         """
 
         random_effects = []
-        # TODO: check that we don't accept zeros stds
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             stds_inv_mat = np.diag(1 / stds)
@@ -218,15 +217,6 @@ class LinearLMEOracle:
             u[mask] = u_nonzero
             random_effects.append(u)
         return np.array(random_effects)
-
-    # TODO: move predict to the solver
-    def predict(self, beta, gamma):
-        us = self.optimal_random_effects(beta, gamma)
-        answers = []
-        for i, (x, _, z, l) in enumerate(self.problem):
-            y = x.dot(beta) + z.dot(us[i])
-            answers.append(y)
-        return answers
 
 
 class LinearLMEOracleRegularized(LinearLMEOracle):

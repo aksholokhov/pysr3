@@ -1,10 +1,19 @@
-import unittest
+from typing import Set
 
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
+class Logger:
+    def __init__(self, list_of_keys: Set = ()):
+        self.keys = list_of_keys
+        self.dict = {key: [] for key in list_of_keys}
 
+    def log(self, **kwargs):
+        for key in self.keys:
+            self.dict[key].appemd(kwargs.get(key, None))
+        return self
 
-if __name__ == '__main__':
-    unittest.main()
+    def add(self, key, value):
+        self.dict[key] = value
+        return self
+
+    def get(self, key):
+        return self.dict[key]
