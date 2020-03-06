@@ -59,6 +59,7 @@ class TestLinearLMEProblem(unittest.TestCase):
         problem, true_parameters = LinearLMEProblem.generate(study_sizes=[4, 5, 10],
                                                              num_fixed_effects=1,
                                                              num_random_effects=1,
+                                                             both_fixed_and_random_effects=np.array([0]),
                                                              obs_std=0.1,
                                                              random_intercept=True,
                                                              seed=42)

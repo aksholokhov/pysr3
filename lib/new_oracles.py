@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable
 
 import numpy as np
 from scipy.linalg.lapack import get_lapack_funcs
@@ -35,6 +35,22 @@ class LinearLMEOracle:
         self.omega_cholesky_inv = []
         self.omega_cholesky = []
         self.gamma = None
+        beta_to_gamma_map = np.zeros(self.problem.num_features)
+        beta_counter = 0
+        gamma_counter = 0
+        for label in self.problem.column_labels:
+            if label == 1:
+                beta_to_gamma_map[beta_counter] = -1
+                beta_counter += 1
+            elif label == 2:
+                gamma_counter += 1
+            elif label == 3:
+                beta_to_gamma_map[beta_counter] = gamma_counter
+                beta_counter += 1
+                gamma_counter += 1
+            else:
+                continue
+        self.beta_to_gamma_map = beta_to_gamma_map
 
     def _recalculate_cholesky(self, gamma: np.ndarray):
         """
@@ -54,15 +70,17 @@ class LinearLMEOracle:
         """
 
         if (self.gamma != gamma).any():
+            self.omega_cholesky = []
+            self.omega_cholesky_inv = []
             gamma_mat = np.diag(gamma)
             invert_upper_triangular: Callable[[np.ndarray], np.ndarray] = get_lapack_funcs("trtri")
             for x, y, z, stds in self.problem:
                 omega = z.dot(gamma_mat).dot(z.T) + np.diag(stds)
                 L = np.linalg.cholesky(omega)
-                L_inv = invert_upper_triangular(L.T).T
+                L_inv = invert_upper_triangular(L.T)[0].T
                 self.omega_cholesky.append(L)
                 self.omega_cholesky_inv.append(L_inv)
-        self.gamma = gamma
+            self.gamma = gamma
         return None
 
     def loss(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> float:
@@ -115,7 +133,7 @@ class LinearLMEOracle:
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             Lz = L_inv.dot(z)
-            grad_gamma += np.sum(Lz ** 2, axis=0) - Lz.T.dot(L_inv.dot(xi)) ** 2
+            grad_gamma += 1/2*np.sum(Lz ** 2, axis=0) - 1/2*Lz.T.dot(L_inv.dot(xi)) ** 2
         return grad_gamma
 
     def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
@@ -137,9 +155,15 @@ class LinearLMEOracle:
             hessian: np.ndarray, shape = [k, k]
                 Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄).
         """
-
-        # TODO: Implement hessian gamma
-        raise NotImplementedError("Hessian is not implemented yet")
+        self._recalculate_cholesky(gamma)
+        num_random_effects = self.problem.num_random_effects
+        hessian = np.zeros(shape=(num_random_effects, num_random_effects))
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            xi = y - x.dot(beta)
+            Lz = L_inv.dot(z)
+            Lxi = L_inv.dot(xi).reshape((len(xi), 1))
+            hessian += (-Lz.T.dot(Lz) + 2*(Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (Lz.T.dot(Lz))
+        return 1/2*hessian
 
     def optimal_beta(self, gamma: np.ndarray, _dont_solve_wrt_beta=False, **kwargs):
         """
@@ -211,7 +235,7 @@ class LinearLMEOracle:
             z_masked = z[:, mask]
             gamma_masked = gamma[mask]
             u_nonzero = np.linalg.solve(np.diag(1 / gamma_masked) + z_masked.T.dot(stds_inv_mat).dot(z_masked),
-                                        z.T.dot(stds_inv_mat).dot(xi)
+                                        z_masked.T.dot(stds_inv_mat).dot(xi)
                                         )
             u = np.zeros(len(gamma))
             u[mask] = u_nonzero
@@ -296,8 +320,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         beta: np.ndarray, shape = [n]
             Vector of optimal estimates of the fixed effects for given gamma.
         """
-
-        kernel, tail = super(self).optimal_beta(gamma, _dont_solve_wrt_beta=True, **kwargs)
+        kernel, tail = super().optimal_beta(gamma, _dont_solve_wrt_beta=True, **kwargs)
         return np.linalg.solve(self.lb * np.eye(self.problem.num_features) + kernel, self.lb * tbeta + tail)
 
     @staticmethod
@@ -368,7 +391,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 The value of the loss function: ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2
         """
 
-        return (super(self).loss(beta, gamma, **kwargs)
+        return (super().loss(beta, gamma, **kwargs)
                 + self.lb / 2 * sum((beta - tbeta) ** 2)
                 + self.lg / 2 * sum((gamma - tgamma) ** 2))
 
@@ -393,7 +416,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 The gradient of the loss function with respect to gamma: grad_gamma = ∇_𝛄[ℒ](β, 𝛄) + lg*(𝛄 - t𝛄)
         """
 
-        return self.gradient_gamma(beta, gamma, **kwargs) + self.lg * (gamma - tgamma)
+        return super().gradient_gamma(beta, gamma, **kwargs) + self.lg * (gamma - tgamma)
 
     def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -414,7 +437,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄) + lg*I.
         """
 
-        return super(self).hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_effects)
+        return super().hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_effects)
 
     def optimal_tgamma(self, tbeta, gamma, **kwargs):
         """
@@ -437,7 +460,10 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         tgamma : np.ndarray, shape = [k]
             Minimizer of the loss function w.r.t tgamma with other arguments fixed.
         """
+        # TODO: rewrite it taking features/RE matching into account!
         tgamma = np.zeros(len(gamma))
         idx = tbeta != 0
-        tgamma[idx] = gamma[idx]
+        idx_gamma = self.beta_to_gamma_map[idx]
+        idx_gamma = idx_gamma[idx_gamma >= 0]
+        tgamma[idx_gamma] = gamma[idx_gamma]
         return self._take_only_k_max(tgamma, self.j)

@@ -8,33 +8,79 @@ from lib.problems import LinearLMEProblem
 from lib.new_oracles import LinearLMEOracleRegularized
 from lib.logger import Logger
 
+from lib.legacy.oracles import LinearLMEOracleRegularized as OldOracle
 
 class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     """
-    Solve Linear Mixed Effects problem with projected gradient descent method
+    Solve regularized sparse Linear Mixed Effects problem with projected gradient descent method:
+
+    min w.r.t. β, 𝛄, tβ, t𝛄 the loss function
+
+     ℒr(β, 𝛄, tβ, t𝛄) := ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2
     """
 
-    def __init__(self, tol: float = 1e-4, tol_inner: float = 1e-4, solver: str = "pgd", n_iter=1000, n_iter_inner=20,
-                 use_line_search=True, lb=1, lg=1,
-                 nnz_tbeta=3, nnz_tgamma=3, logger_keys: Set = ('converged',)):
+    def __init__(self,
+                 tol: float = 1e-4,
+                 tol_inner: float = 1e-4,
+                 solver: str = "pgd",
+                 initializer=None,
+                 n_iter: int = 1000,
+                 n_iter_inner: int = 20,
+                 use_line_search: bool = True,
+                 lb: float = 1,
+                 lg: float = 1,
+                 nnz_tbeta: int = 3,
+                 nnz_tgamma: int = 3,
+                 logger_keys: Set = ('converged',)):
         """
-        Initializes the model
+        Initializes the model.
 
         Parameters
         ----------
         tol : float
-            Precision of the solution.
+            Tolerance for stopping criterion: ||tβ_{k+1} - tβ_k|| <= tol and ||t𝛄_{k+1} - t𝛄_k|| <= tol.
+
+        tol_inner : float
+            Tolerance for inner optimization subroutine (min ℒ w.r.t. 𝛄) stopping criterion:
+            ||projected ∇ℒ|| <= tol_inner
 
         solver : {'pgd'}
             Solver to use in computational routines:
+            - 'pgd' : Projected Gradient Descent
 
-            - 'pgd' Projected Gradient Descent
+        initializer : {None, 'EM'}, Optional
+            Whether to use an initializer before starting the main optimization routine:
+                - None : Does not do any special initialization, starts with the given initial point.
+                - 'EM' : Performs one step of a naive EM-algorithm in order to improve the initial point.
 
+
+        n_iter : int
+            Number of iterations for the outer optimization cycle.
+
+        n_iter_inner : int
+            Number of iterations for the inner optimization cycle.
+
+        use_line_search : bool, default = True
+            Whether to use line search when optimizing w.r.t. 𝛄. If true, it starts from step_len = 1 and cuts it in half
+            until the descent criterion is met. If false, it uses a fixed step size of 1/iteration_number.
+
+        lb : float
+            Regularization coefficient for the tβ-related term, see the loss-function description.
+
+        lg : float
+            Regularization coefficient for the t𝛄-related term, see the loss-function description.
+
+        nnz_tbeta : int,
+            How many non-zero coefficients are allowed in tβ.
+
+        nnz_tgamma : int,
+            How many non-zero coefficients are allowed in t𝛄.
         """
 
         self.tol = tol
         self.tol_inner = tol_inner
         self.solver = solver
+        self.initializer = initializer
         self.n_iter = n_iter
         self.n_iter_inner = n_iter_inner
         self.use_line_search = use_line_search
@@ -44,30 +90,49 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         self.nnz_tgamma = nnz_tgamma
         self.logger_keys = logger_keys
 
-    def fit(self, x, y, columns_labels=None, initial_parameters: dict = None, warm_start=False,
-            initializer=None, **kwargs):
+    def fit(self,
+            x: np.ndarray,
+            y: np.ndarray,
+            columns_labels: np.ndarray = None,
+            initial_parameters: dict = None,
+            warm_start=False,
+            random_intercept=True,
+            **kwargs):
         """
         Fits a Linear Model with Linear Mixed-Effects to the given data
 
         Parameters
         ----------
-        x : array-like
-        y : array-like
-        columns_labels
-        initial_parameters:
-            - gamma0 : array-like,
-                If None then it defaults to an all-ones vector.
-            - beta0 :
-                If None then it defaults to an all-ones vector.
-            - tbeta0 :
-                If None then it defaults to an all-zeros vector.
-            - tgamma0 :
-                If None then it defaults to an all-zeros vector.
-        warm_start :
-            Use previous parameters
-        initializer : {None, 'EM'}, Optional
-            Which initializer to use
-        kwargs
+        x : np.ndarray
+            Data. If columns_labels = None then it's assumed that columns_labels are in the first row of x.
+
+        y : np.ndarray
+            Answers, real-valued array.
+
+        columns_labels : np.ndarray
+            List of column labels: 1 -- fixed effect, 2 -- random effect, 3 -- both fixed and random,
+                    0 -- groups labels, 4 -- answers standard deviations. There shall be only one
+                    column of group labels and answers STDs, and overall n columns with fixed effects (1 or 3)
+                    and k columns of random effects (2 or 3).
+
+        initial_parameters: dict with possible fields:
+            - 'beta0' : np.ndarray, shape = [n]
+                Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
+            - 'gamma0' : np.ndarray, shape = [k]
+                Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
+            - 'tbeta0' : np.ndarray, shape = [n]
+                Initial estimate of sparse fixed effects. If None then it defaults to an all-zeros vector.
+            - 'tgamma0' : np.ndarray, shape = [k]
+                Initial estimate of sparse random covariances. If None then it defaults to an all-zeros vector.
+
+        warm_start : bool, default = False
+            Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
+            Throws NotFittedError if set to True when not fitted.
+
+        random_intercept : bool, default = True
+            Whether treat the intercept as a random effect.
+        kwargs :
+            Not used currently, left here for passing debugging parameters.
 
         Returns
         -------
@@ -75,7 +140,9 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Fitted regression model.
         """
 
-        problem = LinearLMEProblem.from_x_y(x, y, columns_labels, **kwargs)
+        problem, _ = LinearLMEProblem.from_x_y(x, y, columns_labels, random_intercept=random_intercept, **kwargs)
+        if initial_parameters is None:
+            initial_parameters = {}
         beta0 = initial_parameters.get("beta", None)
         gamma0 = initial_parameters.get("gamma", None)
         tbeta0 = initial_parameters.get("tbeta", None)
@@ -88,19 +155,24 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                             nnz_tbeta=self.nnz_tbeta,
                                             nnz_tgamma=self.nnz_tgamma
                                             )
-        num_features = problem.num_features
+        num_fixed_effects = problem.num_features
         num_random_effects = problem.num_random_effects
+        assert num_fixed_effects >= self.nnz_tbeta
+        assert num_random_effects >= self.nnz_tgamma
+        old_oracle = OldOracle(problem, lb=self.lb, lg=self.lg, k=self.nnz_tbeta, j=self.nnz_tgamma)
 
-        if hasattr(self, 'coef_') and warm_start:
+        if warm_start:
+            check_is_fitted(self, 'coef_')
             beta = self.coef_["beta"]
             gamma = self.coef_["gamma"]
             tbeta = self.coef_["tbeta"]
             tgamma = self.coef_["tgamma"]
+
         else:
             if beta0 is not None:
                 beta = beta0
             else:
-                beta = np.ones(num_features)
+                beta = np.ones(num_fixed_effects)
 
             if gamma0 is not None:
                 gamma = gamma0
@@ -110,22 +182,27 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             if tbeta0 is not None:
                 tbeta = tbeta0
             else:
-                tbeta = np.zeros(num_features)
+                tbeta = np.zeros(num_fixed_effects)
 
             if tgamma0 is not None:
                 tgamma = tgamma0
             else:
                 tgamma = np.zeros(num_random_effects)
 
-        if initializer == "EM":
-            beta = oracle.optimal_beta(gamma)
+        if self.initializer == "EM":
+            beta = oracle.optimal_beta(gamma, tbeta)
             us = oracle.optimal_random_effects(beta, gamma)
             gamma = np.sum(us ** 2, axis=0) / oracle.problem.num_studies
 
+        def projected_gradient(current_gamma, current_gradient_gamma):
+            proj_gradient = current_gradient_gamma.copy()
+            for j, _ in enumerate(current_gamma):
+                if current_gamma[j] == 0 and current_gradient_gamma[j] <= 0:
+                    proj_gradient[j] = 0
+            return proj_gradient
+
         loss = oracle.loss(beta, gamma, tbeta, tgamma)
         gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
-        projected_gradient = gradient_gamma.copy()
-        projected_gradient[gamma == 0] = 0
         self.logger_ = Logger(self.logger_keys)
 
         prev_tbeta = np.infty
@@ -151,16 +228,19 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
             if self.solver == 'pgd':
                 inner_iteration = 0
-                while (np.linalg.norm(projected_gradient) > self.tol_inner
+                while (np.linalg.norm(projected_gradient(gamma, gradient_gamma)) > self.tol_inner
                        and inner_iteration < self.n_iter_inner):
                     beta = oracle.optimal_beta(gamma, tbeta)
                     gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
-                    projected_gradient = gradient_gamma.copy()
-                    projected_gradient[gamma == 0] = 0
-                    direction = -projected_gradient
+                    # projecting the gradient to the set of constraints
+                    direction = -projected_gradient(gamma, gradient_gamma)
                     if self.use_line_search:
                         # line search method
-                        step_len = 1
+                        step_len = 0.1
+                        for i, _ in enumerate(gamma):
+                            if direction[i] < 0:
+                                step_len = min(-gamma[i]/direction[i], step_len)
+
                         current_loss = oracle.loss(beta, gamma, tbeta, tgamma)
                         while oracle.loss(beta, gamma + step_len * direction, tbeta, tgamma) >= current_loss:
                             step_len *= 0.5
@@ -170,13 +250,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                         # fixed step size
                         step_len = 1 / iteration
                     gamma = gamma + step_len * direction
-
-                    # projection
-                    gamma = np.clip(gamma, 0, None)
-
                     gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
-                    projected_gradient = gradient_gamma.copy()
-                    projected_gradient[gamma == 0] = 0
                     inner_iteration += 1
 
                 prev_tbeta = tbeta
@@ -184,17 +258,31 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 tbeta = oracle.optimal_tbeta(beta)
                 tgamma = oracle.optimal_tgamma(tbeta, gamma)
 
+            loss = oracle.loss(beta, gamma, tbeta, tgamma)
             if len(self.logger_keys) > 0:
-                self.logger_.log(**locals())
+                self.logger_.log(locals())
 
         us = oracle.optimal_random_effects(beta, gamma)
-        per_cluster_coefficients = np.zeros(problem.num_studies, len(problem.coefficients_to_columns_mapping))
+
+        per_cluster_coefficients = np.zeros((problem.num_studies, len(problem.column_labels)))
+
         for i, u in enumerate(us):
-            for j, (idx_beta, idx_u) in enumerate(problem.coefficients_to_columns_mapping):
-                if idx_beta is not None:
-                    per_cluster_coefficients[i, j] += beta[idx_beta]
-                if idx_u is not None:
-                    per_cluster_coefficients[i, j] += u[idx_u]
+            fixed_effects_counter = 0
+            random_effects_counter = 0
+
+            for j, label in enumerate(problem.column_labels):
+                if label == 1:
+                    per_cluster_coefficients[i, j] = beta[fixed_effects_counter]
+                    fixed_effects_counter += 1
+                elif label == 2:
+                    per_cluster_coefficients[i, j] = u[random_effects_counter]
+                    random_effects_counter += 1
+                elif label == 3:
+                    per_cluster_coefficients[i, j] = beta[fixed_effects_counter] + u[random_effects_counter]
+                    fixed_effects_counter += 1
+                    random_effects_counter += 1
+                else:
+                    continue
 
         self.logger_.add('converged', 1)
         self.logger_.add('iterations', iteration)
@@ -254,7 +342,6 @@ def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=
     -------
         output : None
             None if all the checks are passed, otherwise raises an exception
-
     """
 
     num_features = problem.num_features

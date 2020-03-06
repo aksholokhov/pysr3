@@ -1,7 +1,6 @@
 import numpy as np
-from matplotlib import pyplot as plt
 
-from lib.oracles import LinearLMEOracle, LinearLMEOracleRegularized
+from lib.legacy.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 
 supported_methods = ('EM', 'GradDescent', 'AccGradDescent', 'NewtonRaphson', 'VariableProjectionNR', "VariableProjectionGD")
 supported_logger_keys = ('loss', 'beta', 'gamma', 'test_loss', 'grad_gamma', 'hess_gamma')
@@ -49,7 +48,17 @@ class LinearLMESolver:
 
     def fit(self, train: LinearLMEOracle, test: LinearLMEOracle = None, initializer="None", beta0=None, gamma0=None,
             method='EM', **kwargs):
+        """Generates something
 
+        :param train:
+        :param test:
+        :param initializer:
+        :param beta0:
+        :param gamma0:
+        :param method:
+        :param kwargs:
+        :return:
+        """
         assert method in supported_methods, \
             "Method %s is not from %s" % (method, sorted(supported_methods, key=lambda x: x[0]))
         self.method = method
@@ -288,7 +297,7 @@ if __name__ == '__main__':
     gamma[-1] = 0
 
     train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(study_sizes=study_sizes,
-                                                                         num_features=num_features,
+                                                                         num_fixed_effects=num_features,
                                                                          beta=beta,
                                                                          gamma=gamma,
                                                                          num_random_effects=num_random_effects,

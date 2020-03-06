@@ -6,9 +6,9 @@ class Logger:
         self.keys = list_of_keys
         self.dict = {key: [] for key in list_of_keys}
 
-    def log(self, **kwargs):
+    def log(self, parameters):
         for key in self.keys:
-            self.dict[key].appemd(kwargs.get(key, None))
+            self.dict[key].append(parameters.get(key, None))
         return self
 
     def add(self, key, value):

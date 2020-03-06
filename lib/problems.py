@@ -1,4 +1,4 @@
-from typing import Union, Sized, List, Optional, Tuple, Any
+from typing import Union, Sized, List, Optional, Tuple
 
 import numpy as np
 from sklearn.utils.multiclass import unique_labels
@@ -33,14 +33,16 @@ class LinearLMEProblem(LMEProblem):
         self.random_features = random_features
         self.obs_stds = obs_stds
 
-        self.num_random_effects = random_features[0].shape[1]
-        self.num_features = features[0].shape[1]
         self.study_sizes = [x.shape[0] for x in features]
         self.num_studies = len(self.study_sizes)
         self.num_obs = sum(self.study_sizes)
         self.group_labels = group_labels
         self.column_labels = column_labels
         self.order_of_objects = order_of_objects
+
+        self.num_random_effects = sum([label in (2, 3) for label in column_labels])
+        self.num_features = sum([label in (1, 3) for label in column_labels])
+
 
     def __iter__(self):
         self.__iteration_pos = 0
@@ -73,7 +75,7 @@ class LinearLMEProblem(LMEProblem):
                  seed: int = None,
                  return_true_parameters: bool = True,
                  **kwargs
-                 ) -> Tuple[Any, Optional[dict]]:
+                 ):
         """
         Generates a random mixed-effects problem with given parameters
 
@@ -173,14 +175,15 @@ class LinearLMEProblem(LMEProblem):
         order_of_objects = []
         start = 0
         for i, size in enumerate(study_sizes):
+            # TODO: fix (re-figure out) covariance for intercept
             features = np.random.multivariate_normal(np.zeros(num_fixed_effects), features_covariance_matrix, size)
             features[:, 0] = 1  # the first feature is always the intercept
             order_of_objects += list(range(start, start + size))
             start += size
             random_features = np.random.multivariate_normal(np.zeros(num_random_effects),
                                                             random_features_covariance_matrix, size)
-            random_features[:, 0] = 1
-            random_features[:, :num_both_fixed_and_random_effects] = features[:, both_fixed_and_random_effects]
+            if num_both_fixed_and_random_effects > 0:
+                random_features[:, :num_both_fixed_and_random_effects] = features[:, both_fixed_and_random_effects]
 
             if true_random_effects is not None:
                 random_effects = true_random_effects[i]
@@ -223,14 +226,16 @@ class LinearLMEProblem(LMEProblem):
             return LinearLMEProblem(**data), None
 
     @staticmethod
-    def from_x_y(x: np.ndarray, y: Optional[np.ndarray] = None, columns_labels: List[int] = None,
-                 random_intercept: bool = True, **kwargs):
+    def from_x_y(x: np.ndarray,
+                 y: Optional[np.ndarray] = None,
+                 columns_labels: List[int] = None,
+                 random_intercept: bool = True,
+                 **kwargs):
         """
         Transforms matrices x (data) and y(answers) into an instance of LinearLMEProblem
 
         Parameters
         ----------
-        random_intercept
         x: array-like, shape = [m,n]
             Data.
         y: array-like, shape = [m]
@@ -239,6 +244,8 @@ class LinearLMEProblem(LMEProblem):
             A list of column labels which can be 0 (group labels), 1 (fixed effect), 2 (random effect),
              3 (both fixed and random), or 4 (observation standard deviance). There should be only one 0 in the list.
              If it's None then it's assumed that it is the first row of x.
+        random_intercept: bool, default = True
+            Whether to treat the intercept as a random feature.
         kwargs:
             It's not used now, but it's left here for future.
 
@@ -310,7 +317,7 @@ class LinearLMEProblem(LMEProblem):
         untitled_data = np.zeros((all_features.shape[0], len(self.column_labels)-1))
 
         fixed_effects_counter = 1
-        random_intercept = self.column_labels[0]
+        random_intercept = self.column_labels[0] == 3
         if random_intercept:
             random_effects_counter = 1
         else:
