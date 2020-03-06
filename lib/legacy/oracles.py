@@ -28,7 +28,8 @@ class LinearLMEOracle:
             self.xTomegas_invY = []
             self.xTomegas_invX = []
             for x, y, z, l in self.problem:
-                omega_inv = np.linalg.inv(z.dot(np.diag(gamma)).dot(z.T) + l)
+                l_mat = np.diag(l)
+                omega_inv = np.linalg.inv(z.dot(np.diag(gamma)).dot(z.T) + l_mat)
                 zTomega = z.T.dot(omega_inv)
                 zTomegaZ = zTomega.dot(z)
                 self.omegas_inv.append(omega_inv)
@@ -64,7 +65,7 @@ class LinearLMEOracle:
         problem = self.problem
         if self.mode == 'naive':
             for x, y, z, l in problem:
-                omega = z.dot(gamma_mat).dot(z.T) + l
+                omega = z.dot(gamma_mat).dot(z.T) + np.diag(l)
                 xi = y - x.dot(beta)
                 sign, determinant = np.linalg.slogdet(omega)
                 result += 1 / 2 * xi.T.dot(np.linalg.inv(omega)).dot(xi) + 1 / 2 * sign * determinant
@@ -87,7 +88,7 @@ class LinearLMEOracle:
             for j in range(len(gamma)):
                 result = 0
                 for x, y, z, l in self.problem:
-                    omega_inv = z.dot(gamma_mat).dot(z.T) + l
+                    omega_inv = z.dot(gamma_mat).dot(z.T) + np.diag(l)
                     xi = y - x.dot(beta)
                     z_col = z[:, j]
                     data_part = z_col.T.dot(np.linalg.inv(omega_inv)).dot(xi)
@@ -138,7 +139,7 @@ class LinearLMEOracle:
         if self.mode == 'naive':
             gamma_mat = np.diag(gamma)
             for x, y, z, l in self.problem:
-                omega_i = z.dot(gamma_mat).dot(z.T) + l
+                omega_i = z.dot(gamma_mat).dot(z.T) + np.diag(l)
                 omega += x.T.dot(np.linalg.inv(omega_i)).dot(x)
                 tail += x.T.dot(np.linalg.inv(omega_i)).dot(y)
         elif self.mode == 'fast':
@@ -153,6 +154,7 @@ class LinearLMEOracle:
     def optimal_random_effects(self, beta: np.ndarray, gamma: np.ndarray):
         random_effects = []
         for x, y, z, l in self.problem:
+            l = np.diag(l)
             # This is an ad-hoc to make the matrix gamma invertible even when
             # some \gamma_i are zero. We fix it shortly after.
             # TODO: implement better account for zero gamma (need to del. resp. rows and columns from all the matrices)
@@ -165,14 +167,6 @@ class LinearLMEOracle:
                     u[i] = 0
             random_effects.append(u)
         return np.array(random_effects)
-
-    def predict(self, beta, gamma):
-        us = self.optimal_random_effects(beta, gamma)
-        answers = []
-        for i, (x, _, z, l) in enumerate(self.problem):
-            y = x.dot(beta) + z.dot(us[i])
-            answers.append(y)
-        return answers
 
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
@@ -190,7 +184,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         if self.mode == 'naive':
             gamma_mat = np.diag(gamma)
             for x, y, z, l in self.problem:
-                omega_i = z.dot(gamma_mat).dot(z.T) + l
+                omega_i = z.dot(gamma_mat).dot(z.T) + np.diag(l)
                 L = np.linalg.cholesky(omega_i)
                 #L_inv = invert_upper_triangular(L.T)[0].T
                 #Lx = L_inv.dot(x)
@@ -236,7 +230,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
     def good_lambda_gamma(self, mode="upperbound"):
         if mode == "upperbound":
             return sum([np.linalg.norm(self.problem.random_features[i]) ** 4 / np.max(
-                self.problem.observations_cov_matrices[i] ** 2)
+                self.problem.obs_stds[i] ** 2)
                         for i in range(self.problem.num_studies)])
 
         elif mode == "exact":

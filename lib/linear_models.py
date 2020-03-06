@@ -188,6 +188,13 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 self.logger_.log(**locals())
 
         us = oracle.optimal_random_effects(beta, gamma)
+        per_cluster_coefficients = np.zeros(problem.num_studies, len(problem.coefficients_to_columns_mapping))
+        for i, u in enumerate(us):
+            for j, (idx_beta, idx_u) in enumerate(problem.coefficients_to_columns_mapping):
+                if idx_beta is not None:
+                    per_cluster_coefficients[i, j] += beta[idx_beta]
+                if idx_u is not None:
+                    per_cluster_coefficients[i, j] += u[idx_u]
 
         self.logger_.add('converged', 1)
         self.logger_.add('iterations', iteration)
@@ -198,7 +205,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             "tbeta": tbeta,
             "tgamma": tgamma,
             "random_effects": us,
-            "group_labels": np.copy(problem.group_labels)
+            "group_labels": np.copy(problem.group_labels),
+            "per_cluster_coefficients": per_cluster_coefficients
         }
 
         return self
