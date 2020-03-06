@@ -76,7 +76,7 @@ class TestLinearLMESolver(TestCase):
             # This test is unstable when randomize more parameters #TODO: fix it
             problem, beta, gamma, random_effects, cov_mats = LinearLMEProblem.generate(study_sizes=[20, 30, 50],
                                                                                        obs_std=noise_variance,
-                                                                                       num_features=3,
+                                                                                       num_fixed_effects=3,
                                                                                        gamma=np.array([1, 1]),
                                                                                        seed=random_seed)
             alg = LinearLMESolver(mode='naive')
@@ -109,7 +109,7 @@ class TestLinearLMESolver(TestCase):
 
             problem, beta, gamma, random_effects, cov_mats = LinearLMEProblem.generate(study_sizes=[20, 30, 50],
                                                                                        obs_std=noise_variance,
-                                                                                       num_features=3,
+                                                                                       num_fixed_effects=3,
                                                                                        gamma=np.array([1, 1]),
                                                                                        seed=random_seed)
             alg = LinearLMESolver()

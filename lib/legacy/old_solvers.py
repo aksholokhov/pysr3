@@ -369,7 +369,7 @@ if __name__ == "__main__":
     random_seed = 32
 
     problem, beta, gamma, us, ls = LinearLMEProblem.generate(study_sizes=[100, 100, 100],
-                                                             num_features=8,
+                                                             num_fixed_effects=8,
                                                              num_random_effects=2, obs_std=noise_variance,
                                                              seed=random_seed, return_true_parameters=True)
     alg1 = LinearLMESolver(tol=loss_tol, mode='fast', method='gd')

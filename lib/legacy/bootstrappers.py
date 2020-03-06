@@ -63,7 +63,7 @@ if __name__ == '__main__':
     num_features = np.random.randint(2, min(min(study_sizes), 10))
     num_random_effects = np.random.randint(1, 5)
     problem, beta, gamma, us, errs = LinearLMEProblem.generate(study_sizes, noise_variance,
-                                                               num_features=num_features,
+                                                               num_fixed_effects=num_features,
                                                                num_random_effects=num_random_effects,
                                                                seed=random_seed)
 

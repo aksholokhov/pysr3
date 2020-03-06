@@ -306,7 +306,7 @@ class LMEModelVisualizer:
 if __name__ == '__main__':
     random_seed = 42
     train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(study_sizes=[130, 25, 5],
-                                                                         num_features=6,
+                                                                         num_fixed_effects=6,
                                                                          num_random_effects=3,
                                                                          obs_std=0.1,
                                                                          seed=random_seed)

@@ -5,7 +5,7 @@ import numpy as np
 from numpy import allclose
 
 from lib.problems import LinearLMEProblem
-from lib.oracles import LinearLMEOracle
+from lib.legacy.oracles import LinearLMEOracle
 from lib.solvers import LinearLMESolver
 
 

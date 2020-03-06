@@ -1,4 +1,4 @@
-from lib.oracles import LinearLMEOracleRegularized
+from lib.legacy.oracles import LinearLMEOracleRegularized
 from lib.solvers import LinearLMERegSolver
 
 import numpy as np
