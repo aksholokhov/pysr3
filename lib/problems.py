@@ -16,10 +16,20 @@ class LMEProblem(object):
         pass
 
 
+default_generator_parameters = {
+    "min_elements_per_group": 1,
+    "max_elements_per_group": 1000,
+    "min_groups": 1,
+    "max_groups": 10,
+    "min_features": 1,
+    "max_features": 10,
+}
+
+
 class LinearLMEProblem(LMEProblem):
 
     def __init__(self,
-                 features: List[np.ndarray],
+                 fixed_features: List[np.ndarray],
                  random_features: List[np.ndarray],
                  obs_stds: Union[int, float, np.ndarray],
                  group_labels: np.ndarray,
@@ -28,12 +38,12 @@ class LinearLMEProblem(LMEProblem):
                  answers=None):
         super(LinearLMEProblem, self).__init__()
 
-        self.features = features
+        self.fixed_features = fixed_features
         self.answers = answers
         self.random_features = random_features
         self.obs_stds = obs_stds
 
-        self.study_sizes = [x.shape[0] for x in features]
+        self.study_sizes = [x.shape[0] for x in fixed_features]
         self.num_studies = len(self.study_sizes)
         self.num_obs = sum(self.study_sizes)
         self.group_labels = group_labels
@@ -41,8 +51,7 @@ class LinearLMEProblem(LMEProblem):
         self.order_of_objects = order_of_objects
 
         self.num_random_effects = sum([label in (2, 3) for label in column_labels])
-        self.num_features = sum([label in (1, 3) for label in column_labels])
-
+        self.num_fixed_effects = sum([label in (1, 3) for label in column_labels])
 
     def __iter__(self):
         self.__iteration_pos = 0
@@ -50,180 +59,217 @@ class LinearLMEProblem(LMEProblem):
 
     def __next__(self):
         j = self.__iteration_pos
-        if j < len(self.features):
+        if j < len(self.fixed_features):
             self.__iteration_pos += 1
             if self.answers is None:
                 answers = None
             else:
                 answers = self.answers[j]
-            return self.features[j], answers, self.random_features[j], self.obs_stds[j]
+            return self.fixed_features[j], answers, self.random_features[j], self.obs_stds[j]
         else:
             raise StopIteration
 
     @staticmethod
-    def generate(num_studies: Optional[int] = None,
-                 study_sizes: Optional[List[int]] = None,
-                 num_fixed_effects: Optional[int] = None,
-                 num_random_effects: Optional[int] = None,
-                 both_fixed_and_random_effects: Optional[np.ndarray] = None,
-                 features_covariance_matrix=None,
-                 random_features_covariance_matrix=None,
+    def generate(groups_sizes: Optional[List[Optional[int]]] = None,
+                 features_labels: Optional[List[int]] = None,
+                 random_intercept: bool = False,
+                 features_covariance_matrix: Optional[np.ndarray] = None,
+                 # True parameters:
                  obs_std: Optional[Union[int, float, Sized]] = 0.1,
                  beta: Optional[np.ndarray] = None,
                  gamma: Optional[np.ndarray] = None,
                  true_random_effects: Optional[np.ndarray] = None,
+                 as_x_y=False,
+                 return_true_model_coefficients: bool = True,
                  seed: int = None,
-                 return_true_parameters: bool = True,
-                 **kwargs
+                 generator_params: dict = None,
                  ):
         """
         Generates a random mixed-effects problem with given parameters
 
-        Y_i = X_i*beta + Z*u_i + e_i, where
+        Y_i = X_i*β + Z_i*u_i + 𝜺_i,
 
-        u_i ~ N(0, diag(gamma)),  e_i ~ N(0, diag(obs_std)), and i is from 1 to num_studies.
+        where
+
+        u_i ~ 𝒩(0, diag(𝛄)),
+
+        𝜺_i ~ 𝒩(0, diag(obs_std)
 
         Parameters
         ----------
-        both_fixed_and_random_effects
-        random_features_covariance_matrix
-        features_covariance_matrix
-        num_studies: int
-                number of studies (a.k.a. clusters or groups). Defaults to None,
-                in which case it's generated randomly from U[2, 8).
-        study_sizes: List[int], shape=[num_studies]
-                List of study sizes. Defaults to None,
-                in which case it's generated randomly from U[3, 100)*num_studies.
-        num_fixed_effects: int
-                number of fixed effects (size of beta). Defaults to None, INCLUDES INTERCEPT
-                in which case it's len(beta) if beta != None, otherwise generated randomly from U[2, min(study_sizes)).
-        num_random_effects: int
-                number of random effects (size of gamma). Defaults to None, INCLUDES INTERCEPT
-                in which case it's len(gamma) if gamma != None, otherwise generated randomly from U[2, num_features].
-        obs_std: {float, np.ndarray}, shape = 1 or [num_studies] or [sum(study_sizes)]
-                variance of observation errors
-        beta:
-        gamma:
-        true_random_effects:
-        seed:
-        return_true_parameters:
+        groups_sizes : List, Optional
+            List of groups sizes. If None then generates it from U[1, 1000]^k where k ~ U[1, 10]
+        features_labels : List, Optional
+            List of features labels which define whether a feature is fixed, random, or both:
+                1 -- fixed only,
+                2 -- random only,
+                3 -- both.
+            Does NOT include intercept (it's handled with the random_intercept parameter).
+            If None then generates a random list from U[1, 4]^k where k ~ U[1, 10]
+        random_intercept : bool, default is False
+            True if the intercept is a random parameter as well. Intercept is never a part
+             of the features_covariance_matrix or features_labels.
+        features_covariance_matrix : np.ndarray, Optional, Symmetric and PSD
+            Covariance matrix of the features from features labels (columns from the dataset to be generated).
+            If None then defaults to the identity matrix, in which case all features are independent.
+        obs_std : float or np.ndarray
+            Standard deviations of measurement errors. Can be:
+                -- float -- in this case all errors for all groups have the same standard deviation.
+                -- np.array of length equal to the number of groups. In this case each group has its own standard
+                 deviation of the measurement errors, and it is the same for all objects within a group.
+                -- np.array of length equal to the number of objects in all groups cumulatively. In this case
+                 every object has its own standard deviation.
+            Raise ValueError if obs_std has some other length then above.
+        beta : np.ndarray
+            True vector of fixed effects. Should be equal to the number of fixed features in the features_labels
+            plus one (intercept).
+            If None then it's generated randomly from U[0, 1]^k where k is the number of fixed features plus intercept.
+        gamma : np.ndarray
+            True vector of random effects. Should be equal to the number of random features in the features_labels
+            plus one if random_intercept is True.
+            If None then it's generated randomly from U[0, 1]^k where k is the number of random effects plus (maybe)
+            intercept.
+        true_random_effects: np.ndarray
+            True random effects. Should be of a shape=(m, k) where m is the length of gamma, k is the number of groups.
+            If None then generated according to the model: u_i ~ 𝒩(0, diag(𝛄)).
+        as_x_y : bool, default is False
+            If True, returns the data in the form of tuple of matrices (X, y). Otherwise returns an instance
+            of the respective class.
+        return_true_model_coefficients : bool, default is True
+            If True, the second return argument is a dict with true model coefficients: beta, gamma, random effects and
+            true values of measurements errors, otherwise returns None.
+        seed : int, default is None
+            If given, initializes the global Numpy random generator with this seed.
+        generator_params : dict
+            Dictionary with the parameters of the problem generator. If None then the default one is used (see at the
+            beginning of this file).
 
         Returns
         -------
         problem:
                 Generated problem
-
         """
+
+        if generator_params is None:
+            generator_params = default_generator_parameters
+
         if seed is not None:
             np.random.seed(seed)
 
-        if num_studies is None:
-            if study_sizes is None:
-                num_studies = np.random.randint(2, 8)
+        if groups_sizes is None:
+            num_groups = np.random.randint(generator_params["min_groups"], generator_params["max_groups"])
+            groups_sizes = np.random.randint(generator_params["min_elements_per_group"],
+                                             generator_params["max_elements_per_group"],
+                                             num_groups)
+        else:
+            num_groups = len(groups_sizes)
+            for i, group_size in enumerate(groups_sizes):
+                if group_size is None:
+                    groups_sizes[i] = np.random.randint(generator_params["min_elements_per_group"],
+                                                        generator_params["max_elements_per_group"])
+
+        if features_labels is None:
+            if features_covariance_matrix is not None:
+                len_features_labels = features_covariance_matrix.shape[0]
             else:
-                num_studies = len(study_sizes)
+                len_features_labels = np.random.randint(generator_params["min_features"],
+                                                        generator_params["max_features"])
+            features_labels = np.random.randint(1, 4, len_features_labels).tolist()
 
-        if study_sizes is None:
-            study_sizes = np.random.randint(3, 100, num_studies)
+        # We add the intercept manually since it is not mentioned in features_labels
+        num_effects = len(features_labels) + 1
+        fixed_effects_idx = np.array([0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 3)])
+        random_effects_idx = np.array(([0] if random_intercept else [])
+                                      + [i + 1
+                                         for i, label in enumerate(features_labels) if label in (2, 3)])
 
-        num_studies = len(study_sizes)
+        num_fixed_effects = len(fixed_effects_idx)
+        num_random_effects = len(random_effects_idx)
 
-        if beta is None and num_fixed_effects is not None:
-            beta = np.random.rand(num_fixed_effects)
-        elif beta is not None and num_fixed_effects is None:
-            num_fixed_effects = beta.size
-        elif beta is None and num_fixed_effects is None:
-            num_fixed_effects = np.random.randint(2, min(study_sizes))
+        if beta is None:
             beta = np.random.rand(num_fixed_effects)
         else:
-            assert len(beta) == num_fixed_effects, "len(beta) and num_features don't match"
-
-        if gamma is None and num_random_effects is not None:
+            assert beta.shape[0] == num_fixed_effects, \
+                "beta has the size %d, but the number of fixed effects, including intercept, is %s" % (beta.shape[0],
+                                                                                                       num_fixed_effects
+                                                                                                       )
+        if gamma is None:
             gamma = np.random.rand(num_random_effects)
-        elif gamma is not None and num_random_effects is None:
-            num_random_effects = gamma.size
-        elif gamma is None and num_random_effects is None:
-            num_random_effects = np.random.randint(2, num_fixed_effects + 1)
-            gamma = np.random.rand(num_random_effects) + 0.1  # same
         else:
-            assert len(gamma) == num_random_effects, "len(gamma) and num_random_effects don't match"
-
-        if both_fixed_and_random_effects is None:
-            num_both_fixed_and_random_effects = np.random.randint(0, min(num_fixed_effects, num_random_effects))
-            both_fixed_and_random_effects = np.random.randint(0,
-                                                              num_fixed_effects,
-                                                              num_both_fixed_and_random_effects)
-        else:
-            assert np.all(both_fixed_and_random_effects[:-1] <= both_fixed_and_random_effects[1:]), \
-                "both_fixed_and_random_effects should be strictly ascending"
-            num_both_fixed_and_random_effects = len(both_fixed_and_random_effects)
+            assert gamma.shape[0] == num_random_effects, \
+                "gamma has the size %d, but the number of random effects, including intercept, is %s" % (
+                    gamma.shape[0],
+                    num_random_effects
+                )
 
         data = {
-            'features': [],
+            'fixed_features': [],
             'random_features': [],
             'answers': [],
             'obs_stds': [],
         }
 
         if features_covariance_matrix is None:
-            features_covariance_matrix = np.eye(num_fixed_effects)
-        if random_features_covariance_matrix is None:
-            random_features_covariance_matrix = np.eye(num_random_effects)
+            features_covariance_matrix = np.eye(num_effects)
+        else:
+            assert features_covariance_matrix.shape[0] == num_effects == features_covariance_matrix.shape[1], \
+                "features_covariance_matrix should be n*n where n is length of features_labels"
 
         random_effects_list = []
         errors_list = []
         order_of_objects = []
         start = 0
-        for i, size in enumerate(study_sizes):
-            # TODO: fix (re-figure out) covariance for intercept
-            features = np.random.multivariate_normal(np.zeros(num_fixed_effects), features_covariance_matrix, size)
-            features[:, 0] = 1  # the first feature is always the intercept
+        for i, size in enumerate(groups_sizes):
+            all_features = np.random.multivariate_normal(np.zeros(num_effects), features_covariance_matrix, size)
+            # the first feature is always the intercept
+            all_features = np.concatenate((np.ones((size, 1)), all_features), axis=1)
+            fixed_features = all_features[:, fixed_effects_idx]
+            random_features = all_features[:, random_effects_idx]
             order_of_objects += list(range(start, start + size))
             start += size
-            random_features = np.random.multivariate_normal(np.zeros(num_random_effects),
-                                                            random_features_covariance_matrix, size)
-            if num_both_fixed_and_random_effects > 0:
-                random_features[:, :num_both_fixed_and_random_effects] = features[:, both_fixed_and_random_effects]
 
             if true_random_effects is not None:
                 random_effects = true_random_effects[i]
             else:
                 random_effects = np.random.multivariate_normal(np.zeros(num_random_effects), np.diag(gamma))
-            if isinstance(obs_std, list) and len(obs_std) == num_studies:
-                std = obs_std[i]
+
+            if isinstance(obs_std, np.ndarray):
+                if obs_std.shape[0] == sum(groups_sizes):
+                    std = obs_std[start:size]
+                elif obs_std.shape[0] == num_groups:
+                    std = obs_std[i]
+                else:
+                    raise ValueError("len(obs_std) should be either num_groups or sum(groups_sizes)")
             elif isinstance(obs_std, (float, int)):
                 std = obs_std
             else:
-                raise ValueError("obs_std is not a list or int/float.")
-            errors = np.random.randn(size) * std
-            answers = features.dot(beta) + random_features.dot(random_effects) + errors
+                raise ValueError("obs_std is not an array or int/float.")
 
-            data['features'].append(features)
+            errors = np.random.randn(size) * std
+            answers = fixed_features.dot(beta) + random_features.dot(random_effects) + errors
+
+            data['fixed_features'].append(fixed_features)
             data['random_features'].append(random_features)
             data['answers'].append(answers)
             data['obs_stds'].append(np.ones(size) * std)
             random_effects_list.append(random_effects)
             errors_list.append(errors)
 
-        data['group_labels'] = np.arange(start=0, stop=num_studies, step=1)
+        data['group_labels'] = np.arange(start=0, stop=num_groups, step=1)
         data['order_of_objects'] = np.array(order_of_objects)
-        data['column_labels'] = [0]
-        column_labels = [1]*num_fixed_effects
-        for t in both_fixed_and_random_effects:
-            column_labels[t] = 3
-        column_labels += [2]*(num_random_effects - num_both_fixed_and_random_effects)
-        column_labels = column_labels + [4, 0]
-        data['column_labels'] = column_labels
-        if return_true_parameters:
+        data['column_labels'] = [3 if random_intercept else 1] + features_labels + [4, 0]
+        generated_problem = LinearLMEProblem(**data)
+        generated_problem = generated_problem.to_x_y() if as_x_y else generated_problem
+        if return_true_model_coefficients:
             true_parameters = {
                 "beta": beta,
                 "gamma": gamma,
                 "random_effects": np.array(random_effects_list),
                 "errors": np.array(errors_list)
             }
-            return LinearLMEProblem(**data), true_parameters
+            return generated_problem, true_parameters
         else:
-            return LinearLMEProblem(**data), None
+            return generated_problem, None
 
     @staticmethod
     def from_x_y(x: np.ndarray,
@@ -277,7 +323,7 @@ class LinearLMEProblem(LMEProblem):
         groups_labels = unique_labels(x[:, group_labels_idx])
 
         data = {
-            'features': [],
+            'fixed_features': [],
             'random_features': [],
             'answers': [],
             'obs_stds': [],
@@ -292,7 +338,7 @@ class LinearLMEProblem(LMEProblem):
             features = x[np.ix_(objects_idx, features_idx)]
             # add an intercept column plus real features
             # noinspection PyTypeChecker
-            data['features'].append(np.concatenate((np.ones((features.shape[0], 1)), features), axis=1))
+            data['fixed_features'].append(np.concatenate((np.ones((features.shape[0], 1)), features), axis=1))
             # same for random effects
             random_features = x[np.ix_(objects_idx, random_features_idx)]
             if random_intercept:
@@ -311,10 +357,10 @@ class LinearLMEProblem(LMEProblem):
 
     def to_x_y(self) -> Tuple[np.ndarray, np.ndarray]:
         all_group_labels = np.repeat(self.group_labels, self.study_sizes)
-        all_features = np.concatenate(self.features, axis=0)
+        all_features = np.concatenate(self.fixed_features, axis=0)
         all_random_features = np.concatenate(self.random_features, axis=0)
         all_stds = np.concatenate(self.obs_stds, axis=0)
-        untitled_data = np.zeros((all_features.shape[0], len(self.column_labels)-1))
+        untitled_data = np.zeros((all_features.shape[0], len(self.column_labels) - 1))
 
         fixed_effects_counter = 1
         random_intercept = self.column_labels[0] == 3
@@ -347,8 +393,3 @@ class LinearLMEProblem(LMEProblem):
         else:
             all_answers = None
         return data_with_column_labels, all_answers
-
-
-if __name__ == '__main__':
-    problem = LinearLMEProblem.generate(study_sizes=[10, 30, 50], obs_std=1, num_fixed_effects=3, num_random_effects=2)
-    pass

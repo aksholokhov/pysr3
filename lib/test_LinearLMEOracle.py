@@ -13,11 +13,11 @@ from lib.problems import LinearLMEProblem
 class TestLinearLMEOracle(TestCase):
 
     def test_compare_to_old_oracle(self):
-        num_features = 3
+        num_fixed_effects = 4
         num_random_effects = 2
-        problem, true_parameters = LinearLMEProblem.generate(study_sizes=[4, 5, 10],
-                                                             num_fixed_effects=num_features,
-                                                             num_random_effects=num_random_effects,
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
+                                                             features_labels=[3, 3, 1],
+                                                             random_intercept=False,
                                                              obs_std=0.1,
                                                              seed=42)
         new_oracle = LinearLMEOracle(problem)
@@ -28,7 +28,7 @@ class TestLinearLMEOracle(TestCase):
         # tolerances should pretty much represent machine precision
         rtol = 1e-8
         atol = 1e-10
-        for random_beta, random_gamma in zip(np.random.rand(trials, num_features),
+        for random_beta, random_gamma in zip(np.random.rand(trials, num_fixed_effects),
                                              np.random.rand(trials, num_random_effects)):
             loss1 = new_oracle.loss(random_beta, random_gamma)
             loss2 = old_oracle.loss(random_beta, random_gamma)
@@ -58,7 +58,8 @@ class TestLinearLMEOracle(TestCase):
         dx = rtol / 1000
         for random_seed in np.random.randint(0, 1000, size=trials):
             np.random.seed(random_seed)
-            problem, true_parameters = LinearLMEProblem.generate(num_random_effects=2,
+            problem, true_parameters = LinearLMEProblem.generate(features_labels=[3, 3],
+                                                                 random_intercept=False,
                                                                  seed=random_seed)
             beta = true_parameters['beta']
             oracle = LinearLMEOracle(problem)
@@ -80,14 +81,14 @@ class TestLinearLMEOracle(TestCase):
     def test_hessian_gamma(self):
         trials = 100
         random_seed = 34
-        r = 1e-5
+        r = 1e-6
         rtol = 1e-5
         atol = 1e-7
         problem, true_parameters = LinearLMEProblem.generate(seed=random_seed)
         oracle = LinearLMEOracle(problem)
         np.random.seed(random_seed)
         for j in range(trials):
-            beta = np.random.rand(problem.num_features)
+            beta = np.random.rand(problem.num_fixed_effects)
             gamma = np.random.rand(problem.num_random_effects)
             dg = np.random.rand(problem.num_random_effects)
             hess = oracle.hessian_gamma(beta, gamma)
@@ -95,6 +96,7 @@ class TestLinearLMEOracle(TestCase):
             true_dir = (oracle.gradient_gamma(beta, gamma + r * dg)
                         - oracle.gradient_gamma(beta, gamma - r * dg)
                         ) / (2 * r)
+
             self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol), msg="Hessian does not look right")
 
     # # We exclude this test because it does not make sense to test beta ang random_effects separately (when X = Z they
@@ -119,13 +121,10 @@ class TestLinearLMEOracle(TestCase):
     #                                msg="Optimal beta is not right for a random problem with seed=%d" % random_seed)
 
     def test_no_data_problem(self):
-        num_features = 1
-        num_random_effects = 1
         random_seed = 43
-        problem, true_parameters = LinearLMEProblem.generate(study_sizes=[10, 10, 10],
-                                                             num_fixed_effects=num_features,
-                                                             num_random_effects=num_random_effects,
-                                                             both_fixed_and_random_effects=np.array([0]),
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[10, 10, 10],
+                                                             features_labels=[],
+                                                             random_intercept=True,
                                                              seed=random_seed)
         beta = true_parameters['beta']
         gamma = true_parameters['gamma']

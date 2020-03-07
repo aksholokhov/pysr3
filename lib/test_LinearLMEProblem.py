@@ -7,45 +7,22 @@ from lib.problems import LinearLMEProblem
 
 class TestLinearLMEProblem(unittest.TestCase):
     def test_creation_and_from_to_x_y(self):
-        problem, true_parameters = LinearLMEProblem.generate(study_sizes=[4, 5, 10],
-                                                             num_fixed_effects=3,
-                                                             num_random_effects=3,
-                                                             both_fixed_and_random_effects=np.array([0, 1]),
-                                                             features_covariance_matrix=np.array([
-                                                                 [1, 0, 0],
-                                                                 [0, 1, 0.7],
-                                                                 [0, 0.7, 1]
-                                                             ]),
-                                                             random_features_covariance_matrix=np.array([
-                                                                 [1, 0.8, 0],
-                                                                 [0.8, 1, 0],
-                                                                 [0, 0, 1]
-                                                             ]),
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
+                                                             features_labels=[3, 3, 1, 2],
+                                                             random_intercept=True,
                                                              obs_std=0.1,
                                                              seed=42)
         x1, y1 = problem.to_x_y()
         problem2, _ = LinearLMEProblem.from_x_y(x1, y1)
         x2, y2 = problem2.to_x_y()
         self.assertTrue(np.all(x1 == x2) and np.all(y1 == y2))
-        test_problem, true_test_parameters = LinearLMEProblem.generate(study_sizes=[3, 4, 5],
+        test_problem, true_test_parameters = LinearLMEProblem.generate(groups_sizes=[3, 4, 5],
+                                                                       features_labels=[3, 3, 1, 2],
+                                                                       random_intercept=True,
                                                                        beta=true_parameters["beta"],
                                                                        gamma=true_parameters["gamma"],
-                                                                       both_fixed_and_random_effects=np.array([0, 1]),
                                                                        true_random_effects=true_parameters[
-                                                                           "random_effects"
-                                                                       ],
-                                                                       features_covariance_matrix=np.array([
-                                                                           [1, 0, 0],
-                                                                           [0, 1, 0.7],
-                                                                           [0, 0.7, 1]
-                                                                       ]),
-                                                                       random_features_covariance_matrix=np.array(
-                                                                           [
-                                                                               [1, 0.8, 0],
-                                                                               [0.8, 1, 0],
-                                                                               [0, 0, 1]
-                                                                           ]
-                                                                       ),
+                                                                           "random_effects"],
                                                                        obs_std=0.1,
                                                                        seed=43)
 
@@ -56,12 +33,10 @@ class TestLinearLMEProblem(unittest.TestCase):
                         )
 
     def test_creation_from_no_data(self):
-        problem, true_parameters = LinearLMEProblem.generate(study_sizes=[4, 5, 10],
-                                                             num_fixed_effects=1,
-                                                             num_random_effects=1,
-                                                             both_fixed_and_random_effects=np.array([0]),
-                                                             obs_std=0.1,
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
+                                                             features_labels=[],
                                                              random_intercept=True,
+                                                             obs_std=0.1,
                                                              seed=42)
 
         self.assertEqual(len(true_parameters["beta"]), 1, "Beta should be of len = 1 for no-data problem")

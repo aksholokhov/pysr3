@@ -35,7 +35,7 @@ class LinearLMEOracle:
         self.omega_cholesky_inv = []
         self.omega_cholesky = []
         self.gamma = None
-        beta_to_gamma_map = np.zeros(self.problem.num_features)
+        beta_to_gamma_map = np.zeros(self.problem.num_fixed_effects)
         beta_counter = 0
         gamma_counter = 0
         for label in self.problem.column_labels:
@@ -321,7 +321,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             Vector of optimal estimates of the fixed effects for given gamma.
         """
         kernel, tail = super().optimal_beta(gamma, _dont_solve_wrt_beta=True, **kwargs)
-        return np.linalg.solve(self.lb * np.eye(self.problem.num_features) + kernel, self.lb * tbeta + tail)
+        return np.linalg.solve(self.lb * np.eye(self.problem.num_fixed_effects) + kernel, self.lb * tbeta + tail)
 
     @staticmethod
     def _take_only_k_max(x: np.ndarray, k: int, **kwargs):

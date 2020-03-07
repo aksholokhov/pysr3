@@ -344,7 +344,7 @@ def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=
             None if all the checks are passed, otherwise raises an exception
     """
 
-    num_features = problem.num_features
+    num_features = problem.num_fixed_effects
     num_random_effects = problem.num_random_effects
     if beta is not None:
         if tbeta is not None:
