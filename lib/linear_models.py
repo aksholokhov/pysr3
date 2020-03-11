@@ -7,8 +7,10 @@ from sklearn.utils.validation import check_consistent_length, check_is_fitted
 from lib.problems import LinearLMEProblem
 from lib.new_oracles import LinearLMEOracleRegularized
 from lib.logger import Logger
+from lib.helpers import get_per_group_coefficients
 
 from lib.legacy.oracles import LinearLMEOracleRegularized as OldOracle
+
 
 class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     """
@@ -155,7 +157,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                             nnz_tbeta=self.nnz_tbeta,
                                             nnz_tgamma=self.nnz_tgamma
                                             )
-        num_fixed_effects = problem.num_features
+        num_fixed_effects = problem.num_fixed_effects
         num_random_effects = problem.num_random_effects
         assert num_fixed_effects >= self.nnz_tbeta
         assert num_random_effects >= self.nnz_tgamma
@@ -194,15 +196,14 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             us = oracle.optimal_random_effects(beta, gamma)
             gamma = np.sum(us ** 2, axis=0) / oracle.problem.num_studies
 
-        def projected_gradient(current_gamma, current_gradient_gamma):
-            proj_gradient = current_gradient_gamma.copy()
+        def projected_direction(current_gamma, current_direction):
+            proj_direction = current_direction.copy()
             for j, _ in enumerate(current_gamma):
-                if current_gamma[j] == 0 and current_gradient_gamma[j] <= 0:
-                    proj_gradient[j] = 0
-            return proj_gradient
+                if current_gamma[j] == 0 and current_direction[j] <= 0:
+                    proj_direction[j] = 0
+            return proj_direction
 
         loss = oracle.loss(beta, gamma, tbeta, tgamma)
-        gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
         self.logger_ = Logger(self.logger_keys)
 
         prev_tbeta = np.infty
@@ -228,12 +229,13 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
             if self.solver == 'pgd':
                 inner_iteration = 0
-                while (np.linalg.norm(projected_gradient(gamma, gradient_gamma)) > self.tol_inner
+                gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
+                while (np.linalg.norm(projected_direction(gamma, -gradient_gamma)) > self.tol_inner
                        and inner_iteration < self.n_iter_inner):
                     beta = oracle.optimal_beta(gamma, tbeta)
                     gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
                     # projecting the gradient to the set of constraints
-                    direction = -projected_gradient(gamma, gradient_gamma)
+                    direction = projected_direction(gamma, -gradient_gamma)
                     if self.use_line_search:
                         # line search method
                         step_len = 0.1
@@ -263,26 +265,10 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 self.logger_.log(locals())
 
         us = oracle.optimal_random_effects(beta, gamma)
+        sparse_us = oracle.optimal_random_effects(tbeta, tgamma)
 
-        per_cluster_coefficients = np.zeros((problem.num_studies, len(problem.column_labels)))
-
-        for i, u in enumerate(us):
-            fixed_effects_counter = 0
-            random_effects_counter = 0
-
-            for j, label in enumerate(problem.column_labels):
-                if label == 1:
-                    per_cluster_coefficients[i, j] = beta[fixed_effects_counter]
-                    fixed_effects_counter += 1
-                elif label == 2:
-                    per_cluster_coefficients[i, j] = u[random_effects_counter]
-                    random_effects_counter += 1
-                elif label == 3:
-                    per_cluster_coefficients[i, j] = beta[fixed_effects_counter] + u[random_effects_counter]
-                    fixed_effects_counter += 1
-                    random_effects_counter += 1
-                else:
-                    continue
+        per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
+        sparse_per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
         self.logger_.add('iterations', iteration)
@@ -293,15 +279,17 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             "tbeta": tbeta,
             "tgamma": tgamma,
             "random_effects": us,
+            "sparse_random_effects": sparse_us,
             "group_labels": np.copy(problem.group_labels),
-            "per_cluster_coefficients": per_cluster_coefficients
+            "per_group_coefficients": per_group_coefficients,
+            "sparse_per_group_coefficients": sparse_per_group_coefficients,
         }
 
         return self
 
-    def predict(self, data):
+    def predict(self, x):
         check_is_fitted(self, 'coef_')
-        problem = LinearLMEProblem.from_x_y(data, y=None)
+        problem, _ = LinearLMEProblem.from_x_y(x, y=None)
         beta = self.coef_['beta']
         us = self.coef_['random_effects']
         group_labels = self.coef_['group_labels']
@@ -312,13 +300,13 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             assert len(idx_of_this_label_in_train) <= 1, "Group labels of the classifier contain duplicates."
             if len(idx_of_this_label_in_train) == 1:
                 idx_of_this_label_in_train = idx_of_this_label_in_train[0]
-                y = x.dot(beta) + z.dot(us[idx_of_this_label_in_train])
+                y = x.dot(beta) + z.dot(us[idx_of_this_label_in_train][0])
             else:
                 # If we have not seen this group (so we don't have inferred random effects for this)
                 # then we make a prediction with "expected" (e.g. zero) random effects
                 y = x.dot(beta)
             answers.append(y)
-        return answers
+        return np.concatenate(answers)
 
 
 def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=None):
@@ -336,7 +324,7 @@ def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=
     tbeta : array-like, shape = [n], Optional
         Vector of the sparse set of fixed effects (for regularized models)
     tgamma : array-like, shape = [k], Optional
-        Vector of the sparse set of random effecta (for regularized models)
+        Vector of the sparse set of random effects (for regularized models)
 
     Returns
     -------

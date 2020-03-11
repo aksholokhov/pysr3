@@ -221,7 +221,7 @@ class LinearLMEOracle:
         Returns
         -------
         u : np.ndarray, shape = [m, k]
-            Set of optimal random effects estimtions for given beta and gamma
+            Set of optimal random effects estimations for given beta and gamma
 
         """
 
@@ -343,7 +343,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         """
 
         b = np.zeros(len(x))
-        idx_k_max = x.argsort()[-k:]
+        idx_k_max = np.abs(x).argsort()[-k:]
         b[idx_k_max] = x[idx_k_max]
         return b
 
@@ -460,10 +460,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         tgamma : np.ndarray, shape = [k]
             Minimizer of the loss function w.r.t tgamma with other arguments fixed.
         """
-        # TODO: rewrite it taking features/RE matching into account!
         tgamma = np.zeros(len(gamma))
         idx = tbeta != 0
         idx_gamma = self.beta_to_gamma_map[idx]
-        idx_gamma = idx_gamma[idx_gamma >= 0]
+        idx_gamma = (idx_gamma[idx_gamma >= 0]).astype(int)
         tgamma[idx_gamma] = gamma[idx_gamma]
         return self._take_only_k_max(tgamma, self.j)

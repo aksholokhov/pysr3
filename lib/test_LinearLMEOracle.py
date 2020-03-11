@@ -5,7 +5,7 @@ import numpy as np
 from numpy import allclose
 from scipy.misc import derivative
 
-from lib.new_oracles import LinearLMEOracle
+from lib.new_oracles import LinearLMEOracle, LinearLMEOracleRegularized
 from lib.legacy.oracles import LinearLMEOracle as OldOracle
 from lib.problems import LinearLMEProblem
 
@@ -99,27 +99,6 @@ class TestLinearLMEOracle(TestCase):
 
             self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol), msg="Hessian does not look right")
 
-    # # We exclude this test because it does not make sense to test beta ang random_effects separately (when X = Z they
-    # # are identifiable only in the limit
-    # def test_optimal_beta(self):
-    #     trials = 100
-    #     num_features = 5
-    #     num_random_effects = 3
-    #     for random_seed in np.random.randint(0, 1000, size=trials):
-    #         np.random.seed(random_seed)
-    #         noise_variance = 1e-2
-    #         rtol = 1e-5
-    #         atol = noise_variance
-    #         problem, beta, gamma, us, err = LinearLMEProblem.generate(study_sizes=[50, 50, 50, 50],
-    #                                                                   num_features=num_features,
-    #                                                                   num_random_effects=num_random_effects,
-    #                                                                   seed=random_seed)
-    #         oracle = LinearLMEOracle(problem)
-    #         maybe_beta = oracle.optimal_beta(gamma)
-    #         maybe_us = oracle.optimal_random_effects(maybe_beta, gamma)
-    #         self.assertAlmostEqual(allclose(maybe_beta + maybe_us, beta + us, rtol=rtol, atol=atol),
-    #                                msg="Optimal beta is not right for a random problem with seed=%d" % random_seed)
-
     def test_no_data_problem(self):
         random_seed = 43
         problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[10, 10, 10],
@@ -127,30 +106,73 @@ class TestLinearLMEOracle(TestCase):
                                                              random_intercept=True,
                                                              seed=random_seed)
         beta = true_parameters['beta']
-        gamma = true_parameters['gamma']
         us = true_parameters['random_effects']
+        empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_studies
         rtol = 1e-1
         atol = 1e-1
         oracle = LinearLMEOracle(problem)
 
-        maybe_beta = oracle.optimal_beta(gamma)
-        maybe_us = oracle.optimal_random_effects(maybe_beta, gamma)
+        maybe_beta = oracle.optimal_beta(empirical_gamma)
+        maybe_us = oracle.optimal_random_effects(maybe_beta, empirical_gamma)
         self.assertTrue(allclose(maybe_beta + maybe_us, beta + us, rtol=rtol, atol=atol),
                         msg="No-data-problem is not right")
         return None
 
-    # def test_optimal_random_effects(self):
-    #     trials = 100
-    #     noise_variance = 1e-2
-    #     for random_seed in np.random.randint(0, 1000, size=trials):
-    #         np.random.seed(random_seed)
-    #
-    #         problem, beta, gamma, random_effects, cov_mats = LinearLMEProblem.generate(study_sizes=[20, 30, 50],
-    #                                                                                    obs_std=noise_variance,
-    #                                                                                    seed=random_seed)
-    #         oracle = LinearLMEOracle(problem)
-    #         maybe_random_effects = oracle.optimal_random_effects(beta, gamma)
-    #         self.assertTrue(allclose(random_effects, maybe_random_effects))
+    def test_non_regularized_oracle_is_zero_regularized_oracle(self):
+        num_fixed_effects = 4
+        num_random_effects = 3
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
+                                                             features_labels=[3, 3, 1, 2],
+                                                             random_intercept=False,
+                                                             obs_std=0.1,
+                                                             seed=42)
+        # when both regularization coefficients are zero, these two oracles should be exactly equivalent
+        oracle_non_regularized = LinearLMEOracle(problem)
+        oracle_regularized = LinearLMEOracleRegularized(problem, lg=0, lb=0, nnz_tbeta=1, nnz_tgamma=1)
+        np.random.seed(42)
+        trials = 100
+        rtol = 1e-14
+        atol = 1e-14
+        for random_beta, random_gamma, random_tbeta, random_tgamma in zip(np.random.rand(trials, num_fixed_effects),
+                                                                          np.random.rand(trials, num_random_effects),
+                                                                          np.random.rand(trials, num_fixed_effects),
+                                                                          np.random.rand(trials, num_random_effects),
+                                                                          ):
+            loss1 = oracle_regularized.loss(random_beta, random_gamma, random_tbeta, random_tgamma)
+            loss2 = oracle_non_regularized.loss(random_beta, random_gamma)
+            self.assertAlmostEqual(loss1, loss2, delta=atol,
+                                   msg="Loss of zero-regularized and non-regularized oracles is different")
+            gradient1 = oracle_regularized.gradient_gamma(random_beta, random_gamma, random_tgamma)
+            gradient2 = oracle_non_regularized.gradient_gamma(random_beta, random_gamma)
+            self.assertTrue(allclose(gradient1, gradient2, rtol=rtol, atol=atol),
+                            msg="Gradients w.r.t. gamma of zero-regularized and non-regularized oracles are different")
+            hessian1 = oracle_regularized.hessian_gamma(random_beta, random_gamma)
+            hessian2 = oracle_non_regularized.hessian_gamma(random_beta, random_gamma)
+            self.assertTrue(allclose(hessian1, hessian2, rtol=100 * rtol, atol=100 * atol),
+                            msg="Hessian w.r.t. gamma of zero-regularized and non-regularized oracles are different")
+            beta1 = oracle_regularized.optimal_beta(random_gamma, random_tbeta)
+            beta2 = oracle_non_regularized.optimal_beta(random_gamma)
+            self.assertTrue(allclose(beta1, beta2, rtol=rtol, atol=atol),
+                            msg="Optimal betas of zero-regularized and non-regularized oracles are different")
+            us1 = oracle_regularized.optimal_random_effects(random_beta, random_gamma)
+            us2 = oracle_non_regularized.optimal_random_effects(random_beta, random_gamma)
+            self.assertTrue(allclose(us1, us2, rtol=rtol, atol=atol),
+                            msg="Optimal random effects of zero-regularized and non-regularized oracles is different")
+        return None
+
+    def test_beta_to_gamma_map(self):
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
+                                                             features_labels=[3, 3, 1, 2, 3, 1, 2],
+                                                             random_intercept=False,
+                                                             obs_std=0.1,
+                                                             seed=42)
+        oracle = LinearLMEOracle(problem)
+        true_beta_to_gamma_map = np.array([-1, 0, 1, -1, 3, -1])
+        for e1, e2 in zip(true_beta_to_gamma_map, oracle.beta_to_gamma_map):
+            self.assertEqual(e1, e2, msg="Beta-to-gamma mask is not right: \n %s is not \n %s as should be" % (
+                true_beta_to_gamma_map,
+                oracle.beta_to_gamma_map
+            ))
 
 
 if __name__ == '__main__':

@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y
 
+from lib.helpers import get_per_group_coefficients
+
 
 class LMEProblem(object):
     def __init__(self, **kwargs):
@@ -176,8 +178,7 @@ class LinearLMEProblem(LMEProblem):
                                                         generator_params["max_features"])
             features_labels = np.random.randint(1, 4, len_features_labels).tolist()
 
-        # We add the intercept manually since it is not mentioned in features_labels
-        num_effects = len(features_labels) + 1
+        # We add the intercept manually since it is not mentioned in features_labels.
         fixed_effects_idx = np.array([0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 3)])
         random_effects_idx = np.array(([0] if random_intercept else [])
                                       + [i + 1
@@ -209,10 +210,12 @@ class LinearLMEProblem(LMEProblem):
             'obs_stds': [],
         }
 
+        # features covariance matrix describes covariances only presented in features_labels (meaningful features),
+        # so we exclude the intercept feature when we generate random correlated data.
         if features_covariance_matrix is None:
-            features_covariance_matrix = np.eye(num_effects)
+            features_covariance_matrix = np.eye(len(features_labels))
         else:
-            assert features_covariance_matrix.shape[0] == num_effects == features_covariance_matrix.shape[1], \
+            assert features_covariance_matrix.shape[0] == len(features_labels) == features_covariance_matrix.shape[1], \
                 "features_covariance_matrix should be n*n where n is length of features_labels"
 
         random_effects_list = []
@@ -220,9 +223,17 @@ class LinearLMEProblem(LMEProblem):
         order_of_objects = []
         start = 0
         for i, size in enumerate(groups_sizes):
-            all_features = np.random.multivariate_normal(np.zeros(num_effects), features_covariance_matrix, size)
-            # the first feature is always the intercept
-            all_features = np.concatenate((np.ones((size, 1)), all_features), axis=1)
+            if len(features_labels) > 0:
+                all_features = np.random.multivariate_normal(np.zeros(len(features_labels)),
+                                                             features_covariance_matrix,
+                                                             size)
+                # The first feature is always the intercept. It's a 'fake' feature in a sense that it does not appear
+                # in the dataset when you export it in the form of (X, y).
+                all_features = np.concatenate((np.ones((size, 1)), all_features), axis=1)
+            else:
+                # if we were not provided with any features then the only column in X is the intercept.
+                all_features = np.ones((size, 1))
+
             fixed_features = all_features[:, fixed_effects_idx]
             random_features = all_features[:, random_effects_idx]
             order_of_objects += list(range(start, start + size))
@@ -257,14 +268,22 @@ class LinearLMEProblem(LMEProblem):
 
         data['group_labels'] = np.arange(start=0, stop=num_groups, step=1)
         data['order_of_objects'] = np.array(order_of_objects)
-        data['column_labels'] = [3 if random_intercept else 1] + features_labels + [4, 0]
+        all_columns_labels = [3 if random_intercept else 1] + features_labels + [4, 0]
+        data['column_labels'] = all_columns_labels
         generated_problem = LinearLMEProblem(**data)
         generated_problem = generated_problem.to_x_y() if as_x_y else generated_problem
+
         if return_true_model_coefficients:
+            random_effects = np.array(random_effects_list)
+
+            per_group_coefficients = get_per_group_coefficients(beta,
+                                                                random_effects,
+                                                                labels=np.array(all_columns_labels))
             true_parameters = {
                 "beta": beta,
                 "gamma": gamma,
-                "random_effects": np.array(random_effects_list),
+                "per_group_coefficients": per_group_coefficients,
+                "random_effects": random_effects,
                 "errors": np.array(errors_list)
             }
             return generated_problem, true_parameters
@@ -325,7 +344,7 @@ class LinearLMEProblem(LMEProblem):
         data = {
             'fixed_features': [],
             'random_features': [],
-            'answers': [],
+            'answers': None if y is None else [],
             'obs_stds': [],
             'group_labels': groups_labels,
             'column_labels': np.array([3 if random_intercept else 1] + columns_labels)
