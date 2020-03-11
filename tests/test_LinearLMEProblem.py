@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from lib.problems import LinearLMEProblem
+from problems import LinearLMEProblem
 
 
 class TestLinearLMEProblem(unittest.TestCase):

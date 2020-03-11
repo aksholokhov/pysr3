@@ -5,9 +5,9 @@ import numpy as np
 from numpy import allclose
 from scipy.misc import derivative
 
-from lib.new_oracles import LinearLMEOracle, LinearLMEOracleRegularized
-from lib.legacy.oracles import LinearLMEOracle as OldOracle
-from lib.problems import LinearLMEProblem
+from new_oracles import LinearLMEOracle, LinearLMEOracleRegularized
+from legacy.oracles import LinearLMEOracle as OldOracle
+from problems import LinearLMEProblem
 
 
 class TestLinearLMEOracle(TestCase):

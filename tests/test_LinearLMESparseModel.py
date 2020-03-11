@@ -2,10 +2,9 @@ import unittest
 
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
-from sklearn.utils.estimator_checks import check_estimator
 
-from lib.linear_models import LinearLMESparseModel
-from lib.problems import LinearLMEProblem
+from linear_models import LinearLMESparseModel
+from problems import LinearLMEProblem
 
 
 class TestLinearLMESparseModel(unittest.TestCase):

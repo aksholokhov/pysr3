@@ -4,8 +4,8 @@ from unittest import TestCase
 import numpy as np
 from scipy.misc import derivative
 
-from lib.problems import LinearLMEProblem
-from lib.legacy.old_solvers import LinearLMESolver
+from problems import LinearLMEProblem
+from legacy.old_solvers import LinearLMESolver
 
 
 class TestLinearLMESolver(TestCase):
@@ -65,7 +65,7 @@ class TestLinearLMESolver(TestCase):
                                                                                                   gamma - r * dg)) / (
                                2 * r)
             err = np.linalg.norm(maybe_dir - true_dir)
-            self.assertAlzmostEqual(err, 0, delta=10 * r)
+            self.assertAlmostEqual(err, 0, delta=10 * r)
 
     # TODO: Fix beta and us instability tests
     def test_optimal_beta(self):
@@ -74,7 +74,7 @@ class TestLinearLMESolver(TestCase):
             np.random.seed(random_seed)
             noise_variance = 1e-2
             # This test is unstable when randomize more parameters #TODO: fix it
-            problem, beta, gamma, random_effects, cov_mats = LinearLMEProblem.generate(study_sizes=[20, 30, 50],
+            problem, beta, gamma, random_effects, cov_mats = LinearLMEProblem.generate(groups_sizes=[20, 30, 50],
                                                                                        obs_std=noise_variance,
                                                                                        num_fixed_effects=3,
                                                                                        gamma=np.array([1, 1]),
@@ -107,7 +107,7 @@ class TestLinearLMESolver(TestCase):
         for random_seed in np.random.randint(0, 1000, size=trials):
             np.random.seed(random_seed)
 
-            problem, beta, gamma, random_effects, cov_mats = LinearLMEProblem.generate(study_sizes=[20, 30, 50],
+            problem, beta, gamma, random_effects, cov_mats = LinearLMEProblem.generate(groups_sizes=[20, 30, 50],
                                                                                        obs_std=noise_variance,
                                                                                        num_fixed_effects=3,
                                                                                        gamma=np.array([1, 1]),

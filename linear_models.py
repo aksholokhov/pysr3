@@ -1,15 +1,31 @@
+# This code implements solvers for linear mixed-effects models.
+# Copyright (C) 2020 Aleksei Sholokhov, aksh@uw.edu
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from typing import Set
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
 
-from lib.problems import LinearLMEProblem
-from lib.new_oracles import LinearLMEOracleRegularized
-from lib.logger import Logger
-from lib.helpers import get_per_group_coefficients
+from problems import LinearLMEProblem
+from new_oracles import LinearLMEOracleRegularized
+from logger import Logger
+from helpers import get_per_group_coefficients
 
-from lib.legacy.oracles import LinearLMEOracleRegularized as OldOracle
+from legacy.oracles import LinearLMEOracleRegularized as OldOracle
 
 
 class LinearLMESparseModel(BaseEstimator, RegressorMixin):
@@ -63,8 +79,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Number of iterations for the inner optimization cycle.
 
         use_line_search : bool, default = True
-            Whether to use line search when optimizing w.r.t. 𝛄. If true, it starts from step_len = 1 and cuts it in half
-            until the descent criterion is met. If false, it uses a fixed step size of 1/iteration_number.
+            Whether to use line search when optimizing w.r.t. 𝛄. If true, it starts from step_len = 1 and cuts it
+            in half until the descent criterion is met. If false, it uses a fixed step size of 1/iteration_number.
 
         lb : float
             Regularization coefficient for the tβ-related term, see the loss-function description.

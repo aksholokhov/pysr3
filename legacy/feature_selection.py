@@ -1,5 +1,5 @@
-from lib.legacy.oracles import LinearLMEOracleRegularized
-from lib.solvers import LinearLMERegSolver
+from legacy.oracles import LinearLMEOracleRegularized
+from legacy.solvers import LinearLMERegSolver
 
 import numpy as np
 

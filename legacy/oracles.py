@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.linalg.lapack import get_lapack_funcs
 
-from lib.problems import LinearLMEProblem
+from problems import LinearLMEProblem
 
 
 class LinearLMEOracle:
@@ -199,7 +199,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             tail = np.sum(self.xTomegas_invY, axis=0)
         else:
             raise Exception("Unexpected mode: %s" % self.mode)
-        return np.linalg.solve(self.lb * np.eye(self.problem.num_features) + omega, self.lb * tbeta + tail)
+        return np.linalg.solve(self.lb * np.eye(self.problem.num_fixed_effects) + omega, self.lb * tbeta + tail)
 
     @staticmethod
     def take_only_k_max(a: np.ndarray, k: int):
@@ -245,7 +245,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
         elif mode == "exact_full_hess":
             def minus_max_eig(gamma: np.ndarray):
-                tbeta = np.zeros(self.problem.num_features)
+                tbeta = np.zeros(self.problem.num_fixed_effects)
                 beta = self.optimal_beta_reg(gamma, tbeta)
                 return np.min(np.linalg.eigvals(self.hessian_gamma(beta, gamma)))
 

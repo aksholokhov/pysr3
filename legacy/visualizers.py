@@ -4,9 +4,9 @@ import numpy as np
 from dask.distributed import Client, as_completed
 from matplotlib import pyplot as plt
 
-from lib.legacy.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
-from lib.problems import LinearLMEProblem
-from lib.legacy.old_solvers import LinearLMESolver
+from legacy.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
+from problems import LinearLMEProblem
+from legacy.old_solvers import LinearLMESolver
 
 
 # from deprecated import deprecated
@@ -305,14 +305,14 @@ class LMEModelVisualizer:
 
 if __name__ == '__main__':
     random_seed = 42
-    train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(study_sizes=[130, 25, 5],
+    train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(groups_sizes=[130, 25, 5],
                                                                          num_fixed_effects=6,
                                                                          num_random_effects=3,
                                                                          obs_std=0.1,
                                                                          seed=random_seed)
-    test = LinearLMEProblem.generate(study_sizes=[5, 5, 5], beta=beta, gamma=gamma,
+    test = LinearLMEProblem.generate(groups_sizes=[5, 5, 5], beta=beta, gamma=gamma,
                                      true_random_effects=random_effects,
-                                     seed=random_seed + 1, return_true_parameters=False)
+                                     seed=random_seed + 1, return_true_model_coefficients=False)
     true_parameters = {
         "beta": beta,
         "gamma": gamma,

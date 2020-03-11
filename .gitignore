@@ -1,6 +1,10 @@
 .DS_*
 *pycache*
 *dask*
-*.pdf
 .idea
 .ipynb_checkpoints
+
+dist
+build
+
+*.pdf

@@ -1,8 +1,8 @@
 import numpy as np
-from numpy import log, diag
-from numpy.linalg import inv, det
+from numpy import diag
+from numpy.linalg import inv
 
-from lib.problems import LinearLMEProblem
+from problems import LinearLMEProblem
 
 
 class LinearLMESolver:
@@ -228,7 +228,7 @@ class LinearLMESolver:
             self.test_problem = test
 
         k_gamma = problem.num_random_effects
-        k_beta = problem.num_features
+        k_beta = problem.num_fixed_effects
 
         if gamma0 is None:
             gamma = np.ones(k_gamma)
@@ -362,16 +362,14 @@ class LinearLMESolver:
 
 
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-
     noise_variance = 1e-2
     loss_tol = 1e-5
     random_seed = 32
 
-    problem, beta, gamma, us, ls = LinearLMEProblem.generate(study_sizes=[100, 100, 100],
+    problem, beta, gamma, us, ls = LinearLMEProblem.generate(groups_sizes=[100, 100, 100],
                                                              num_fixed_effects=8,
                                                              num_random_effects=2, obs_std=noise_variance,
-                                                             seed=random_seed, return_true_parameters=True)
+                                                             seed=random_seed, return_true_model_coefficients=True)
     alg1 = LinearLMESolver(tol=loss_tol, mode='fast', method='gd')
     logger_gd = alg1.fit(problem, no_calculations=True)
     gamma0 = np.ones(problem.num_random_effects)

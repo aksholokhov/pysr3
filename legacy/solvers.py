@@ -1,6 +1,6 @@
 import numpy as np
 
-from lib.legacy.oracles import LinearLMEOracle, LinearLMEOracleRegularized
+from legacy.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 
 supported_methods = ('EM', 'GradDescent', 'AccGradDescent', 'NewtonRaphson', 'VariableProjectionNR', "VariableProjectionGD")
 supported_logger_keys = ('loss', 'beta', 'gamma', 'test_loss', 'grad_gamma', 'hess_gamma')
@@ -271,7 +271,7 @@ class LinearLMERegSolver(LinearLMESolver):
 
 if __name__ == '__main__':
 
-    from lib.problems import LinearLMEProblem
+    from problems import LinearLMEProblem
 
     random_seed = 212
     study_sizes = [300, 100, 50]
@@ -296,7 +296,7 @@ if __name__ == '__main__':
     gamma[0] = 0
     gamma[-1] = 0
 
-    train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(study_sizes=study_sizes,
+    train, beta, gamma, random_effects, errs = LinearLMEProblem.generate(groups_sizes=study_sizes,
                                                                          num_fixed_effects=num_features,
                                                                          beta=beta,
                                                                          gamma=gamma,
@@ -307,12 +307,12 @@ if __name__ == '__main__':
 
     empirical_gamma = np.sum(random_effects ** 2, axis=0) / len(study_sizes)
 
-    test = LinearLMEProblem.generate(study_sizes=test_study_sizes, beta=beta, gamma=gamma,
+    test = LinearLMEProblem.generate(groups_sizes=test_study_sizes, beta=beta, gamma=gamma,
                                      how_close_z_to_x=how_close,
                                      true_random_effects=random_effects,
                                      seed=random_seed + 1,
                                      obs_std=obs_std,
-                                     return_true_parameters=False)
+                                     return_true_model_coefficients=False)
     true_parameters = {
         "beta": beta,
         "gamma": gamma,

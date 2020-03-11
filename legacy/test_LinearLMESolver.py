@@ -4,9 +4,9 @@ from unittest import TestCase
 import numpy as np
 from numpy import allclose
 
-from lib.problems import LinearLMEProblem
-from lib.legacy.oracles import LinearLMEOracle
-from lib.solvers import LinearLMESolver
+from problems import LinearLMEProblem
+from legacy.oracles import LinearLMEOracle
+from legacy.solvers import LinearLMESolver
 
 
 def test_convergence_for_method(method="EM", trials=100, noise_variance=1e-2, loss_tol=1e-4, max_iter=1000, rtol=2e-1, atol=1e-1):
