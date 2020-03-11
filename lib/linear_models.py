@@ -259,6 +259,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 prev_tgamma = tgamma
                 tbeta = oracle.optimal_tbeta(beta)
                 tgamma = oracle.optimal_tgamma(tbeta, gamma)
+                iteration += 1
 
             loss = oracle.loss(beta, gamma, tbeta, tgamma)
             if len(self.logger_keys) > 0:

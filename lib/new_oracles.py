@@ -231,7 +231,7 @@ class LinearLMEOracle:
             stds_inv_mat = np.diag(1 / stds)
             # If the variance of R.E. is 0 then the R.E. is 0, so we take it into account separately
             # to keep matrices invertible.
-            mask = gamma != 0
+            mask = np.abs(gamma) > 1e-10
             z_masked = z[:, mask]
             gamma_masked = gamma[mask]
             u_nonzero = np.linalg.solve(np.diag(1 / gamma_masked) + z_masked.T.dot(stds_inv_mat).dot(z_masked),
