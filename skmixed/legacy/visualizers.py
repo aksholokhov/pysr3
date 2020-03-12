@@ -4,9 +4,9 @@ import numpy as np
 from dask.distributed import Client, as_completed
 from matplotlib import pyplot as plt
 
-from legacy.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
-from problems import LinearLMEProblem
-from legacy.old_solvers import LinearLMESolver
+from skmixed.legacy.bootstrappers import NonParLinearLMEBootstrapper, LMEBootstrapper
+from linear_mixed_effects.problems import LinearLMEProblem
+from skmixed.legacy.old_solvers import LinearLMESolver
 
 
 # from deprecated import deprecated

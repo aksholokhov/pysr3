@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
 
-from linear_models import LinearLMESparseModel
-from problems import LinearLMEProblem
+from skmixed.linear_mixed_effects.models import LinearLMESparseModel
+from skmixed.linear_mixed_effects.problems import LinearLMEProblem
 
 
 class TestLinearLMESparseModel(unittest.TestCase):

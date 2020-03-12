@@ -4,8 +4,8 @@ from unittest import TestCase
 import numpy as np
 from scipy.misc import derivative
 
-from problems import LinearLMEProblem
-from legacy.old_solvers import LinearLMESolver
+from linear_mixed_effects.problems import LinearLMEProblem
+from skmixed.legacy.old_solvers import LinearLMESolver
 
 
 class TestLinearLMESolver(TestCase):

@@ -20,12 +20,12 @@ import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
 
-from problems import LinearLMEProblem
-from new_oracles import LinearLMEOracleRegularized
-from logger import Logger
-from helpers import get_per_group_coefficients
+from skmixed.linear_mixed_effects.problems import LinearLMEProblem
+from skmixed.linear_mixed_effects.oracles import LinearLMEOracleRegularized
+from skmixed.logger import Logger
+from skmixed.helpers import get_per_group_coefficients
 
-from legacy.oracles import LinearLMEOracleRegularized as OldOracle
+from skmixed.legacy.oracles import LinearLMEOracleRegularized as OldOracle
 
 
 class LinearLMESparseModel(BaseEstimator, RegressorMixin):

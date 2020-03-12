@@ -21,7 +21,7 @@ import numpy as np
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y
 
-from helpers import get_per_group_coefficients
+from skmixed.helpers import get_per_group_coefficients
 
 
 class LMEProblem(object):

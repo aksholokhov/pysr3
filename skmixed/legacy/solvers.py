@@ -1,6 +1,6 @@
 import numpy as np
 
-from legacy.oracles import LinearLMEOracle, LinearLMEOracleRegularized
+from skmixed.legacy.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 
 supported_methods = ('EM', 'GradDescent', 'AccGradDescent', 'NewtonRaphson', 'VariableProjectionNR', "VariableProjectionGD")
 supported_logger_keys = ('loss', 'beta', 'gamma', 'test_loss', 'grad_gamma', 'hess_gamma')
@@ -271,7 +271,7 @@ class LinearLMERegSolver(LinearLMESolver):
 
 if __name__ == '__main__':
 
-    from problems import LinearLMEProblem
+    from linear_mixed_effects.problems import LinearLMEProblem
 
     random_seed = 212
     study_sizes = [300, 100, 50]

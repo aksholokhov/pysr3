@@ -2,7 +2,7 @@ import numpy as np
 from numpy import diag
 from numpy.linalg import inv
 
-from problems import LinearLMEProblem
+from linear_mixed_effects.problems import LinearLMEProblem
 
 
 class LinearLMESolver:
