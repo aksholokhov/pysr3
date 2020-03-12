@@ -4,7 +4,7 @@
 *.egg-info
 .idea
 .ipynb_checkpoints
-
+skmixed_env
 dist
 build
 
