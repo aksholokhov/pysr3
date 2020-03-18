@@ -5,6 +5,8 @@ Welcome to skmixed's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   Source code docs
+
 
 
 Indices and tables
