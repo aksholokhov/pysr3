@@ -289,7 +289,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         sparse_us = oracle.optimal_random_effects(tbeta, tgamma)
 
         per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
-        sparse_per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
+        sparse_per_group_coefficients = get_per_group_coefficients(tbeta, sparse_us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
         self.logger_.add('iterations', iteration)
