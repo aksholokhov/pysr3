@@ -231,7 +231,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         if mode == "upperbound":
             return sum([np.linalg.norm(self.problem.random_features[i]) ** 4 / np.max(
                 self.problem.obs_stds[i] ** 2)
-                        for i in range(self.problem.num_studies)])
+                        for i in range(self.problem.num_groups)])
 
         elif mode == "exact":
             def minus_max_eig(gamma: np.ndarray):

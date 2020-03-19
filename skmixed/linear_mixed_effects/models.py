@@ -304,11 +304,15 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         return self
 
-    def predict(self, x):
+    def predict(self, x, use_sparse_coefficients=False):
         check_is_fitted(self, 'coef_')
         problem, _ = LinearLMEProblem.from_x_y(x, y=None)
-        beta = self.coef_['beta']
-        us = self.coef_['random_effects']
+        if use_sparse_coefficients:
+            beta = self.coef_['tbeta']
+            us = self.coef_['sparse_random_effects']
+        else:
+            beta = self.coef_['beta']
+            us = self.coef_['random_effects']
         group_labels = self.coef_['group_labels']
         answers = []
         for i, (x, _, z, stds) in enumerate(problem):

@@ -62,9 +62,9 @@ class LinearLMEProblem(LMEProblem):
         self.random_features = random_features
         self.obs_stds = obs_stds
 
-        self.study_sizes = [x.shape[0] for x in fixed_features]
-        self.num_studies = len(self.study_sizes)
-        self.num_obs = sum(self.study_sizes)
+        self.groups_sizes = [x.shape[0] for x in fixed_features]
+        self.num_groups = len(self.groups_sizes)
+        self.num_obs = sum(self.groups_sizes)
         self.group_labels = group_labels
         self.column_labels = column_labels
         self.order_of_objects = order_of_objects
@@ -104,6 +104,7 @@ class LinearLMEProblem(LMEProblem):
                  generator_params: dict = None,
                  ):
         """
+
         Generates a random mixed-effects problem with given parameters
 
         Y_i = X_i*β + Z_i*u_i + 𝜺_i,
@@ -392,7 +393,7 @@ class LinearLMEProblem(LMEProblem):
         return LinearLMEProblem(**data), None
 
     def to_x_y(self) -> Tuple[np.ndarray, np.ndarray]:
-        all_group_labels = np.repeat(self.group_labels, self.study_sizes)
+        all_group_labels = np.repeat(self.group_labels, self.groups_sizes)
         all_features = np.concatenate(self.fixed_features, axis=0)
         all_random_features = np.concatenate(self.random_features, axis=0)
         all_stds = np.concatenate(self.obs_stds, axis=0)
