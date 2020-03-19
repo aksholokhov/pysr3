@@ -107,7 +107,7 @@ class TestLinearLMEOracle(TestCase):
                                                              seed=random_seed)
         beta = true_parameters['beta']
         us = true_parameters['random_effects']
-        empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_studies
+        empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_groups
         rtol = 1e-1
         atol = 1e-1
         oracle = LinearLMEOracle(problem)
