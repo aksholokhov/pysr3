@@ -25,8 +25,6 @@ from skmixed.linear_mixed_effects.oracles import LinearLMEOracleRegularized
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
 
-from skmixed.legacy.oracles import LinearLMEOracleRegularized as OldOracle
-
 
 class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     """
@@ -177,7 +175,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         num_random_effects = problem.num_random_effects
         assert num_fixed_effects >= self.nnz_tbeta
         assert num_random_effects >= self.nnz_tgamma
-        old_oracle = OldOracle(problem, lb=self.lb, lg=self.lg, k=self.nnz_tbeta, j=self.nnz_tgamma)
+        # old_oracle = OldOracle(problem, lb=self.lb, lg=self.lg, k=self.nnz_tbeta, j=self.nnz_tgamma)
 
         if warm_start:
             check_is_fitted(self, 'coef_')
@@ -245,30 +243,36 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
             if self.solver == 'pgd':
                 inner_iteration = 0
+                beta = oracle.optimal_beta(gamma, tbeta)
                 gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
-                while (np.linalg.norm(projected_direction(gamma, -gradient_gamma)) > self.tol_inner
+                direction = projected_direction(gamma, -gradient_gamma)
+                while (np.linalg.norm(direction) > self.tol_inner
                        and inner_iteration < self.n_iter_inner):
-                    beta = oracle.optimal_beta(gamma, tbeta)
-                    gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
+                    # gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
                     # projecting the gradient to the set of constraints
-                    direction = projected_direction(gamma, -gradient_gamma)
+                    # direction = projected_direction(gamma, -gradient_gamma)
                     if self.use_line_search:
                         # line search method
                         step_len = 0.1
                         for i, _ in enumerate(gamma):
                             if direction[i] < 0:
-                                step_len = min(-gamma[i]/direction[i], step_len)
+                                step_len = min(-gamma[i] / direction[i], step_len)
 
                         current_loss = oracle.loss(beta, gamma, tbeta, tgamma)
-                        while oracle.loss(beta, gamma + step_len * direction, tbeta, tgamma) >= current_loss:
+
+                        while (oracle.loss(beta, gamma + step_len * direction, tbeta, tgamma)
+                                >= (1 - np.sign(current_loss) * 1e-5) * current_loss):
                             step_len *= 0.5
                             if step_len <= 1e-15:
                                 break
                     else:
                         # fixed step size
                         step_len = 1 / iteration
+                    if step_len <= 1e-15:
+                        break
                     gamma = gamma + step_len * direction
                     gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
+                    direction = projected_direction(gamma, -gradient_gamma)
                     inner_iteration += 1
 
                 prev_tbeta = tbeta
