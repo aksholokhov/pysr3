@@ -210,7 +210,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         if self.initializer == "EM":
             beta = oracle.optimal_beta(gamma, tbeta)
             us = oracle.optimal_random_effects(beta, gamma)
-            gamma = np.sum(us ** 2, axis=0) / oracle.problem.num_studies
+            gamma = np.sum(us ** 2, axis=0) / oracle.problem.num_groups
 
         def projected_direction(current_gamma, current_direction):
             proj_direction = current_direction.copy()
