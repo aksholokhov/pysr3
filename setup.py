@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="skmixed",
-    version="0.0.5",
+    version="0.0.6",
     author="Aleksei Sholokhov",
     author_email="aksh@uw.edu",
     description="Linear Mixed-Effects Models compatible with SciKit-Learn",

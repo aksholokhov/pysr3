@@ -21,7 +21,7 @@ copyright = '2020, Aleksei Sholokhov'
 author = 'Aleksei Sholokhov'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.5'
+release = '0.0.6'
 
 # -- General configuration ------------------------------------------------
 autoclass_content = "both"  # include both class docstring and __init__

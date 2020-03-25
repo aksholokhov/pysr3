@@ -28,11 +28,34 @@ from skmixed.helpers import get_per_group_coefficients
 
 class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     """
-    Solve regularized sparse Linear Mixed Effects problem with projected gradient descent method:
+    Solve regularized sparse Linear Mixed Effects problem with projected gradient descent method.
 
-    min w.r.t. β, 𝛄, tβ, t𝛄 the loss function
+    The log-likelihood minimization problem which this model solves is::
 
-     ℒr(β, 𝛄, tβ, t𝛄) := ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2
+        min ℋ(β, 𝛄, tβ, t𝛄) w.r.t. all four arguments (β, 𝛄, tβ, t𝛄)
+        s.t. nnz(tbeta) <= nnz_tbeta and nnz(gamma) <= nnz_tgamma where
+
+        ℋ(β, 𝛄, tβ, t𝛄) := ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2
+
+        ℒ(β, 𝛄) = ∑(yi - Xi*β)ᵀΩi^{-1}(yi - Xi*β) + ln(det(Ωi))
+
+        Ωi = Zi*diag(𝛄)Ziᵀ + diag(obs_stds)
+
+    The original statistical model which this loss is based on is::
+
+        Y_i = X_i*β + Z_i*u_i + 𝜺_i,
+
+        where
+
+        u_i ~ 𝒩(0, diag(𝛄)),
+
+        𝛄 ~ 𝒩(t𝛄, 1/lg)
+
+        β ~ 𝒩(tβ, 1/lb)
+
+        𝜺_i ~ 𝒩(0, diag(obs_std)
+
+    See my paper for more details.
     """
 
     def __init__(self,
@@ -49,7 +72,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                  nnz_tgamma: int = 3,
                  logger_keys: Set = ('converged',)):
         """
-        Initializes the model.
+        init: initializes the model.
 
         Parameters
         ----------
@@ -57,18 +80,17 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Tolerance for stopping criterion: ||tβ_{k+1} - tβ_k|| <= tol and ||t𝛄_{k+1} - t𝛄_k|| <= tol.
 
         tol_inner : float
-            Tolerance for inner optimization subroutine (min ℒ w.r.t. 𝛄) stopping criterion:
-            ||projected ∇ℒ|| <= tol_inner
+            Tolerance for inner optimization subroutine (min ℋ w.r.t. 𝛄) stopping criterion:
+            ||projected ∇ℋ|| <= tol_inner
 
         solver : {'pgd'}
             Solver to use in computational routines:
-            - 'pgd' : Projected Gradient Descent
+                - 'pgd' : Projected Gradient Descent
 
         initializer : {None, 'EM'}, Optional
             Whether to use an initializer before starting the main optimization routine:
                 - None : Does not do any special initialization, starts with the given initial point.
                 - 'EM' : Performs one step of a naive EM-algorithm in order to improve the initial point.
-
 
         n_iter : int
             Number of iterations for the outer optimization cycle.
@@ -115,7 +137,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             random_intercept=True,
             **kwargs):
         """
-        Fits a Linear Model with Linear Mixed-Effects to the given data
+        Fits a Linear Model with Linear Mixed-Effects to the given data.
 
         Parameters
         ----------
@@ -126,22 +148,32 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Answers, real-valued array.
 
         columns_labels : np.ndarray
-            List of column labels: 1 -- fixed effect, 2 -- random effect, 3 -- both fixed and random,
-                    0 -- groups labels, 4 -- answers standard deviations. There shall be only one
-                    column of group labels and answers STDs, and overall n columns with fixed effects (1 or 3)
-                    and k columns of random effects (2 or 3).
+            List of column labels. There shall be only one column of group labels and answers STDs,
+            and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
 
-        initial_parameters: dict with possible fields:
-            - 'beta0' : np.ndarray, shape = [n]
-                Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
-            - 'gamma0' : np.ndarray, shape = [k]
-                Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
-            - 'tbeta0' : np.ndarray, shape = [n]
-                Initial estimate of sparse fixed effects. If None then it defaults to an all-zeros vector.
-            - 'tgamma0' : np.ndarray, shape = [k]
-                Initial estimate of sparse random covariances. If None then it defaults to an all-zeros vector.
+            - 1 : int
+                fixed effect
+            - 2 : int
+                random effect
+            - 3 : int
+                both fixed and random,
+            - 0 : int
+                groups labels
+            - 4 : int
+                answers standard deviations
 
-        warm_start : bool, default = False
+        initial_parameters: np.ndarray
+            Dict with possible fields:
+                - 'beta0' : np.ndarray, shape = [n]
+                    Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
+                - 'gamma0' : np.ndarray, shape = [k]
+                    Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
+                - 'tbeta0' : np.ndarray, shape = [n]
+                    Initial estimate of sparse fixed effects. If None then it defaults to an all-zeros vector.
+                - 'tgamma0' : np.ndarray, shape = [k]
+                    Initial estimate of sparse random covariances. If None then it defaults to an all-zeros vector.
+
+        warm_start : bool, default is False
             Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
             Throws NotFittedError if set to True when not fitted.
 
@@ -152,7 +184,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         Returns
         -------
-        self :
+        self : LinearLMESparseModel
             Fitted regression model.
         """
 
@@ -261,7 +293,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                         current_loss = oracle.loss(beta, gamma, tbeta, tgamma)
 
                         while (oracle.loss(beta, gamma + step_len * direction, tbeta, tgamma)
-                                >= (1 - np.sign(current_loss) * 1e-5) * current_loss):
+                               >= (1 - np.sign(current_loss) * 1e-5) * current_loss):
                             step_len *= 0.5
                             if step_len <= 1e-15:
                                 break
@@ -309,14 +341,41 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, x, use_sparse_coefficients=False):
+        """
+        Makes a prediction if .fit(X, y) was called before and throws an error otherwise.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Data matrix. Should have the same format as the data which was used for fitting the model:
+            the number of columns and the columns' labels should be the same. It may contain new groups, in which case
+            the prediction will be formed using the fixed effects only.
+
+        use_sparse_coefficients : bool, default is False
+            If true then uses sparse coefficients, tbeta and tgamma, for making a prediction, otherwise uses
+            beta and gamma.
+
+        Returns
+        -------
+        y : np.ndarray
+            Models predictions.
+        """
         check_is_fitted(self, 'coef_')
         problem, _ = LinearLMEProblem.from_x_y(x, y=None)
+
         if use_sparse_coefficients:
             beta = self.coef_['tbeta']
             us = self.coef_['sparse_random_effects']
         else:
             beta = self.coef_['beta']
             us = self.coef_['random_effects']
+
+        assert problem.num_fixed_effects == beta.shape[0], \
+            "Number of fixed effects is not the same to what it was in the train data."
+
+        assert problem.num_random_effects == us[0].shape[0], \
+            "Number of random effects is not the same to what it was in the train data."
+
         group_labels = self.coef_['group_labels']
         answers = []
         for i, (x, _, z, stds) in enumerate(problem):
@@ -332,6 +391,44 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 y = x.dot(beta)
             answers.append(y)
         return np.concatenate(answers)
+
+    def score(self, x, y, sample_weight=None):
+        """
+        Returns the coefficient of determination R^2 of the prediction.
+
+        The coefficient R^2 is defined as (1 - u/v), where u is the residual sum
+        of squares ((y_true - y_pred) ** 2).sum() and v is the
+        total sum of squares ((y_true - y_true.mean()) ** 2).sum().
+        The best possible score is 1.0 and it can be negative (because the model can be arbitrarily worse).
+        A constant model that always predicts the expected value of y,
+        disregarding the input features, would get a R^2 score of 0.0.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Data matrix. Should have the same format as the data which was used for fitting the model:
+            the number of columns and the columns' labels should be the same. It may contain new groups, in which case
+            the prediction will be formed using the fixed effects only.
+
+        y : np.ndarray
+            Answers, real-valued array.
+
+        sample_weight : array_like, Optional
+            Weights of samples for calculating the R^2 statistics.
+
+        Returns
+        -------
+        r2_score : float
+            R^2 score
+
+        """
+
+        y_pred = self.predict(x)
+        u = ((y - y_pred) ** 2).sum()
+        v = ((y - y.mean()) ** 2).sum()
+        return 1 - u / v
+
+
 
 
 def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=None):

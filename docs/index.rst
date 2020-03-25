@@ -14,6 +14,7 @@ API Summary:
     skmixed.linear_mixed_effects.models.LinearLMESparseModel
     skmixed.linear_mixed_effects.problems.LinearLMEProblem
     skmixed.linear_mixed_effects.oracles.LinearLMEOracle
+    skmixed.linear_mixed_effects.oracles.LinearLMEOracleRegularized
     skmixed.helpers
     skmixed.logger
 

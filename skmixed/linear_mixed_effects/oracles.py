@@ -25,7 +25,10 @@ from skmixed.linear_mixed_effects.problems import LinearLMEProblem
 
 class LinearLMEOracle:
     """
-    Implements Linear Mixed-Effects Model functional for given problem:
+    Implements Linear Mixed-Effects Model functional for given problem.
+
+    The model is::
+
         Y_i = X_i*β + Z_i*u_i + 𝜺_i,
 
         where
@@ -71,6 +74,8 @@ class LinearLMEOracle:
 
     def _recalculate_cholesky(self, gamma: np.ndarray):
         """
+        Recalculates Cholesky factors of all Ω_i's when gamma changes.
+
         Supplementary subroutine which recalculates Cholesky decompositions and their inverses of matrices Ω_i
         when 𝛄 (estimated set of covariances for random effects) changes:
 
@@ -83,7 +88,8 @@ class LinearLMEOracle:
 
         Returns
         -------
-            None : if all the Cholesky factors were updated and stored successfully, otherwise raises and error
+            None :
+                if all the Cholesky factors were updated and stored successfully, otherwise raises and error
         """
 
         if (self.gamma != gamma).any():
@@ -156,7 +162,6 @@ class LinearLMEOracle:
     def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         """
         Returns the Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄).
-        IT'S NOT IMPLEMENTED YET, it just a placeholder which raise an error
 
         Parameters
         ----------
@@ -185,14 +190,17 @@ class LinearLMEOracle:
     def optimal_beta(self, gamma: np.ndarray, _dont_solve_wrt_beta=False, **kwargs):
         """
         Returns beta (vector of estimations of fixed effects) which minimizes loss function for a fixed gamma.
-        It's available almost exclusively in linear models. In general one should use gradient_beta and do iterative
-        minimization instead.
+
+        The algorithm for computing optimal beta is::
 
             kernel = ∑X_i^TΩ_iX_i
 
             tail = ∑X_i^TΩ_iY_i
 
             β = (kernel)^{-1}*tail
+
+        It's available almost exclusively in linear models. In general one should use gradient_beta and do iterative
+        minimization instead.
 
         Parameters
         ----------
@@ -262,7 +270,8 @@ class LinearLMEOracle:
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
     """
-    Implements Regularized Linear Mixed-Effects Model functional for given problem:
+    Implements Regularized Linear Mixed-Effects Model functional for given problem::
+
         Y_i = X_i*β + Z_i*u_i + 𝜺_i,
 
         where
@@ -314,6 +323,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
     def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, **kwargs):
         """
         Returns beta (vector of estimations of fixed effects) which minimizes loss function for a fixed gamma.
+
+        The algorithm for computing optimal beta is::
+
             kernel = ∑X_i^TΩ_iX_i
 
             tail = ∑X_i^TΩ_iY_i
@@ -366,9 +378,10 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
     def optimal_tbeta(self, beta: np.ndarray, **kwargs):
         """
-        Returns tbeta which minimizes the loss function with all other variables fixed. It is a projection of beta
-        on the sparse subspace with no more than k elements, which can be constructed by taking k largest elements from
-        beta and setting the rest to be 0.
+        Returns tbeta which minimizes the loss function with all other variables fixed.
+
+        It is a projection of beta on the sparse subspace with no more than k elements, which can be constructed by
+        taking k largest elements from beta and setting the rest to be 0.
 
         Parameters
         ----------
@@ -458,10 +471,11 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
     def optimal_tgamma(self, tbeta, gamma, **kwargs):
         """
-        Returns tgamma which minimizes the loss function with all other variables fixed. It is a projection of gamma
-        on the sparse subspace with no more than nnz_gamma elements, which can be constructed by taking nnz_gamma
-        largest elements from gamma and setting the rest to be 0. In addition, it preserves that for all the
-        elements where tbeta = 0 it implies that tgamma = 0 as well.
+        Returns tgamma which minimizes the loss function with all other variables fixed.
+
+        It is a projection of gamma on the sparse subspace with no more than nnz_gamma elements,
+        which can be constructed by taking nnz_gamma largest elements from gamma and setting the rest to be 0.
+        In addition, it preserves that for all the elements where tbeta = 0 it implies that tgamma = 0 as well.
 
         Parameters
         ----------

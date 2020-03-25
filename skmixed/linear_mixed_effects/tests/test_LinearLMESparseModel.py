@@ -42,10 +42,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=i)
             model = LinearLMESparseModel(**model_parameters)
 
-            # per_group_coefficients = true_model_parameters["per_group_coefficients"]
-            # us = true_model_parameters['random_effects']
-            # empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_studies
-
             x, y = problem.to_x_y()
             model.fit(x, y)
 
@@ -96,9 +92,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "obs_std": 0.1,
         }
 
-        true_beta = np.array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0])
-        true_gamma = np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0])
-
         model_parameters = {
             # "nnz_tbeta": 4,
             # "nnz_tgamma": 3,
@@ -132,10 +125,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
                                          nnz_tbeta=sum(true_beta),
                                          nnz_tgamma=sum(true_gamma))
 
-            # per_group_coefficients = true_model_parameters["per_group_coefficients"]
-            # us = true_model_parameters['random_effects']
-            # empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_studies
-
             x, y = problem.to_x_y()
             model.fit(x, y)
 
@@ -149,8 +138,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             mse = mean_squared_error(y, y_pred)
 
             coefficients = model.coef_
-            maybe_beta = coefficients["beta"]
-            maybe_gamma = coefficients["gamma"]
             maybe_tbeta = coefficients["tbeta"]
             maybe_tgamma = coefficients["tgamma"]
             fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta != 0)
@@ -184,21 +171,109 @@ class TestLinearLMESparseModel(unittest.TestCase):
                                       random_effects_min_accuracy,
                                       i)
                                )
-
-
-
-            # coefficients = model.coef_
-            # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
-            # maybe_beta = coefficients["beta"]
-            # maybe_us = coefficients["random_effects"]
-            # maybe_gamma = coefficients["gamma"]
-            # maybe_tbeta = coefficients["tbeta"]
-            # maybe_tgamma = coefficients["tgamma"]
-            # maybe_cluster_coefficients = coefficients["per_cluster_coefficients"]
-            # maybe_sparse_cluster_coefficients = coefficients["sparse_per_cluster_coefficients"]
-        # cluster_coefficients = beta + us
-        # maybe_cluster_coefficients = maybe_beta + maybe_us
         return None
+
+    def test_get_set_params(self):
+        problem_parameters = {
+            "groups_sizes": [20, 5, 10, 50],
+            "features_labels": [3, 3, 3],
+            "random_intercept": True,
+            "features_covariance_matrix": np.array([
+                [1, 0, 0],
+                [0, 1, 0.7],
+                [0, 0.7, 1]
+            ]),
+            "obs_std": 0.1,
+        }
+        model_parameters = {
+            "nnz_tbeta": 4,
+            "nnz_tgamma": 4,
+            "lb": 0,  # We expect the coefficient vectors to be dense so we turn regularization off.
+            "lg": 0,  # Same.
+            "initializer": 'EM',
+            "logger_keys": ('converged', 'loss',),
+            "tol": 1e-6,
+            "n_iter": 1000,
+            "tol_inner": 1e-4,
+            "n_iter_inner": 1000,
+        }
+        # Now we want to solve a regularized problem to get two different models
+        model2_parameters = {
+            "nnz_tbeta": 3,
+            "nnz_tgamma": 2,
+            "lb": 20,
+            "lg": 20,
+            "initializer": None,
+            "logger_keys": ('converged',),
+            "tol": 1e-6,
+            "n_iter": 1000,
+            "tol_inner": 1e-4,
+            "n_iter_inner": 1000,
+        }
+        problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=42)
+        x, y = problem.to_x_y()
+
+        model = LinearLMESparseModel(**model_parameters)
+        model.fit(x, y)
+        params = model.get_params()
+        y_pred = model.predict(x)
+
+        model2 = LinearLMESparseModel(**model2_parameters)
+        model2.fit(x, y)
+        params2 = model2.get_params()
+        y_pred2 = model2.predict(x)
+
+        model.set_params(**params2)
+        model.fit(x, y)
+        y_pred_with_other_params = model.predict(x)
+        assert np.equal(y_pred_with_other_params, y_pred2).all(),\
+            "set_params or get_params is not working properly"
+        model2.set_params(**params)
+        model2.fit(x, y)
+        y_pred2_with_other_params = model2.predict(x)
+        assert np.equal(y_pred2_with_other_params, y_pred).all(), \
+            "set_params or get_params is not working properly"
+
+    def test_score_function(self):
+        # this is only a basic test which checks R^2 in two points: nearly perfect prediction and constant prediction.
+
+        problem_parameters = {
+            "groups_sizes": [20, 5, 10, 50],
+            "features_labels": [3, 3, 3],
+            "random_intercept": True,
+            "features_covariance_matrix": np.array([
+                [1, 0, 0],
+                [0, 1, 0.7],
+                [0, 0.7, 1]
+            ]),
+            "obs_std": 0.1,
+        }
+
+        model_parameters = {
+            "nnz_tbeta": 4,
+            "nnz_tgamma": 4,
+            "lb": 0,  # We expect the coefficient vectors to be dense so we turn regularization off.
+            "lg": 0,  # Same.
+            "initializer": 'EM',
+            "logger_keys": ('converged', 'loss',),
+            "tol": 1e-6,
+            "n_iter": 1000,
+            "tol_inner": 1e-4,
+            "n_iter_inner": 1000,
+        }
+
+        problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=42)
+        x, y = problem.to_x_y()
+        model = LinearLMESparseModel(**model_parameters)
+        model.fit(x, y)
+        model.coef_["beta"] = true_model_parameters["beta"]
+        model.coef_["random_effects"] = true_model_parameters["random_effects"]
+        good_score = model.score(x, y)
+        assert good_score > 0.99
+        model.coef_["beta"] = np.zeros(4)
+        model.coef_["random_effects"] = np.zeros((4, 4))
+        bad_score = model.score(x, y)
+        assert abs(bad_score) < 0.1
 
 
 if __name__ == '__main__':

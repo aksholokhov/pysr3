@@ -105,7 +105,7 @@ class LinearLMEProblem(LMEProblem):
                  ):
         """
 
-        Generates a random mixed-effects problem with given parameters
+        Generates a random mixed-effects problem with given parameters.
 
         Y_i = X_i*β + Z_i*u_i + 𝜺_i,
 
@@ -119,47 +119,57 @@ class LinearLMEProblem(LMEProblem):
         ----------
         groups_sizes : List, Optional
             List of groups sizes. If None then generates it from U[1, 1000]^k where k ~ U[1, 10]
+
         features_labels : List, Optional
-            List of features labels which define whether a feature is fixed, random, or both:
-                1 -- fixed only,
-                2 -- random only,
-                3 -- both.
-            Does NOT include intercept (it's handled with the random_intercept parameter).
+            List of features labels which define whether a role of features in the problem: 1 -- fixed only,
+            2 -- random only, 3 -- both. Does NOT include intercept (it's handled with the random_intercept parameter).
             If None then generates a random list from U[1, 4]^k where k ~ U[1, 10]
+
         random_intercept : bool, default is False
             True if the intercept is a random parameter as well. Intercept is never a part
-             of the features_covariance_matrix or features_labels.
+            of the features_covariance_matrix or features_labels.
+
         features_covariance_matrix : np.ndarray, Optional, Symmetric and PSD
             Covariance matrix of the features from features labels (columns from the dataset to be generated).
             If None then defaults to the identity matrix, in which case all features are independent.
+
         obs_std : float or np.ndarray
             Standard deviations of measurement errors. Can be:
-                -- float -- in this case all errors for all groups have the same standard deviation.
-                -- np.array of length equal to the number of groups. In this case each group has its own standard
-                 deviation of the measurement errors, and it is the same for all objects within a group.
-                -- np.array of length equal to the number of objects in all groups cumulatively. In this case
-                 every object has its own standard deviation.
+                - std : float
+                    In this case all errors for all groups have the same standard deviation std.
+                - stds : np.array of length equal to the number of groups
+                    In this case each group has its own standard deviation of the measurement errors, and
+                    it is the same for all objects within a group.
+                - stds : np.array of length equal to the number of objects in all groups cumulatively.
+                    In this case every object has its own standard deviation.
             Raise ValueError if obs_std has some other length then above.
+
         beta : np.ndarray
             True vector of fixed effects. Should be equal to the number of fixed features in the features_labels
             plus one (intercept).
             If None then it's generated randomly from U[0, 1]^k where k is the number of fixed features plus intercept.
+
         gamma : np.ndarray
             True vector of random effects. Should be equal to the number of random features in the features_labels
             plus one if random_intercept is True.
             If None then it's generated randomly from U[0, 1]^k where k is the number of random effects plus (maybe)
             intercept.
+
         true_random_effects: np.ndarray
             True random effects. Should be of a shape=(m, k) where m is the length of gamma, k is the number of groups.
             If None then generated according to the model: u_i ~ 𝒩(0, diag(𝛄)).
+
         as_x_y : bool, default is False
             If True, returns the data in the form of tuple of matrices (X, y). Otherwise returns an instance
             of the respective class.
+
         return_true_model_coefficients : bool, default is True
             If True, the second return argument is a dict with true model coefficients: beta, gamma, random effects and
             true values of measurements errors, otherwise returns None.
+
         seed : int, default is None
             If given, initializes the global Numpy random generator with this seed.
+
         generator_params : dict
             Dictionary with the parameters of the problem generator. If None then the default one is used (see at the
             beginning of this file).
@@ -321,14 +331,18 @@ class LinearLMEProblem(LMEProblem):
         ----------
         x: array-like, shape = [m,n]
             Data.
+
         y: array-like, shape = [m]
             Answers.
+
         columns_labels: List, shape = [n], Optional
             A list of column labels which can be 0 (group labels), 1 (fixed effect), 2 (random effect),
-             3 (both fixed and random), or 4 (observation standard deviance). There should be only one 0 in the list.
-             If it's None then it's assumed that it is the first row of x.
+            3 (both fixed and random), or 4 (observation standard deviance). There should be only one 0 in the list.
+            If it's None then it's assumed that it is the first row of x.
+
         random_intercept: bool, default = True
             Whether to treat the intercept as a random feature.
+
         kwargs:
             It's not used now, but it's left here for future.
 
@@ -393,6 +407,19 @@ class LinearLMEProblem(LMEProblem):
         return LinearLMEProblem(**data), None
 
     def to_x_y(self) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Transforms the problem to the (X, y) form.
+
+        The first row of X is going to be features labels.
+
+        Returns
+        -------
+        X : np.ndarray
+            Features as a matrix
+        y : np.ndarray
+            Answer as a vector
+        """
+
         all_group_labels = np.repeat(self.group_labels, self.groups_sizes)
         all_features = np.concatenate(self.fixed_features, axis=0)
         all_random_features = np.concatenate(self.random_features, axis=0)
