@@ -24,6 +24,8 @@ author = 'Aleksei Sholokhov'
 release = '0.0.6'
 
 # -- General configuration ------------------------------------------------
+master_doc = 'index'
+
 autoclass_content = "both"  # include both class docstring and __init__
 autodoc_default_flags = [
         # Make sure that any autodoc declarations show the right members
