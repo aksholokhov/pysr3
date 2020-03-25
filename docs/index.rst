@@ -1,11 +1,12 @@
 Welcome to skmixed's documentation!
 ===================================
 
+.. automodule:: skmixed.linear_mixed_effects.models
+    :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-   Source code docs
 
 
 
