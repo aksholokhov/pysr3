@@ -83,12 +83,13 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Tolerance for inner optimization subroutine (min ℋ w.r.t. 𝛄) stopping criterion:
             ||projected ∇ℋ|| <= tol_inner
 
-        solver : {'pgd'}
-            Solver to use in computational routines:
+        solver : {'pgd'} Solver to use in computational routines:
+
                 - 'pgd' : Projected Gradient Descent
 
         initializer : {None, 'EM'}, Optional
             Whether to use an initializer before starting the main optimization routine:
+
                 - None : Does not do any special initialization, starts with the given initial point.
                 - 'EM' : Performs one step of a naive EM-algorithm in order to improve the initial point.
 
@@ -151,27 +152,23 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             List of column labels. There shall be only one column of group labels and answers STDs,
             and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
 
-            - 1 : int
-                fixed effect
-            - 2 : int
-                random effect
-            - 3 : int
-                both fixed and random,
-            - 0 : int
-                groups labels
-            - 4 : int
-                answers standard deviations
+                - 1 : fixed effect
+                - 2 : random effect
+                - 3 : both fixed and random,
+                - 0 : groups labels
+                - 4 : answers standard deviations
 
-        initial_parameters: np.ndarray
+        initial_parameters : np.ndarray
             Dict with possible fields:
-                - 'beta0' : np.ndarray, shape = [n]
-                    Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
-                - 'gamma0' : np.ndarray, shape = [k]
-                    Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
-                - 'tbeta0' : np.ndarray, shape = [n]
-                    Initial estimate of sparse fixed effects. If None then it defaults to an all-zeros vector.
-                - 'tgamma0' : np.ndarray, shape = [k]
-                    Initial estimate of sparse random covariances. If None then it defaults to an all-zeros vector.
+
+                -   | 'beta0' : np.ndarray, shape = [n],
+                    | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
+                -   | 'gamma0' : np.ndarray, shape = [k],
+                    | Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
+                -   | 'tbeta0' : np.ndarray, shape = [n],
+                    | Initial estimate of sparse fixed effects. If None then it defaults to an all-zeros vector.
+                -   | 'tgamma0' : np.ndarray, shape = [k],
+                    | Initial estimate of sparse random covariances. If None then it defaults to an all-zeros vector.
 
         warm_start : bool, default is False
             Whether to use previous parameters as initial ones. Overrides initial_parameters if given.

@@ -2,6 +2,9 @@ from typing import Set
 
 
 class Logger:
+    """
+    Helper class for logging the progress of iterative methods.
+    """
     def __init__(self, list_of_keys: Set = ()):
         self.keys = list_of_keys
         self.dict = {key: [] for key in list_of_keys}

@@ -363,7 +363,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             Vector which we take largest elements from.
         k : int
             How many elements we take from x
-        kwargs
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters.
 
         Returns
         -------

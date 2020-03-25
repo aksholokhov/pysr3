@@ -46,6 +46,11 @@ default_generator_parameters = {
 
 
 class LinearLMEProblem(LMEProblem):
+    """
+    Helper class which implements Linear Mixed-Effects models' abstractions over a given dataset.
+
+    It also can generate random problems with specific characteristics.
+    """
 
     def __init__(self,
                  fixed_features: List[np.ndarray],
@@ -107,13 +112,15 @@ class LinearLMEProblem(LMEProblem):
 
         Generates a random mixed-effects problem with given parameters.
 
-        Y_i = X_i*β + Z_i*u_i + 𝜺_i,
+        The model is::
 
-        where
+            Y_i = X_i*β + Z_i*u_i + 𝜺_i,
 
-        u_i ~ 𝒩(0, diag(𝛄)),
+            where
 
-        𝜺_i ~ 𝒩(0, diag(obs_std)
+            u_i ~ 𝒩(0, diag(𝛄)),
+
+            𝜺_i ~ 𝒩(0, diag(obs_std)
 
         Parameters
         ----------
@@ -135,13 +142,13 @@ class LinearLMEProblem(LMEProblem):
 
         obs_std : float or np.ndarray
             Standard deviations of measurement errors. Can be:
-                - std : float
-                    In this case all errors for all groups have the same standard deviation std.
-                - stds : np.array of length equal to the number of groups
-                    In this case each group has its own standard deviation of the measurement errors, and
-                    it is the same for all objects within a group.
-                - stds : np.array of length equal to the number of objects in all groups cumulatively.
-                    In this case every object has its own standard deviation.
+
+                - float : In this case all errors for all groups have the same standard deviation std.
+                -   | np.array of length equal to the number of groups : In this case each group has its own standard
+                    | deviation of the measurement errors, and it is the same for all objects within a group.
+                -   | stds : np.array of length equal to the number of objects in all groups cumulatively.
+                    | In this case every object has its own standard deviation.
+
             Raise ValueError if obs_std has some other length then above.
 
         beta : np.ndarray
