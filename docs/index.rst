@@ -11,10 +11,10 @@ API Summary:
    :nosignatures:
    :toctree: generated/
 
-    skmixed.linear_mixed_effects.models.LinearLMESparseModel
-    skmixed.linear_mixed_effects.problems.LinearLMEProblem
-    skmixed.linear_mixed_effects.oracles.LinearLMEOracle
-    skmixed.linear_mixed_effects.oracles.LinearLMEOracleRegularized
+    skmixed.lme.models.LinearLMESparseModel
+    skmixed.lme.problems.LinearLMEProblem
+    skmixed.lme.oracles.LinearLMEOracle
+    skmixed.lme.oracles.LinearLMEOracleRegularized
     skmixed.helpers
     skmixed.logger
 

@@ -20,8 +20,8 @@ import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
 
-from skmixed.linear_mixed_effects.problems import LinearLMEProblem
-from skmixed.linear_mixed_effects.oracles import LinearLMEOracleRegularized
+from skmixed.lme.problems import LinearLMEProblem
+from skmixed.lme.oracles import LinearLMEOracleRegularized
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
 

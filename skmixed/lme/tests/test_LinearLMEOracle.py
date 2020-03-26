@@ -5,9 +5,9 @@ import numpy as np
 from numpy import allclose
 from scipy.misc import derivative
 
-from skmixed.linear_mixed_effects.oracles import LinearLMEOracle, LinearLMEOracleRegularized
+from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 from skmixed.legacy.oracles import LinearLMEOracle as OldOracle
-from skmixed.linear_mixed_effects.problems import LinearLMEProblem
+from skmixed.lme.problems import LinearLMEProblem
 
 
 class TestLinearLMEOracle(TestCase):

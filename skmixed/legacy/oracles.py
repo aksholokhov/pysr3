@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.linalg.lapack import get_lapack_funcs
 
-from skmixed.linear_mixed_effects.problems import LinearLMEProblem
+from skmixed.lme.problems import LinearLMEProblem
 
 
 class LinearLMEOracle:
