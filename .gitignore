@@ -7,7 +7,6 @@
 skmixed_env
 dist
 build
-docs/generated
 docs/_build
 *.csv
 *.pdf
