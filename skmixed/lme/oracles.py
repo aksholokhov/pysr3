@@ -156,7 +156,7 @@ class LinearLMEOracle:
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             Lz = L_inv.dot(z)
-            grad_gamma += 1/2*np.sum(Lz ** 2, axis=0) - 1/2*Lz.T.dot(L_inv.dot(xi)) ** 2
+            grad_gamma += 1 / 2 * np.sum(Lz ** 2, axis=0) - 1 / 2 * Lz.T.dot(L_inv.dot(xi)) ** 2
         return grad_gamma
 
     def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
@@ -184,8 +184,8 @@ class LinearLMEOracle:
             xi = y - x.dot(beta)
             Lz = L_inv.dot(z)
             Lxi = L_inv.dot(xi).reshape((len(xi), 1))
-            hessian += (-Lz.T.dot(Lz) + 2*(Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (Lz.T.dot(Lz))
-        return 1/2*hessian
+            hessian += (-Lz.T.dot(Lz) + 2 * (Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (Lz.T.dot(Lz))
+        return 1 / 2 * hessian
 
     def optimal_beta(self, gamma: np.ndarray, _dont_solve_wrt_beta=False, **kwargs):
         """
@@ -498,3 +498,47 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         idx_gamma = (idx_gamma[idx_gamma >= 0]).astype(int)
         tgamma[idx_gamma] = gamma[idx_gamma]
         return self._take_only_k_max(tgamma, self.j)
+
+
+class LinearLMEOracleW(LinearLMEOracleRegularized):
+
+    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3):
+        super().__init__(problem, lb, lg, nnz_tbeta, nnz_tgamma)
+
+    def _recalculate_drop_matrices(self, beta, gamma):
+        self._recalculate_cholesky(gamma)
+        self.drop_matrix_beta = np.zeros(self.problem.num_fixed_effects)
+        self.drop_matrix_gamma = np.zeros(self.problem.num_random_effects)
+        for j, ((x, y, z, l), L_inv) in enumerate(zip(self.problem, self.omega_cholesky_inv)):
+            # Calculate drop price for gammas individually
+            xi = y - x.dot(beta)
+            Lxi = L_inv.dot(xi)
+            Lx = L_inv.dot(x)
+            Lz = L_inv.dot(z)
+            h1 = np.sum(Lz ** 2, axis=0)
+            g1 = Lz.T.dot(Lxi) ** 2
+            self.drop_matrix_gamma += -gamma * g1 / (1 - gamma * h1) + np.log(1 + gamma * h1 / (1 - gamma * h1))
+            # Calculate drop price for betas only
+            self.drop_matrix_beta += -2 * beta * Lx.T.dot(Lxi)
+            self.drop_matrix_beta += -beta ** 2 * np.sum(Lx ** 2, axis=0)
+            # Calculate drop price for gammas given dropped betas
+            idx_beta = []
+            idx_gamma = []
+            for i, k in enumerate(self.beta_to_gamma_map):
+                if k >= 0:
+                    idx_beta.append(i)
+                    idx_gamma.append(k)
+            idx_beta = np.array(idx_beta)
+            idx_gamma = np.array(idx_gamma).astype(int)
+            x_s = x[:, idx_beta]
+            beta_s = beta[idx_beta]
+            gamma_s = gamma[idx_gamma]
+            z_s = z[:, idx_gamma]
+            Lz_s = L_inv.dot(z_s)
+            h1_s = np.sum(Lz_s ** 2, axis=0)
+            g2_s = np.sum((Lxi.reshape((len(Lxi), 1)) + L_inv.dot(x_s * beta_s)) * Lz_s, axis=0)
+            self.drop_matrix_beta[idx_beta] += -gamma_s * (g2_s ** 2) / (1 - gamma_s * h1_s) + np.log(1 + gamma_s * h1_s / (1 - gamma_s * h1_s))
+
+        self.drop_matrix_beta /= 2
+        self.drop_matrix_gamma /= 2
+        return None
