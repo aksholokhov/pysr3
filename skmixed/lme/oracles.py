@@ -320,7 +320,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         self.k = nnz_tbeta
         self.j = nnz_tgamma
 
-    def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, **kwargs):
+    def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, _dont_solve_wrt_beta=False, **kwargs):
         """
         Returns beta (vector of estimations of fixed effects) which minimizes loss function for a fixed gamma.
 
@@ -341,6 +341,10 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             Vector of estimates of random effects.
         tbeta : np.ndarray, shape = [n]
             Vector of (nnz_tbeta)-sparse estimates for fixed effects.
+        _dont_solve_wrt_beta : bool, Optional
+            If true, then it does not perform the outer matrix inversion and returns the (kernel, tail) instead.
+            It's left here for the purposes of use in child classes where both the kernel and the tail should be
+            adjusted to account for regularization.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -350,6 +354,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             Vector of optimal estimates of the fixed effects for given gamma.
         """
         kernel, tail = super().optimal_beta(gamma, _dont_solve_wrt_beta=True, **kwargs)
+        if _dont_solve_wrt_beta:
+            return kernel, tail
         return np.linalg.solve(self.lb * np.eye(self.problem.num_fixed_effects) + kernel, self.lb * tbeta + tail)
 
     @staticmethod
@@ -504,11 +510,17 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
 
     def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3):
         super().__init__(problem, lb, lg, nnz_tbeta, nnz_tgamma)
+        self.beta = None
+        self.drop_penalties_beta = None
+        self.drop_penalties_gamma = None
 
     def _recalculate_drop_matrices(self, beta, gamma):
+        if np.all(self.gamma == gamma) and np.all(self.beta == beta):
+            return None
         self._recalculate_cholesky(gamma)
-        self.drop_matrix_beta = np.zeros(self.problem.num_fixed_effects)
-        self.drop_matrix_gamma = np.zeros(self.problem.num_random_effects)
+
+        self.drop_penalties_beta = np.zeros(self.problem.num_fixed_effects)
+        self.drop_penalties_gamma = np.zeros(self.problem.num_random_effects)
         for j, ((x, y, z, l), L_inv) in enumerate(zip(self.problem, self.omega_cholesky_inv)):
             # Calculate drop price for gammas individually
             xi = y - x.dot(beta)
@@ -517,10 +529,10 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
             Lz = L_inv.dot(z)
             h1 = np.sum(Lz ** 2, axis=0)
             g1 = Lz.T.dot(Lxi) ** 2
-            self.drop_matrix_gamma += -gamma * g1 / (1 - gamma * h1) + np.log(1 + gamma * h1 / (1 - gamma * h1))
+            self.drop_penalties_gamma += -gamma * g1 / (1 - gamma * h1) + np.log(1 + gamma * h1 / (1 - gamma * h1))
             # Calculate drop price for betas only
-            self.drop_matrix_beta += -2 * beta * Lx.T.dot(Lxi)
-            self.drop_matrix_beta += -beta ** 2 * np.sum(Lx ** 2, axis=0)
+            self.drop_penalties_beta += -2 * beta * Lx.T.dot(Lxi)
+            self.drop_penalties_beta += -beta ** 2 * np.sum(Lx ** 2, axis=0)
             # Calculate drop price for gammas given dropped betas
             idx_beta = []
             idx_gamma = []
@@ -537,8 +549,60 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
             Lz_s = L_inv.dot(z_s)
             h1_s = np.sum(Lz_s ** 2, axis=0)
             g2_s = np.sum((Lxi.reshape((len(Lxi), 1)) + L_inv.dot(x_s * beta_s)) * Lz_s, axis=0)
-            self.drop_matrix_beta[idx_beta] += -gamma_s * (g2_s ** 2) / (1 - gamma_s * h1_s) + np.log(1 + gamma_s * h1_s / (1 - gamma_s * h1_s))
+            self.drop_penalties_beta[idx_beta] += (-gamma_s * (g2_s ** 2) / (1 - gamma_s * h1_s)
+                                                   + np.log(1 + gamma_s * h1_s / (1 - gamma_s * h1_s)))
 
-        self.drop_matrix_beta /= 2
-        self.drop_matrix_gamma /= 2
+        # we invert the sign and take into account the 1/2 multiplier for the loss function
+        self.drop_penalties_beta /= -2
+        self.drop_penalties_gamma /= -2
+        self.beta = beta
         return None
+
+    def loss(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
+        if self.drop_penalties_beta is None or self.drop_penalties_gamma is None:
+            self._recalculate_drop_matrices(beta, gamma)
+        return (super(LinearLMEOracleRegularized, self).loss(beta, gamma, **kwargs)
+                + self.lb / 2 * sum(self.drop_penalties_beta*(beta - tbeta) ** 2)
+                + self.lg / 2 * sum(self.drop_penalties_gamma*(gamma - tgamma) ** 2))
+
+    def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, beta: np.ndarray = None, **kwargs):
+        if self.drop_penalties_beta is None:
+            if beta is not None:
+                self._recalculate_drop_matrices(beta, gamma)
+            else:
+                raise ValueError("Drop penalties for beta are not initialized")
+
+        kernel, tail = super(LinearLMEOracleRegularized, self).optimal_beta(gamma, _dont_solve_wrt_beta=True, **kwargs)
+        return np.linalg.solve(self.lb * np.diag(self.drop_penalties_beta) + kernel,
+                               self.lb * self.drop_penalties_beta * tbeta + tail)
+
+    def gradient_gamma(self, beta: np.ndarray, gamma: np.ndarray, tgamma: np.ndarray = None, **kwargs) -> np.ndarray:
+        if self.drop_penalties_gamma is None:
+            self._recalculate_drop_matrices(beta, gamma)
+        return (super(LinearLMEOracleRegularized, self).gradient_gamma(beta, gamma, tgamma=tgamma, **kwargs)
+                + self.lg * self.drop_penalties_gamma * (gamma - tgamma))
+
+    def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+        if self.drop_penalties_gamma is None:
+            self._recalculate_drop_matrices(beta, gamma)
+        return super(LinearLMEOracleRegularized, self).hessian_gamma(beta, gamma, **kwargs) + self.lg * np.diag(
+            self.drop_penalties_gamma)
+
+    def optimal_tbeta(self, beta: np.ndarray, gamma: np.ndarray = None, **kwargs):
+        self._recalculate_drop_matrices(beta, gamma)
+        tbeta = np.zeros(len(beta))
+        idx_k_max = np.abs(self.drop_penalties_beta*beta).argsort()[-self.k:]
+        tbeta[idx_k_max] = beta[idx_k_max]
+        return tbeta
+
+    def optimal_tgamma(self, tbeta, gamma, beta: np.ndarray = None, **kwargs):
+        self._recalculate_drop_matrices(beta, gamma)
+        tgamma = np.zeros(len(gamma))
+        idx = tbeta != 0
+        idx_gamma = self.beta_to_gamma_map[idx]
+        idx_gamma = (idx_gamma[idx_gamma >= 0]).astype(int)
+        tgamma[idx_gamma] = gamma[idx_gamma]
+        idx_k_max = np.abs(self.drop_penalties_gamma * tgamma).argsort()[-self.j:]
+        tgamma2 = np.zeros(len(gamma))
+        tgamma2[idx_k_max] = tgamma[idx_k_max]
+        return tgamma2

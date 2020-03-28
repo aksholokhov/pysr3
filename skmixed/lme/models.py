@@ -21,7 +21,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
 
 from skmixed.lme.problems import LinearLMEProblem
-from skmixed.lme.oracles import LinearLMEOracleRegularized
+from skmixed.lme.oracles import LinearLMEOracleRegularized, LinearLMEOracleW
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
 
@@ -68,6 +68,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                  use_line_search: bool = True,
                  lb: float = 1,
                  lg: float = 1,
+                 regularization_type: str = "l2",
                  nnz_tbeta: int = 3,
                  nnz_tgamma: int = 3,
                  logger_keys: Set = ('converged',)):
@@ -109,6 +110,12 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         lg : float
             Regularization coefficient for the t𝛄-related term, see the loss-function description.
 
+        regularization_type : str, one of {"l2", "loss-weighted"}, default = "l2"
+            Type of norm in the regularization terms. Options are:
+
+                - 'l2' : Euclidean norm.
+                - 'loss-weighted' : A weighted norm designed so to drop the least important coefficients.
+
         nnz_tbeta : int,
             How many non-zero coefficients are allowed in tβ.
 
@@ -128,6 +135,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         self.nnz_tbeta = nnz_tbeta
         self.nnz_tgamma = nnz_tgamma
         self.logger_keys = logger_keys
+        self.regularization_type = regularization_type
 
     def fit(self,
             x: np.ndarray,
@@ -194,12 +202,23 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         tgamma0 = initial_parameters.get("tgamma", None)
         _check_input_consistency(problem, beta0, gamma0, tbeta0, tgamma0)
 
-        oracle = LinearLMEOracleRegularized(problem,
-                                            lb=self.lb,
-                                            lg=self.lg,
-                                            nnz_tbeta=self.nnz_tbeta,
-                                            nnz_tgamma=self.nnz_tgamma
-                                            )
+        if self.regularization_type == "l2":
+            oracle = LinearLMEOracleRegularized(problem,
+                                                lb=self.lb,
+                                                lg=self.lg,
+                                                nnz_tbeta=self.nnz_tbeta,
+                                                nnz_tgamma=self.nnz_tgamma
+                                                )
+        elif self.regularization_type == "loss-weighted":
+            oracle = LinearLMEOracleW(problem,
+                                      lb=self.lb,
+                                      lg=self.lg,
+                                      nnz_tbeta=self.nnz_tbeta,
+                                      nnz_tgamma=self.nnz_tgamma
+                                      )
+        else:
+            raise ValueError("regularization_type is not understood.")
+
         num_fixed_effects = problem.num_fixed_effects
         num_random_effects = problem.num_random_effects
         assert num_fixed_effects >= self.nnz_tbeta
@@ -238,6 +257,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             beta = oracle.optimal_beta(gamma, tbeta)
             us = oracle.optimal_random_effects(beta, gamma)
             gamma = np.sum(us ** 2, axis=0) / oracle.problem.num_groups
+            # tbeta = oracle.optimal_tbeta(beta)
+            # tgamma = oracle.optimal_tgamma(tbeta, gamma)
 
         def projected_direction(current_gamma, current_direction):
             proj_direction = current_direction.copy()
@@ -272,7 +293,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
             if self.solver == 'pgd':
                 inner_iteration = 0
-                beta = oracle.optimal_beta(gamma, tbeta)
+                beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
                 gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
                 direction = projected_direction(gamma, -gradient_gamma)
                 while (np.linalg.norm(direction) > self.tol_inner
@@ -306,8 +327,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
                 prev_tbeta = tbeta
                 prev_tgamma = tgamma
-                tbeta = oracle.optimal_tbeta(beta)
-                tgamma = oracle.optimal_tgamma(tbeta, gamma)
+                tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
+                tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
                 iteration += 1
 
             loss = oracle.loss(beta, gamma, tbeta, tgamma)
