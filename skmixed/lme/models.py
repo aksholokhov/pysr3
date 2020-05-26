@@ -358,7 +358,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         return self
 
-    def predict(self, x, use_sparse_coefficients=False):
+    def predict(self, x, columns_labels=None, use_sparse_coefficients=False):
         """
         Makes a prediction if .fit(X, y) was called before and throws an error otherwise.
 
@@ -379,7 +379,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Models predictions.
         """
         check_is_fitted(self, 'coef_')
-        problem, _ = LinearLMEProblem.from_x_y(x, y=None)
+        problem, _ = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
 
         if use_sparse_coefficients:
             beta = self.coef_['tbeta']

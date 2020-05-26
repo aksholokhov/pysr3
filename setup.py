@@ -3,6 +3,10 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+experiments_require=[
+    'pandas', 'matplotlib', 'jupyter', 'environment_kernels'
+]
+
 setuptools.setup(
     name="skmixed",
     version="0.0.6",
