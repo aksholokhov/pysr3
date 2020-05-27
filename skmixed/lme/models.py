@@ -263,7 +263,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         def projected_direction(current_gamma, current_direction):
             proj_direction = current_direction.copy()
             for j, _ in enumerate(current_gamma):
-                if current_gamma[j] == 0 and current_direction[j] <= 0:
+                if current_gamma[j] <= 1e-15 and current_direction[j] <= 0:
                     proj_direction[j] = 0
             return proj_direction
 
