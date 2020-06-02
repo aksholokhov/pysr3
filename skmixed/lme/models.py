@@ -65,6 +65,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                  initializer=None,
                  n_iter: int = 1000,
                  n_iter_inner: int = 20,
+                 n_iter_outer: int = 20,
                  use_line_search: bool = True,
                  lb: float = 1,
                  lg: float = 1,
@@ -272,10 +273,16 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         prev_tbeta = np.infty
         prev_tgamma = np.infty
+        prev_beta = np.infty
+        prev_gamma = np.infty
+
+        outer_iteration = 0
 
         iteration = 0
-        while (np.linalg.norm(tbeta - prev_tbeta) > self.tol
-               and np.linalg.norm(tgamma - prev_tgamma) > self.tol
+        while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
+                or np.linalg.norm(tgamma - prev_tgamma) > self.tol
+                or np.linalg.norm(beta - prev_beta) > self.tol
+                or np.linalg.norm(gamma - prev_gamma) > self.tol)
                and iteration < self.n_iter):
 
             if iteration >= self.n_iter:
@@ -293,6 +300,12 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
             if self.solver == 'pgd':
                 inner_iteration = 0
+
+                prev_beta = beta
+                prev_gamma = gamma
+                prev_tbeta = tbeta
+                prev_tgamma = tgamma
+
                 beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
                 gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
                 direction = projected_direction(gamma, -gradient_gamma)
@@ -325,8 +338,6 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                     direction = projected_direction(gamma, -gradient_gamma)
                     inner_iteration += 1
 
-                prev_tbeta = tbeta
-                prev_tgamma = tgamma
                 tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
                 tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
                 iteration += 1
@@ -445,8 +456,6 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         u = ((y - y_pred) ** 2).sum()
         v = ((y - y.mean()) ** 2).sum()
         return 1 - u / v
-
-
 
 
 def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=None):
