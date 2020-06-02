@@ -47,7 +47,7 @@ if __name__ == "__main__":
     rcParams['font.family'] = 'monospace'
 
     # Read the data
-    num_groups = 60
+    num_groups = 70
     covariates_df = pd.read_csv(covariates_path)
     coefficients_df = pd.read_csv(coefficients_path)
     groups = list(coefficients_df['group_id'].unique())
@@ -60,10 +60,9 @@ if __name__ == "__main__":
     id2loc = location_metadata.set_index('location_id')['location_name'].to_dict()
 
     # Combine all the data into one matrix
-
     all_betas = pd.concat(betas_df.values(), axis=0)
     all_betas["std"] = 0.1
-    #all_betas[covariates] = normalize(all_betas[covariates].to_numpy(), axis=0)
+    # all_betas[covariates] = normalize(all_betas[covariates].to_numpy(), axis=0)
     X = all_betas[["location_id"] + covariates + ["std"]].to_numpy()
     columns_labels = [0] + len(covariates) * [3] + [4]
     y = all_betas["beta"].to_numpy()
@@ -72,65 +71,153 @@ if __name__ == "__main__":
     # Fit the model
     model = LinearLMESparseModel(lb=0, lg=0, initializer="EM", n_iter=100, n_iter_inner=100)
     model.fit(X, y, columns_labels=columns_labels)
-    logger = model.logger_
     all_betas["prediction"] = model.predict(X, columns_labels=columns_labels)
-    print("done fitting");
+    logger = model.logger_
+    print("done fitting dense")
+
+    model_sparse = LinearLMESparseModel(lb=1, lg=1, nnz_tbeta=3, nnz_tgamma=2,
+                                        regularization_type="l2",
+                                        initializer="EM", n_iter=100, n_iter_inner=100)
+    model_sparse.fit(X, y, columns_labels=columns_labels)
+    all_betas["sparse_prediction"] = model_sparse.predict(X, columns_labels=columns_labels,
+                                                          use_sparse_coefficients=True)
+    print("done fitting sparse")
+
+    model_smart = LinearLMESparseModel(lb=1, lg=1, nnz_tbeta=3, nnz_tgamma=2,
+                                       regularization_type="loss-weighted",
+                                       initializer="EM", n_iter=100, n_iter_inner=100)
+    model_smart.fit(X, y, columns_labels=columns_labels)
+    all_betas["weighted_sparse_prediction"] = model_smart.predict(X, columns_labels=columns_labels,
+                                                                  use_sparse_coefficients=True)
+    print("done fitting smart")
 
 
     # Evaluate the model
-
-    def print_on_plot(elements, ax, x0=0.2, y0=9, h=0.3):
+    def print_on_plot(elements, ax, x0=0.2, y0=9, h=0.4):
         offset = 0
         for s in elements:
-            ax.text(x0, y0 - offset, s)
-            offset += h
+            if type(s) is tuple:
+                ax.text(x0, y0 - offset, s[0], color=s[1])
+                offset += h
+            elif type(s) is str:
+                ax.text(x0, y0 - offset, s)
+                offset += h
+            else:
+                raise ValueError("wrong type: %s" % type(s))
 
 
-    fig = plt.figure(figsize=(12, 6 * len(groups)))
+    fig = plt.figure(figsize=(12, 7 * len(groups)))
     grid = plt.GridSpec(len(groups), 2)
     counter = 0
+    ihme_scores = []
+    me_scores = []
     for i, group in enumerate(groups):
         ax = fig.add_subplot(grid[i, 0])
         cur_betas = all_betas[all_betas["location_id"] == group]
         time = pd.to_datetime(cur_betas['date'])
         ax.plot(time, cur_betas["beta"], label='True')
         ax.plot(time, cur_betas["beta_pred"], label='IHME')
-        ax.plot(time, cur_betas["prediction"], label="Aleksei")
+        ax.plot(time, cur_betas["sparse_prediction"], label="Sparse")
+        ax.plot(time, cur_betas["prediction"], label="Full")
+        ax.plot(time, cur_betas["weighted_sparse_prediction"], label="Weighted")
         ax.legend()
         start_date = time.to_list()[0]
         end_date = time.to_list()[-1]
         format_xaxis(ax, start_date, end_date)
         ax.set_title(f"{regression_version}: {id2loc[group]}")
         ax2 = fig.add_subplot(grid[i, 1])
-        ax2.set_xlim((0, 10))
-        ax2.set_ylim((0, 10))
-        table_format = "%-25s%10.4f%10.4f%10.4f%10.4f"
+        ax2.set_xlim((0, 12))
+        ax2.set_ylim((0, 12))
+        table_format = "%-21s%10.2e%10.2e%10.2e%10.2e"
         ihme_error = np.linalg.norm(cur_betas["beta"] - cur_betas["beta_pred"])
-        my_error = np.linalg.norm(cur_betas["beta"] - cur_betas["prediction"])
-        if ihme_error > my_error:
+        dense_error = np.linalg.norm(cur_betas["beta"] - cur_betas["prediction"])
+        sparse_error = np.linalg.norm(cur_betas["beta"] - cur_betas["sparse_prediction"])
+        weighted_sparse_error = np.linalg.norm(cur_betas["beta"] - cur_betas["weighted_sparse_prediction"])
+
+        ihme_scores.append(ihme_error)
+        me_scores.append(dense_error)
+
+        effect2coef = [0, 2, 3, 4, 5]
+
+
+        def coef_to_color(beta, gamma):
+            if beta == 0:
+                return "red"
+            elif gamma == 0:
+                return "blue"
+            else:
+                return "black"
+
+
+        sorted_errors_idx = np.argsort([ihme_error, dense_error, sparse_error, weighted_sparse_error])
+        colors_for_errors = ["", "", "", ""]
+        for k, color in enumerate(["green", "blue", "black", "black"]):
+            colors_for_errors[sorted_errors_idx[k]] = color
+
+        if ihme_error > dense_error:
             counter += 1
         statistics = [
                          "RMSE:",
-                         "%6s: %.3f" %("IHME", ihme_error),
-                         "%6s: %.3f" %("Me", my_error),
+                         ("%-12s: %.2e" % ("  IHME", ihme_error), colors_for_errors[0]),
+                         ("%-12s: %.2e" % ("  Full", dense_error), colors_for_errors[1]),
+                         ("%-12s: %.2e" % ("  Sparse", sparse_error), colors_for_errors[2]),
+                         ("%-12s: %.2e" % ("  Weighted", weighted_sparse_error), colors_for_errors[3]),
                          "",
-                         "Coefficients:",
-                         "%-25s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var")
                      ] + \
                      [
-                         table_format % (covariate,
-                                         model.coef_["per_group_coefficients"][i, j],
+                         "Coefficients:",
+                         "%-21s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var"),
+                     ] + \
+                     [
+                         table_format % (""
+                                         "  " + covariate,
+                                         model.coef_["per_group_coefficients"][i, effect2coef[j]],
                                          model.coef_["beta"][j],
                                          model.coef_["random_effects"][i, j],
                                          model.coef_["gamma"][j])
                          for j, covariate in enumerate(["intercept"] + covariates)
+                     ] + \
+                     [
+                         "\n",
+                         "Sparse Coefficients:",
+                         "%-21s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var"),
+                     ] + \
+                     [
+                         (table_format % (""
+                                          "  " + covariate,
+                                          model_sparse.coef_["sparse_per_group_coefficients"][i, effect2coef[j]],
+                                          model_sparse.coef_["tbeta"][j],
+                                          model_sparse.coef_["sparse_random_effects"][i, j],
+                                          model_sparse.coef_["tgamma"][j]),
+                          coef_to_color(model_sparse.coef_["tbeta"][j], model_sparse.coef_["tgamma"][j]))
+                         for j, covariate in enumerate(["intercept"] + covariates)
+                     ] + \
+                     [
+                         "\n",
+                         "Weighted Sparse Coefficients:",
+                         "%-21s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var"),
+                     ] + \
+                     [
+                         (table_format % (""
+                                          "  " + covariate,
+                                          model_smart.coef_["sparse_per_group_coefficients"][i, effect2coef[j]],
+                                          model_smart.coef_["tbeta"][j],
+                                          model_smart.coef_["sparse_random_effects"][i, j],
+                                          model_smart.coef_["tgamma"][j]),
+                          coef_to_color(model_smart.coef_["tbeta"][j], model_smart.coef_["tgamma"][j]))
+                         for j, covariate in enumerate(["intercept"] + covariates)
                      ]
-        print_on_plot(statistics, ax2)
-        ax2.get_xaxis().set_visible(False)
-        ax2.get_yaxis().set_visible(False)
 
-    plt.show()
-    print(counter/len(groups))
+        print_on_plot(statistics, ax2, x0=-1, y0=12)
+        ax2.axis('off')
 
+    plt.savefig("fit_0.png")
 
-
+    print(counter / len(groups))
+    plt.figure(figsize=(8, 8))
+    plt.scatter(ihme_scores, me_scores)
+    plt.xlabel("RMSE IHME")
+    plt.ylabel("RMSE Aleksei")
+    max_err = max(max(ihme_scores), max(me_scores))
+    plt.plot([0, max_err], [0, max_err], '--b')
+    plt.savefig("comparison_0.pdf")
