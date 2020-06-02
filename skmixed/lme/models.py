@@ -254,7 +254,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 tgamma = np.zeros(num_random_effects)
 
         if self.initializer == "EM":
-            beta = oracle.optimal_beta(gamma, tbeta)
+            beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
             us = oracle.optimal_random_effects(beta, gamma)
             gamma = np.sum(us ** 2, axis=0) / oracle.problem.num_groups
             # tbeta = oracle.optimal_tbeta(beta)
