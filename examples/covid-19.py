@@ -69,7 +69,7 @@ if __name__ == "__main__":
     print("done data");
 
     # Fit the model
-    model = LinearLMESparseModel(lb=0, lg=0, initializer="EM", n_iter=100, n_iter_inner=100)
+    model = LinearLMESparseModel(lb=0, lg=0, initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=1)
     model.fit(X, y, columns_labels=columns_labels)
     all_betas["prediction"] = model.predict(X, columns_labels=columns_labels)
     logger = model.logger_
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     model_sparse = LinearLMESparseModel(lb=1, lg=1, nnz_tbeta=3, nnz_tgamma=2,
                                         regularization_type="l2",
-                                        initializer="EM", n_iter=100, n_iter_inner=100)
+                                        initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=15)
     model_sparse.fit(X, y, columns_labels=columns_labels)
     all_betas["sparse_prediction"] = model_sparse.predict(X, columns_labels=columns_labels,
                                                           use_sparse_coefficients=True)
@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     model_smart = LinearLMESparseModel(lb=1, lg=1, nnz_tbeta=3, nnz_tgamma=2,
                                        regularization_type="loss-weighted",
-                                       initializer="EM", n_iter=100, n_iter_inner=100)
+                                       initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=15)
     model_smart.fit(X, y, columns_labels=columns_labels)
     all_betas["weighted_sparse_prediction"] = model_smart.predict(X, columns_labels=columns_labels,
                                                                   use_sparse_coefficients=True)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         for k, color in enumerate(["green", "blue", "black", "black"]):
             colors_for_errors[sorted_errors_idx[k]] = color
 
-        if ihme_error > dense_error:
+        if ihme_error > weighted_sparse_error:
             counter += 1
         statistics = [
                          "RMSE:",
