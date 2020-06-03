@@ -30,6 +30,7 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             "n_iter": 1000,
             "tol_inner": 1e-4,
             "n_iter_inner": 1000,
+            "n_iter_outer": 20,
         }
 
         max_mse = 0.05
@@ -67,9 +68,11 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             model2.fit(x, y)
 
             logger = model.logger_
-            loss = np.array(logger.get("loss"))
-            self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
-                            msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
+
+            # TODO: It won't decrease monotonically because it may jump when we increase regularization.
+            # loss = np.array(logger.get("loss"))
+            # self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
+            #                 msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
             y_pred = model.predict(x)
             explained_variance = explained_variance_score(y, y_pred)
@@ -90,9 +93,9 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             maybe_tgamma2 = coefficients2["tgamma"]
             fixed_effects_accuracy2 = accuracy_score(true_beta, maybe_tbeta2 != 0)
             random_effects_accuracy2 = accuracy_score(true_gamma, maybe_tgamma2 != 0)
-            print("\n %d) MSE    EV FEA REA")
-            print("%.4f  %.4f %.4f %.4f" % (mse, explained_variance, fixed_effects_accuracy, random_effects_accuracy))
-            print("%.4f  %.4f %.4f %.4f" % (mse2, explained_variance2, fixed_effects_accuracy2, random_effects_accuracy2))
+            # print("\n %d) MSE    EV FEA REA")
+            # print("%.4f  %.4f %.4f %.4f" % (mse, explained_variance, fixed_effects_accuracy, random_effects_accuracy))
+            # print("%.4f  %.4f %.4f %.4f" % (mse2, explained_variance2, fixed_effects_accuracy2, random_effects_accuracy2))
 
             # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
 

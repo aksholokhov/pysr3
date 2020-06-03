@@ -61,11 +61,12 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     def __init__(self,
                  tol: float = 1e-4,
                  tol_inner: float = 1e-4,
+                 tol_outer: float = 1e-2,
                  solver: str = "pgd",
                  initializer=None,
                  n_iter: int = 1000,
                  n_iter_inner: int = 20,
-                 n_iter_outer: int = 20,
+                 n_iter_outer: int = 1,
                  use_line_search: bool = True,
                  lb: float = 1,
                  lg: float = 1,
@@ -126,10 +127,12 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         self.tol = tol
         self.tol_inner = tol_inner
+        self.tol_outer = tol_outer
         self.solver = solver
         self.initializer = initializer
         self.n_iter = n_iter
         self.n_iter_inner = n_iter_inner
+        self.n_iter_outer = n_iter_outer
         self.use_line_search = use_line_search
         self.lb = lb
         self.lg = lg
@@ -271,80 +274,89 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         loss = oracle.loss(beta, gamma, tbeta, tgamma)
         self.logger_ = Logger(self.logger_keys)
 
-        prev_tbeta = np.infty
-        prev_tgamma = np.infty
-        prev_beta = np.infty
-        prev_gamma = np.infty
-
         outer_iteration = 0
 
-        iteration = 0
-        while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
-                or np.linalg.norm(tgamma - prev_tgamma) > self.tol
-                or np.linalg.norm(beta - prev_beta) > self.tol
-                or np.linalg.norm(gamma - prev_gamma) > self.tol)
-               and iteration < self.n_iter):
+        while (outer_iteration < self.n_iter_outer
+               and (np.linalg.norm(beta - tbeta) > self.tol_outer
+                    or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
 
-            if iteration >= self.n_iter:
-                us = oracle.optimal_random_effects(beta, gamma)
-                if len(self.logger_keys) > 0:
-                    self.logger_.log(**locals())
-                self.coef_ = {"beta": beta,
-                              "gamma": gamma,
-                              "tbeta": tbeta,
-                              "tgamma": tgamma,
-                              "random_effects": us
-                              }
-                self.logger_.add("converged", 0)
-                return self
+            prev_tbeta = np.infty
+            prev_tgamma = np.infty
+            prev_beta = np.infty
+            prev_gamma = np.infty
 
-            if self.solver == 'pgd':
-                inner_iteration = 0
+            iteration = 0
+            while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
+                    or np.linalg.norm(tgamma - prev_tgamma) > self.tol
+                    or np.linalg.norm(beta - prev_beta) > self.tol
+                    or np.linalg.norm(gamma - prev_gamma) > self.tol)
+                   and iteration < self.n_iter):
 
-                prev_beta = beta
-                prev_gamma = gamma
-                prev_tbeta = tbeta
-                prev_tgamma = tgamma
+                if iteration >= self.n_iter:
+                    us = oracle.optimal_random_effects(beta, gamma)
+                    if len(self.logger_keys) > 0:
+                        self.logger_.log(**locals())
+                    self.coef_ = {"beta": beta,
+                                  "gamma": gamma,
+                                  "tbeta": tbeta,
+                                  "tgamma": tgamma,
+                                  "random_effects": us
+                                  }
+                    self.logger_.add("converged", 0)
+                    return self
 
-                beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
-                gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
-                direction = projected_direction(gamma, -gradient_gamma)
-                while (np.linalg.norm(direction) > self.tol_inner
-                       and inner_iteration < self.n_iter_inner):
-                    # gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
-                    # projecting the gradient to the set of constraints
-                    # direction = projected_direction(gamma, -gradient_gamma)
-                    if self.use_line_search:
-                        # line search method
-                        step_len = 0.1
-                        for i, _ in enumerate(gamma):
-                            if direction[i] < 0:
-                                step_len = min(-gamma[i] / direction[i], step_len)
+                if self.solver == 'pgd':
+                    inner_iteration = 0
 
-                        current_loss = oracle.loss(beta, gamma, tbeta, tgamma)
+                    prev_beta = beta
+                    prev_gamma = gamma
+                    prev_tbeta = tbeta
+                    prev_tgamma = tgamma
 
-                        while (oracle.loss(beta, gamma + step_len * direction, tbeta, tgamma)
-                               >= (1 - np.sign(current_loss) * 1e-5) * current_loss):
-                            step_len *= 0.5
-                            if step_len <= 1e-15:
-                                break
-                    else:
-                        # fixed step size
-                        step_len = 1 / iteration
-                    if step_len <= 1e-15:
-                        break
-                    gamma = gamma + step_len * direction
+                    beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
                     gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
                     direction = projected_direction(gamma, -gradient_gamma)
-                    inner_iteration += 1
+                    while (np.linalg.norm(direction) > self.tol_inner
+                           and inner_iteration < self.n_iter_inner):
+                        # gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
+                        # projecting the gradient to the set of constraints
+                        # direction = projected_direction(gamma, -gradient_gamma)
+                        if self.use_line_search:
+                            # line search method
+                            step_len = 0.1
+                            for i, _ in enumerate(gamma):
+                                if direction[i] < 0:
+                                    step_len = min(-gamma[i] / direction[i], step_len)
 
-                tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
-                tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
-                iteration += 1
+                            current_loss = oracle.loss(beta, gamma, tbeta, tgamma)
 
-            loss = oracle.loss(beta, gamma, tbeta, tgamma)
-            if len(self.logger_keys) > 0:
-                self.logger_.log(locals())
+                            while (oracle.loss(beta, gamma + step_len * direction, tbeta, tgamma)
+                                   >= (1 - np.sign(current_loss) * 1e-5) * current_loss):
+                                step_len *= 0.5
+                                if step_len <= 1e-15:
+                                    break
+                        else:
+                            # fixed step size
+                            step_len = 1 / iteration
+                        if step_len <= 1e-15:
+                            break
+                        gamma = gamma + step_len * direction
+                        gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
+                        direction = projected_direction(gamma, -gradient_gamma)
+                        inner_iteration += 1
+
+                    tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
+                    tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
+                    iteration += 1
+
+                loss = oracle.loss(beta, gamma, tbeta, tgamma)
+                if len(self.logger_keys) > 0:
+                    self.logger_.log(locals())
+            # gradient_at_tgamma = oracle.gradient_gamma(tbeta, tgamma, tgamma)
+            # direction_at_sparse_point = projected_direction(tgamma, -gradient_at_tgamma)
+            outer_iteration += 1
+            oracle.lb = 2*(1+oracle.lb)
+            oracle.lg = 2*(1+oracle.lg)
 
         us = oracle.optimal_random_effects(beta, gamma)
         sparse_us = oracle.optimal_random_effects(tbeta, tgamma)
