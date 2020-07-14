@@ -47,7 +47,7 @@ if __name__ == "__main__":
     rcParams['font.family'] = 'monospace'
 
     # Read the data
-    num_groups = 70
+    num_groups = 15
     covariates_df = pd.read_csv(covariates_path)
     coefficients_df = pd.read_csv(coefficients_path)
     groups = list(coefficients_df['group_id'].unique())
@@ -75,15 +75,15 @@ if __name__ == "__main__":
     logger = model.logger_
     print("done fitting dense")
 
-    model_sparse = LinearLMESparseModel(lb=1, lg=1, nnz_tbeta=3, nnz_tgamma=2,
+    model_sparse = LinearLMESparseModel(lb=0, lg=0, nnz_tbeta=3, nnz_tgamma=2,
                                         regularization_type="l2",
                                         initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=15)
     model_sparse.fit(X, y, columns_labels=columns_labels)
     all_betas["sparse_prediction"] = model_sparse.predict(X, columns_labels=columns_labels,
                                                           use_sparse_coefficients=True)
     print("done fitting sparse")
-
-    model_smart = LinearLMESparseModel(lb=1, lg=1, nnz_tbeta=3, nnz_tgamma=2,
+    #
+    model_smart = LinearLMESparseModel(lb=0, lg=0, nnz_tbeta=3, nnz_tgamma=2,
                                        regularization_type="loss-weighted",
                                        initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=15)
     model_smart.fit(X, y, columns_labels=columns_labels)
@@ -117,9 +117,9 @@ if __name__ == "__main__":
         time = pd.to_datetime(cur_betas['date'])
         ax.plot(time, cur_betas["beta"], label='True')
         ax.plot(time, cur_betas["beta_pred"], label='IHME')
-        ax.plot(time, cur_betas["sparse_prediction"], label="Sparse")
-        ax.plot(time, cur_betas["prediction"], label="Full")
-        ax.plot(time, cur_betas["weighted_sparse_prediction"], label="Weighted")
+        ax.plot(time, cur_betas["sparse_prediction"], label="R&S Sparse")
+        ax.plot(time, cur_betas["prediction"], label="Dense MM")
+        ax.plot(time, cur_betas["weighted_sparse_prediction"], label="R&S + W Sparse")
         ax.legend()
         start_date = time.to_list()[0]
         end_date = time.to_list()[-1]
@@ -154,18 +154,20 @@ if __name__ == "__main__":
         for k, color in enumerate(["green", "blue", "black", "black"]):
             colors_for_errors[sorted_errors_idx[k]] = color
 
-        if ihme_error > weighted_sparse_error:
-            counter += 1
+        #if ihme_error > weighted_sparse_error:
+        #    counter += 1
         statistics = [
                          "RMSE:",
+                         #"%-12s: %.2e" % ("  IHME", ihme_error),
+                         #"%-12s: %.2e" % ("  Dense MM", dense_error),
                          ("%-12s: %.2e" % ("  IHME", ihme_error), colors_for_errors[0]),
-                         ("%-12s: %.2e" % ("  Full", dense_error), colors_for_errors[1]),
-                         ("%-12s: %.2e" % ("  Sparse", sparse_error), colors_for_errors[2]),
-                         ("%-12s: %.2e" % ("  Weighted", weighted_sparse_error), colors_for_errors[3]),
+                         ("%-12s: %.2e" % ("  Dense MM", dense_error), colors_for_errors[1]),
+                         ("%-12s: %.2e" % ("  R&S", sparse_error), colors_for_errors[2]),
+                         ("%-12s: %.2e" % ("  R&S + W", weighted_sparse_error), colors_for_errors[3]),
                          "",
                      ] + \
                      [
-                         "Coefficients:",
+                         "Full MM Coefficients:",
                          "%-21s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var"),
                      ] + \
                      [
@@ -179,7 +181,7 @@ if __name__ == "__main__":
                      ] + \
                      [
                          "\n",
-                         "Sparse Coefficients:",
+                         "Sparse Relax-and-Split Coefficients:",
                          "%-21s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var"),
                      ] + \
                      [
@@ -194,7 +196,7 @@ if __name__ == "__main__":
                      ] + \
                      [
                          "\n",
-                         "Weighted Sparse Coefficients:",
+                         "W-norm Sparse Relax-and-Split Coefficients:",
                          "%-21s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var"),
                      ] + \
                      [
