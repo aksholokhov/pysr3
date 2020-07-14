@@ -178,8 +178,8 @@ class LinearLMEProblem(LMEProblem):
             If given, initializes the global Numpy random generator with this seed.
 
         generator_params : dict
-            Dictionary with the parameters of the problem generator. If None then the default one is used (see at the
-            beginning of this file).
+            Dictionary with the parameters of the problem generator, like min-max bounds for the number of groups and objects.
+            If None then the default one is used (see at the beginning of this file).
 
         Returns
         -------
@@ -206,11 +206,13 @@ class LinearLMEProblem(LMEProblem):
                                                         generator_params["max_elements_per_group"])
 
         if features_labels is None:
+            # Not tested yet, do not use!
             if features_covariance_matrix is not None:
                 len_features_labels = features_covariance_matrix.shape[0]
             else:
                 len_features_labels = np.random.randint(generator_params["min_features"],
                                                         generator_params["max_features"])
+            # TODO: Fix the bug with non-unique STDs and group labels
             features_labels = np.random.randint(1, 4, len_features_labels).tolist()
 
         # We add the intercept manually since it is not mentioned in features_labels.
