@@ -42,6 +42,7 @@ default_generator_parameters = {
     "max_groups": 10,
     "min_features": 1,
     "max_features": 10,
+    "num_attempts_to_generate_cat_features": 1000,
 }
 
 
@@ -59,11 +60,13 @@ class LinearLMEProblem(LMEProblem):
                  group_labels: np.ndarray,
                  column_labels: List[Tuple[int, int]],
                  order_of_objects: np.ndarray,
+                 categorical_features: List[np.ndarray] = None,
                  answers=None):
         super(LinearLMEProblem, self).__init__()
 
         self.fixed_features = fixed_features
         self.answers = answers
+        self.categorical_features = categorical_features
         self.random_features = random_features
         self.obs_stds = obs_stds
 
@@ -76,6 +79,7 @@ class LinearLMEProblem(LMEProblem):
 
         self.num_random_effects = sum([label in (2, 3) for label in column_labels])
         self.num_fixed_effects = sum([label in (1, 3) for label in column_labels])
+        self.num_categorical_features = sum([label == 5 for label in column_labels])
 
     def __iter__(self):
         self.__iteration_pos = 0
@@ -205,6 +209,8 @@ class LinearLMEProblem(LMEProblem):
                     groups_sizes[i] = np.random.randint(generator_params["min_elements_per_group"],
                                                         generator_params["max_elements_per_group"])
 
+        num_objects = sum(groups_sizes)
+
         if features_labels is None:
             # Not tested yet, do not use!
             if features_covariance_matrix is not None:
@@ -212,116 +218,185 @@ class LinearLMEProblem(LMEProblem):
             else:
                 len_features_labels = np.random.randint(generator_params["min_features"],
                                                         generator_params["max_features"])
-            # TODO: Fix the bug with non-unique STDs and group labels
             features_labels = np.random.randint(1, 4, len_features_labels).tolist()
 
         # We add the intercept manually since it is not mentioned in features_labels.
-        fixed_effects_idx = np.array([0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 3)])
-        random_effects_idx = np.array(([0] if random_intercept else [])
-                                      + [i + 1
-                                         for i, label in enumerate(features_labels) if label in (2, 3)])
+        fixed_features_idx = np.array([0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 3)])
+        random_features_idx = np.array(([0] if random_intercept else [])
+                                       + [i + 1
+                                          for i, label in enumerate(features_labels) if label in (2, 3)])
+        continuous_features_idx = np.array(
+            [0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 2, 3)])
 
-        num_fixed_effects = len(fixed_effects_idx)
-        num_random_effects = len(random_effects_idx)
+        categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5, 6)])
+        active_categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5,)])
+
+        num_fixed_features = len(fixed_features_idx)
+        num_random_features = len(random_features_idx)
+        num_continuous_features = len(continuous_features_idx)
+        num_categorical_features = len(categorical_features_idx)
+        num_active_categorical_features = len(active_categorical_features_idx)
 
         if beta is None:
-            beta = np.random.rand(num_fixed_effects)
+            beta = np.random.rand(num_fixed_features)
         else:
-            assert beta.shape[0] == num_fixed_effects, \
+            assert beta.shape[0] == num_fixed_features, \
                 "beta has the size %d, but the number of fixed effects, including intercept, is %s" % (beta.shape[0],
-                                                                                                       num_fixed_effects
+                                                                                                       num_fixed_features
                                                                                                        )
         if gamma is None:
-            gamma = np.random.rand(num_random_effects)
+            gamma = np.random.rand(num_random_features)
         else:
-            assert gamma.shape[0] == num_random_effects, \
+            assert gamma.shape[0] == num_random_features, \
                 "gamma has the size %d, but the number of random effects, including intercept, is %s" % (
                     gamma.shape[0],
-                    num_random_effects
+                    num_random_features
                 )
 
         data = {
             'fixed_features': [],
             'random_features': [],
+            'categorical_features': [],
             'answers': [],
             'obs_stds': [],
+
         }
 
         # features covariance matrix describes covariances only presented in features_labels (meaningful features),
         # so we exclude the intercept feature when we generate random correlated data.
         if features_covariance_matrix is None:
-            features_covariance_matrix = np.eye(len(features_labels))
+            features_covariance_matrix = np.eye(num_continuous_features - 1)
         else:
-            assert features_covariance_matrix.shape[0] == len(features_labels) == features_covariance_matrix.shape[1], \
-                "features_covariance_matrix should be n*n where n is length of features_labels"
+            assert features_covariance_matrix.shape[0] == num_continuous_features - 1 == \
+                   features_covariance_matrix.shape[1], \
+                "features_covariance_matrix should be n*n where n is the number of continuous features"
 
         random_effects_list = []
         errors_list = []
         order_of_objects = []
+        true_group_labels = np.zeros(num_objects)
+        reference_loss_value = 0
+        group_label_counter = 0
         start = 0
-        for i, size in enumerate(groups_sizes):
-            if len(features_labels) > 0:
-                all_features = np.random.multivariate_normal(np.zeros(len(features_labels)),
-                                                             features_covariance_matrix,
-                                                             size)
-                # The first feature is always the intercept. It's a 'fake' feature in a sense that it does not appear
-                # in the dataset when you export it in the form of (X, y).
-                all_features = np.concatenate((np.ones((size, 1)), all_features), axis=1)
+
+        for i, group_size in enumerate(groups_sizes):
+            if num_active_categorical_features > 0:
+                got_good_subdivision = False
+                # try to find features which don't give too much granular subdivision
+                for _ in range(generator_params["num_attempts_to_generate_cat_features"]):
+                    categorical_features = np.random.randint(0, 2, (group_size, num_active_categorical_features))
+                    tupled_categorical_features = [tuple(s) for s in categorical_features]
+                    unique_sub_labels = set(tupled_categorical_features)
+                    sub_labels_counters = [tupled_categorical_features.count(s) for s in unique_sub_labels]
+                    subgroups_idxs = []
+                    for s in unique_sub_labels:
+                        subgroup_idx = np.array([i for i, t in enumerate(tupled_categorical_features) if t == s])
+                        subgroups_idxs.append(((i, s), subgroup_idx))
+                    if all([s > 2 for s in sub_labels_counters]):
+                        got_good_subdivision = True
+                        break
+
+                if not got_good_subdivision:
+                    raise Exception("No good subdivision found. Reduce the number of categorical features"
+                                    " or increase the number of objects")
             else:
-                # if we were not provided with any features then the only column in X is the intercept.
-                all_features = np.ones((size, 1))
+                subgroups_idxs = [(i, np.arange(group_size))]
 
-            fixed_features = all_features[:, fixed_effects_idx]
-            random_features = all_features[:, random_effects_idx]
-            order_of_objects += list(range(start, start + size))
-            start += size
+            if num_categorical_features - num_active_categorical_features > 0:
+                non_active_categorical_features = np.random.randint(0, 2, (group_size,
+                                                                           num_categorical_features -
+                                                                           num_active_categorical_features))
+                categorical_features = np.concatenate([categorical_features,
+                                                      non_active_categorical_features],
+                                                      axis=1)
 
-            if true_random_effects is not None:
-                random_effects = true_random_effects[i]
-            else:
-                random_effects = np.random.multivariate_normal(np.zeros(num_random_effects), np.diag(gamma))
+            group_continuous_features = np.zeros((group_size, num_continuous_features))
+            group_continuous_features[:, 0] = 1  # intercept
+            group_errors = np.zeros(group_size)
+            group_stds = np.zeros(group_size)
+            group_answers = np.zeros(group_size)
+            random_effects_list.append({})
+            for key, subgroup_idx in subgroups_idxs:
+                subgroup_size = len(subgroup_idx)
+                if num_continuous_features > 1:
+                    subgroup_continuous_features = np.random.multivariate_normal(np.zeros(num_continuous_features - 1),
+                                                                           features_covariance_matrix,
+                                                                           subgroup_size)
+                    group_continuous_features[subgroup_idx, 1:] = subgroup_continuous_features
 
-            if isinstance(obs_std, np.ndarray):
-                if obs_std.shape[0] == sum(groups_sizes):
-                    std = obs_std[start:size]
-                elif obs_std.shape[0] == num_groups:
-                    std = obs_std[i]
+                subgroup_fixed_features = group_continuous_features[np.ix_(subgroup_idx, fixed_features_idx)]
+                subgroup_random_features = group_continuous_features[np.ix_(subgroup_idx, random_features_idx)]
+
+                random_effects = None
+                if true_random_effects is not None:
+                    random_effects = true_random_effects[i].get(key, None)
+                if random_effects is None:
+                    random_effects = np.random.multivariate_normal(np.zeros(num_random_features), np.diag(gamma))
+
+                if isinstance(obs_std, np.ndarray):
+                    if obs_std.shape[0] == sum(groups_sizes):
+                        std = obs_std[start:group_size][subgroup_idx]
+                    elif obs_std.shape[0] == num_groups:
+                        std = obs_std[i]
+                    else:
+                        raise ValueError("len(obs_std) should be either num_groups or sum(groups_sizes)")
+
+                elif isinstance(obs_std, (float, int)):
+                    std = obs_std
                 else:
-                    raise ValueError("len(obs_std) should be either num_groups or sum(groups_sizes)")
-            elif isinstance(obs_std, (float, int)):
-                std = obs_std
-            else:
-                raise ValueError("obs_std is not an array or int/float.")
+                    raise ValueError("obs_std is not an array or int/float.")
 
-            errors = np.random.randn(size) * std
-            answers = fixed_features.dot(beta) + random_features.dot(random_effects) + errors
+                group_stds[subgroup_idx] = std
+                subgroup_errors = np.random.randn(subgroup_size) * std
+                group_errors[subgroup_idx] = subgroup_errors
+                group_answers[subgroup_idx] = subgroup_fixed_features.dot(beta) + subgroup_random_features.dot(random_effects) + subgroup_errors
 
-            data['fixed_features'].append(fixed_features)
-            data['random_features'].append(random_features)
-            data['answers'].append(answers)
-            data['obs_stds'].append(np.ones(size) * std)
-            random_effects_list.append(random_effects)
-            errors_list.append(errors)
+                true_group_labels[start + subgroup_idx] = group_label_counter
+
+                random_effects_list[-1][key] = random_effects
+                group_label_counter += 1
+
+
+            order_of_objects += list(range(start, start + group_size))
+            start += group_size
+
+            reference_loss_value += np.linalg.norm(group_errors) ** 2
+            data['fixed_features'].append(group_continuous_features[:, fixed_features_idx])
+            data['random_features'].append(group_continuous_features[:, random_features_idx])
+            data['answers'].append(group_answers)
+            data['obs_stds'].append(group_stds)
+            if num_categorical_features > 0:
+                data['categorical_features'].append(categorical_features)
+
+            errors_list.append(group_errors)
 
         data['group_labels'] = np.arange(start=0, stop=num_groups, step=1)
         data['order_of_objects'] = np.array(order_of_objects)
+
+        # remove difference between active/inactive
+        for i, label in enumerate(features_labels):
+            if label == 6:
+                features_labels[i] = 5
+
         all_columns_labels = [3 if random_intercept else 1] + features_labels + [4, 0]
         data['column_labels'] = all_columns_labels
         generated_problem = LinearLMEProblem(**data)
         generated_problem = generated_problem.to_x_y() if as_x_y else generated_problem
 
         if return_true_model_coefficients:
-            random_effects = np.array(random_effects_list)
+            # random_effects = np.array(random_effects_list)
 
             per_group_coefficients = get_per_group_coefficients(beta,
-                                                                random_effects,
+                                                                random_effects_list,
                                                                 labels=np.array(all_columns_labels))
             true_parameters = {
                 "beta": beta,
                 "gamma": gamma,
                 "per_group_coefficients": per_group_coefficients,
-                "random_effects": random_effects,
-                "errors": np.array(errors_list)
+                "true_group_labels": true_group_labels,
+                "random_effects": random_effects_list,
+                "errors": np.array(errors_list),
+                "reference_loss_value": reference_loss_value
             }
             return generated_problem, true_parameters
         else:
@@ -346,8 +421,9 @@ class LinearLMEProblem(LMEProblem):
 
         columns_labels: List, shape = [n], Optional
             A list of column labels which can be 0 (group labels), 1 (fixed effect), 2 (random effect),
-            3 (both fixed and random), or 4 (observation standard deviance). There should be only one 0 in the list.
-            If it's None then it's assumed that it is the first row of x.
+            3 (both fixed and random), 4 (observation standard deviance), or 5 (categorical features).
+            There should be only one 0 in the list. If columns_labels is None then it's assumed that
+            it is the first row of x.
 
         random_intercept: bool, default = True
             Whether to treat the intercept as a random feature.
@@ -368,7 +444,8 @@ class LinearLMEProblem(LMEProblem):
 
         if y is not None:
             x, y = check_X_y(x, y)
-        assert set(columns_labels).issubset((0, 1, 2, 3, 4)), "Only 0, 1, 2, 3, and 4 are allowed in columns_labels"
+        assert set(columns_labels).issubset(
+            (0, 1, 2, 3, 4, 5)), "Only 0, 1, 2, 3, 4, and 5 are allowed in columns_labels"
         assert len(columns_labels) == x.shape[1], "len(columns_labels) != x.shape[1] (not all columns are labelled)"
         # take the index of a column that stores group labels
         group_labels_idx = [i for i, label in enumerate(columns_labels) if label == 0]
@@ -378,27 +455,31 @@ class LinearLMEProblem(LMEProblem):
         assert len(obs_std_idx) == 1, "There should be only one 4 in columns_labels"
         obs_std_idx = obs_std_idx[0]
         assert all(x[:, obs_std_idx] != 0), "Errors' STDs can't be zero. Check for zeros in the respective column."
-        features_idx = [i for i, t in enumerate(columns_labels) if t == 1 or t == 3]
+        fixed_features_idx = [i for i, t in enumerate(columns_labels) if t == 1 or t == 3]
         random_features_idx = [i for i, t in enumerate(columns_labels) if t == 2 or t == 3]
+        categorical_features_idx = [i for i, t in enumerate(columns_labels) if t == 5]
+        num_categorical_features = len(categorical_features_idx)
         groups_labels = unique_labels(x[:, group_labels_idx])
 
         data = {
             'fixed_features': [],
             'random_features': [],
+            'categorical_features': [] if num_categorical_features > 0 else None,
             'answers': None if y is None else [],
             'obs_stds': [],
             'group_labels': groups_labels,
-            'column_labels': np.array([3 if random_intercept else 1] + columns_labels)
+            'column_labels': np.array([3 if random_intercept else 1] + columns_labels),
         }
 
         order_of_objects = []
         for label in groups_labels:
             objects_idx = x[:, group_labels_idx] == label
             order_of_objects += np.where(objects_idx)[0].tolist()
-            features = x[np.ix_(objects_idx, features_idx)]
+            fixed_features = x[np.ix_(objects_idx, fixed_features_idx)]
             # add an intercept column plus real features
             # noinspection PyTypeChecker
-            data['fixed_features'].append(np.concatenate((np.ones((features.shape[0], 1)), features), axis=1))
+            data['fixed_features'].append(
+                np.concatenate((np.ones((fixed_features.shape[0], 1)), fixed_features), axis=1))
             # same for random effects
             random_features = x[np.ix_(objects_idx, random_features_idx)]
             if random_intercept:
@@ -410,6 +491,8 @@ class LinearLMEProblem(LMEProblem):
             if y is not None:
                 data['answers'].append(y[objects_idx])
             data['obs_stds'].append(x[objects_idx, obs_std_idx])
+            if num_categorical_features > 0:
+                data['categorical_features'].append(x[np.ix_(objects_idx, categorical_features_idx)])
 
         data["order_of_objects"] = order_of_objects
 
@@ -430,10 +513,13 @@ class LinearLMEProblem(LMEProblem):
         """
 
         all_group_labels = np.repeat(self.group_labels, self.groups_sizes)
-        all_features = np.concatenate(self.fixed_features, axis=0)
+        all_fixed_features = np.concatenate(self.fixed_features, axis=0)
         all_random_features = np.concatenate(self.random_features, axis=0)
+        if self.num_categorical_features > 0:
+            all_categorical_features = np.concatenate(self.categorical_features, axis=0)
+
         all_stds = np.concatenate(self.obs_stds, axis=0)
-        untitled_data = np.zeros((all_features.shape[0], len(self.column_labels) - 1))
+        untitled_data = np.zeros((all_fixed_features.shape[0], len(self.column_labels) - 1))
 
         fixed_effects_counter = 1
         random_intercept = self.column_labels[0] == 3
@@ -441,28 +527,40 @@ class LinearLMEProblem(LMEProblem):
             random_effects_counter = 1
         else:
             random_effects_counter = 0
+        categorical_features_counter = 0
 
         for i, label in enumerate(self.column_labels[1:]):
             if label == 0:
                 untitled_data[:, i] = all_group_labels
             elif label == 1:
-                untitled_data[:, i] = all_features[:, fixed_effects_counter]
+                untitled_data[:, i] = all_fixed_features[:, fixed_effects_counter]
                 fixed_effects_counter += 1
             elif label == 2:
                 untitled_data[:, i] = all_random_features[:, random_effects_counter]
                 random_effects_counter += 1
             elif label == 3:
-                untitled_data[:, i] = all_features[:, fixed_effects_counter]
+                untitled_data[:, i] = all_fixed_features[:, fixed_effects_counter]
                 fixed_effects_counter += 1
                 random_effects_counter += 1
             elif label == 4:
                 untitled_data[:, i] = all_stds
+            elif label == 5:
+                untitled_data[:, i] = all_categorical_features[:, categorical_features_counter]
+                categorical_features_counter += 1
 
-        untitled_data = untitled_data[self.order_of_objects, :]
+        untitled_data = untitled_data[np.array(self.order_of_objects).argsort()]
         column_labels = np.array(self.column_labels[1:]).reshape((1, len(self.column_labels[1:])))
         data_with_column_labels = np.concatenate((column_labels, untitled_data), axis=0)
         if self.answers is not None:
             all_answers = np.concatenate(self.answers)
         else:
             all_answers = None
+        all_answers = all_answers[np.array(self.order_of_objects).argsort()]
         return data_with_column_labels, all_answers
+
+
+if __name__ == "__main__":
+    data = LinearLMEProblem.generate(groups_sizes=[60, 40, 25],
+                                     features_labels=[3, 3, 6, 5, 5],
+                                     random_intercept=True)
+    pass
