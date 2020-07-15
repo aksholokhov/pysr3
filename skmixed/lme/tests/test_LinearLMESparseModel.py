@@ -6,6 +6,8 @@ from sklearn.metrics import mean_squared_error, explained_variance_score, accura
 from skmixed.lme.models import LinearLMESparseModel
 from skmixed.lme.problems import LinearLMEProblem
 
+from skmixed.helpers import random_effects_to_matrix
+
 
 class TestLinearLMESparseModel(unittest.TestCase):
 
@@ -270,7 +272,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
         model = LinearLMESparseModel(**model_parameters)
         model.fit(x, y)
         model.coef_["beta"] = true_model_parameters["beta"]
-        model.coef_["random_effects"] = true_model_parameters["random_effects"]
+        model.coef_["random_effects"] = random_effects_to_matrix(true_model_parameters["random_effects"])
         good_score = model.score(x, y)
         assert good_score > 0.99
         model.coef_["beta"] = np.zeros(4)

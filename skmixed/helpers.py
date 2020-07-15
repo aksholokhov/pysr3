@@ -43,9 +43,17 @@ def get_per_group_coefficients(beta, random_effects, labels):
     """
 
     per_group_coefficients_list = []
+    is_arrays = all([type(s) == np.ndarray for s in random_effects])
+    is_dicts = all([type(s) == dict for s in random_effects])
+    if not (is_arrays or is_dicts):
+        raise Exception("Inconsistent type of random effects: should all either be dicts or arrays")
 
     for i, us_subgroups in enumerate(random_effects):
-        per_group_coefficients_list.append({})
+        if is_arrays:
+            us_subgroups = {(i,): us_subgroups}
+        else:
+            per_group_coefficients_list.append({})
+
         for k, u in us_subgroups.items():
             per_group_coefficients = np.zeros(len(labels))
             fixed_effects_counter = 0
@@ -64,5 +72,19 @@ def get_per_group_coefficients(beta, random_effects, labels):
                     random_effects_counter += 1
                 else:
                     continue
-            per_group_coefficients_list[-1][k] = per_group_coefficients
-    return per_group_coefficients_list
+            if is_arrays:
+                per_group_coefficients_list.append(per_group_coefficients)
+            else:
+                per_group_coefficients_list[-1][k] = per_group_coefficients
+    if is_arrays:
+        return np.array(per_group_coefficients_list)
+    else:
+        return per_group_coefficients_list
+
+
+def random_effects_to_matrix(random_effects):
+    us_matrix = []
+    for i, us_subgroups in enumerate(random_effects):
+        for k, u in us_subgroups.items():
+            us_matrix.append(u)
+    return np.array(us_matrix)

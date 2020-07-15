@@ -8,7 +8,7 @@ from scipy.misc import derivative
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 from skmixed.legacy.oracles import LinearLMEOracle as OldOracle
 from skmixed.lme.problems import LinearLMEProblem
-
+from skmixed.helpers import random_effects_to_matrix
 
 class TestLinearLMEOracle(TestCase):
 
@@ -106,7 +106,7 @@ class TestLinearLMEOracle(TestCase):
                                                              random_intercept=True,
                                                              seed=random_seed)
         beta = true_parameters['beta']
-        us = true_parameters['random_effects']
+        us = random_effects_to_matrix(true_parameters['random_effects'])
         empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_groups
         rtol = 1e-1
         atol = 1e-1
