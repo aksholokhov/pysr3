@@ -175,6 +175,22 @@ class TestLinearLMEOracle(TestCase):
                 oracle.beta_to_gamma_map
             ))
 
+    def test_jones2010n_eff(self):
+        # In case of a random intercept model the n_eff can be represented through intraclass correlation rho.
+        # See original Jones2010 paper for more details.
+        for seed in range(10):
+            problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                                 features_labels=[],
+                                                                 random_intercept=True,
+                                                                 obs_std=0.1,
+                                                                 seed=seed)
+            oracle = LinearLMEOracle(problem)
+            gamma = true_parameters['gamma']
+            rho = gamma/(gamma + 0.1)
+            oracle._recalculate_cholesky(true_parameters['gamma'])
+            n_eff = oracle._jones2010n_eff()
+            assert np.allclose(n_eff, sum([ni/(1+(ni-1)*rho) for ni in problem.groups_sizes]))
+
 
 if __name__ == '__main__':
     unittest.main()

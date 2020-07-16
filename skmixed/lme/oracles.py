@@ -267,6 +267,20 @@ class LinearLMEOracle:
             random_effects.append(u)
         return np.array(random_effects)
 
+    def _jones2010n_eff(self):
+        n_eff = 0
+        for (x, y, z, stds), L in zip(self.problem, self.omega_cholesky):
+            omega = L.dot(L.T)
+            sigma = np.sqrt(np.diag(omega)).reshape((-1, 1))
+            normalization = sigma.dot(sigma.T)
+            c = omega / normalization
+            n_eff += np.linalg.inv(c).sum()
+        return n_eff
+
+    def jones2010bic(self, beta, gamma, **kwargs):
+        self._recalculate_cholesky(gamma)
+        return self.loss(beta, gamma) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
+
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
     """
@@ -606,3 +620,7 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
         tgamma2 = np.zeros(len(gamma))
         tgamma2[idx_k_max] = tgamma[idx_k_max]
         return tgamma2
+
+    def jones2010bic(self, beta, gamma, tbeta=None, tgamma=None, **kwargs):
+        self._recalculate_cholesky(gamma)
+        return self.loss(beta, gamma, tbeta, tgamma) + (2*len(beta) + 2*len(gamma))*np.log(self._jones2010n_eff())

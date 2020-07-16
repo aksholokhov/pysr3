@@ -197,7 +197,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Fitted regression model.
         """
 
-        problem, _ = LinearLMEProblem.from_x_y(x, y, columns_labels, random_intercept=random_intercept, **kwargs)
+        problem = LinearLMEProblem.from_x_y(x, y, columns_labels, random_intercept=random_intercept, **kwargs)
         if initial_parameters is None:
             initial_parameters = {}
         beta0 = initial_parameters.get("beta", None)
@@ -402,7 +402,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Models predictions.
         """
         check_is_fitted(self, 'coef_')
-        problem, _ = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
+        problem = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
 
         if use_sparse_coefficients:
             beta = self.coef_['tbeta']

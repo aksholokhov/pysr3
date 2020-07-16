@@ -13,7 +13,7 @@ class TestLinearLMEProblem(unittest.TestCase):
                                                              obs_std=0.1,
                                                              seed=42)
         x1, y1 = problem.to_x_y()
-        problem2, _ = LinearLMEProblem.from_x_y(x1, y1)
+        problem2 = LinearLMEProblem.from_x_y(x1, y1)
         x2, y2 = problem2.to_x_y()
         self.assertTrue(np.all(x1 == x2) and np.all(y1 == y2))
         test_problem, true_test_parameters = LinearLMEProblem.generate(groups_sizes=[3, 4, 5],
@@ -60,7 +60,7 @@ class TestLinearLMEProblem(unittest.TestCase):
         x[1:, 0] = np.repeat([0, 1, 2], study_sizes)
         x[0, :] = [0] + [1] * (num_features - 1) + [3] + [2] * (num_random_effects - 1) + [4] + [5]*num_categorical_effects
         np.random.shuffle(x[1:, :])
-        problem, true_parameters = LinearLMEProblem.from_x_y(x, y)
+        problem = LinearLMEProblem.from_x_y(x, y)
         x2, y2 = problem.to_x_y()
         self.assertTrue(np.all(x2 == x), msg="x is not the same after from/to transformation")
         self.assertTrue(np.all(y2 == y), msg="y is not the same after from/to transformation")
