@@ -197,22 +197,8 @@ class LinearLMEProblem(LMEProblem):
         if seed is not None:
             np.random.seed(seed)
 
-        if groups_sizes is None:
-            num_groups = np.random.randint(generator_params["min_groups"], generator_params["max_groups"])
-            groups_sizes = np.random.randint(generator_params["min_elements_per_group"],
-                                             generator_params["max_elements_per_group"],
-                                             num_groups)
-        else:
-            num_groups = len(groups_sizes)
-            for i, group_size in enumerate(groups_sizes):
-                if group_size is None:
-                    groups_sizes[i] = np.random.randint(generator_params["min_elements_per_group"],
-                                                        generator_params["max_elements_per_group"])
-
-        num_objects = sum(groups_sizes)
-
         if features_labels is None:
-            # Not tested yet, do not use!
+        # This won't generate categorical features, you need to provide them explicitly
             if features_covariance_matrix is not None:
                 len_features_labels = features_covariance_matrix.shape[0]
             else:
@@ -221,21 +207,25 @@ class LinearLMEProblem(LMEProblem):
             features_labels = np.random.randint(1, 4, len_features_labels).tolist()
 
         # We add the intercept manually since it is not mentioned in features_labels.
-        fixed_features_idx = np.array([0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 3)])
-        random_features_idx = np.array(([0] if random_intercept else [])
-                                       + [i + 1
-                                          for i, label in enumerate(features_labels) if label in (2, 3)])
+        categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5, 6)])
+        active_categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5, )])
+
+        # We consider the group label, which is always present, to be an active categorical feature
+        num_categorical_features = len(categorical_features_idx) + 1
+        num_active_categorical_features = len(active_categorical_features_idx) + 1
+
         continuous_features_idx = np.array(
             [0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 2, 3)])
-
-        categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5, 6)])
-        active_categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5,)])
-
+        num_continuous_features = len(continuous_features_idx)
+        # We calculate continuous features idxes like other feature don't exist
+        # because we need these structures for slicing over continuous features
+        continuous_features_labels = [l for l in features_labels if l in (1, 2, 3)]
+        fixed_features_idx = np.array([0] + [i + 1 for i, label in enumerate(continuous_features_labels) if label in (1, 3)])
+        random_features_idx = np.array(([0] if random_intercept else [])
+                                      + [i + 1
+                                         for i, label in enumerate(continuous_features_labels) if label in (2, 3)])
         num_fixed_features = len(fixed_features_idx)
         num_random_features = len(random_features_idx)
-        num_continuous_features = len(continuous_features_idx)
-        num_categorical_features = len(categorical_features_idx)
-        num_active_categorical_features = len(active_categorical_features_idx)
 
         if beta is None:
             beta = np.random.rand(num_fixed_features)
@@ -253,15 +243,6 @@ class LinearLMEProblem(LMEProblem):
                     num_random_features
                 )
 
-        data = {
-            'fixed_features': [],
-            'random_features': [],
-            'categorical_features': [],
-            'answers': [],
-            'obs_stds': [],
-
-        }
-
         # features covariance matrix describes covariances only presented in features_labels (meaningful features),
         # so we exclude the intercept feature when we generate random correlated data.
         if features_covariance_matrix is None:
@@ -271,116 +252,149 @@ class LinearLMEProblem(LMEProblem):
                    features_covariance_matrix.shape[1], \
                 "features_covariance_matrix should be n*n where n is the number of continuous features"
 
+        data = {
+            'fixed_features': [],
+            'random_features': [],
+            'categorical_features': [],
+            'answers': [],
+            'obs_stds': [],
+        }
+
+        if groups_sizes is None:
+            num_groups = np.random.randint(generator_params["min_groups"], generator_params["max_groups"])
+            groups_sizes = np.random.randint(generator_params["min_elements_per_group"],
+                                             generator_params["max_elements_per_group"],
+                                             num_groups)
+        else:
+            num_groups = len(groups_sizes)
+            for i, group_size in enumerate(groups_sizes):
+                if group_size is None:
+                    groups_sizes[i] = np.random.randint(generator_params["min_elements_per_group"],
+                                                        generator_params["max_elements_per_group"])
+
+        num_objects = sum(groups_sizes)
+
+        # Generate true group division based on active categorical features
+        got_good_subdivision = False
+
+        new_group_sizes = []
+        categorical_features_list = []
+
+        for _ in range(generator_params["num_attempts_to_generate_cat_features"]):
+            # try to find features which don't give too much granular subdivision
+            active_categorical_features = np.random.randint(0, 2, (num_objects, num_active_categorical_features))
+            active_categorical_features[:, 0] = np.repeat(range(num_groups), groups_sizes)
+            tupled_categorical_features = [tuple(s) for s in active_categorical_features]
+            unique_sub_labels = set(tupled_categorical_features)
+            sub_labels_counters = [tupled_categorical_features.count(s) for s in unique_sub_labels]
+            if all([s > 2 for s in sub_labels_counters]):
+                if num_categorical_features - num_active_categorical_features > 0:
+                    non_active_categorical_features = np.random.randint(0, 2, (num_objects,
+                                                                               num_categorical_features -
+                                                                               num_active_categorical_features))
+                    categorical_features = np.zeros((num_objects, num_categorical_features))
+                    categorical_features[:, 0] = active_categorical_features[:, 0]
+                    actives_counter = 1
+                    non_actives_counter = 0
+                    for i, l in enumerate(categorical_features_idx):
+                        # intercept is not in features_labels, hence we do -1 back
+                        if features_labels[l-1] == 5:
+                            categorical_features[:, i+1] = active_categorical_features[:, actives_counter]
+                            actives_counter += 1
+                        elif features_labels[l-1] == 6:
+                            categorical_features[:, i+1] = non_active_categorical_features[:, non_actives_counter]
+                            non_actives_counter += 1
+                else:
+                    categorical_features = active_categorical_features
+
+                for s in unique_sub_labels:
+                    subgroup_idxs = np.array([i for i, t in enumerate(tupled_categorical_features) if t == s])
+                    new_group_sizes.append((s, len(subgroup_idxs)))
+                    categorical_features_list.append(categorical_features[subgroup_idxs, :])
+                got_good_subdivision = True
+                break
+
+        if not got_good_subdivision:
+            raise Exception("No good subdivision found. Reduce the number of categorical features"
+                            " or increase the number of objects")
+
+        num_groups = len(new_group_sizes)
+
         random_effects_list = []
         errors_list = []
         order_of_objects = []
         true_group_labels = np.zeros(num_objects)
         reference_loss_value = 0
-        group_label_counter = 0
         start = 0
 
-        for i, group_size in enumerate(groups_sizes):
-            if num_active_categorical_features > 0:
-                got_good_subdivision = False
-                # try to find features which don't give too much granular subdivision
-                for _ in range(generator_params["num_attempts_to_generate_cat_features"]):
-                    categorical_features = np.random.randint(0, 2, (group_size, num_active_categorical_features))
-                    tupled_categorical_features = [tuple(s) for s in categorical_features]
-                    unique_sub_labels = set(tupled_categorical_features)
-                    sub_labels_counters = [tupled_categorical_features.count(s) for s in unique_sub_labels]
-                    subgroups_idxs = []
-                    for s in unique_sub_labels:
-                        subgroup_idx = np.array([i for i, t in enumerate(tupled_categorical_features) if t == s])
-                        subgroups_idxs.append(((i, s), subgroup_idx))
-                    if all([s > 2 for s in sub_labels_counters]):
-                        got_good_subdivision = True
-                        break
-
-                if not got_good_subdivision:
-                    raise Exception("No good subdivision found. Reduce the number of categorical features"
-                                    " or increase the number of objects")
-            else:
-                subgroups_idxs = [(i, np.arange(group_size))]
-
-            if num_categorical_features - num_active_categorical_features > 0:
-                non_active_categorical_features = np.random.randint(0, 2, (group_size,
-                                                                           num_categorical_features -
-                                                                           num_active_categorical_features))
-                categorical_features = np.concatenate([categorical_features,
-                                                      non_active_categorical_features],
-                                                      axis=1)
+        for i, (group_label, group_size) in enumerate(new_group_sizes):
 
             group_continuous_features = np.zeros((group_size, num_continuous_features))
             group_continuous_features[:, 0] = 1  # intercept
-            group_errors = np.zeros(group_size)
-            group_stds = np.zeros(group_size)
-            group_answers = np.zeros(group_size)
-            random_effects_list.append({})
-            for key, subgroup_idx in subgroups_idxs:
-                subgroup_size = len(subgroup_idx)
-                if num_continuous_features > 1:
-                    subgroup_continuous_features = np.random.multivariate_normal(np.zeros(num_continuous_features - 1),
-                                                                           features_covariance_matrix,
-                                                                           subgroup_size)
-                    group_continuous_features[subgroup_idx, 1:] = subgroup_continuous_features
 
-                subgroup_fixed_features = group_continuous_features[np.ix_(subgroup_idx, fixed_features_idx)]
-                subgroup_random_features = group_continuous_features[np.ix_(subgroup_idx, random_features_idx)]
+            if num_continuous_features > 1:
+                group_continuous_features[:, 1:] = np.random.multivariate_normal(np.zeros(num_continuous_features - 1),
+                                                                                 features_covariance_matrix,
+                                                                                 group_size)
+            group_fixed_features = group_continuous_features[:, fixed_features_idx]
+            group_random_features = group_continuous_features[:, random_features_idx]
 
-                random_effects = None
-                if true_random_effects is not None:
-                    random_effects = true_random_effects[i].get(key, None)
-                if random_effects is None:
-                    random_effects = np.random.multivariate_normal(np.zeros(num_random_features), np.diag(gamma))
+            random_effects = None
+            if true_random_effects is not None:
+                random_effects = dict(true_random_effects).get(group_label, None)
+            if random_effects is None:
+                random_effects = np.random.multivariate_normal(np.zeros(num_random_features), np.diag(gamma))
 
-                if isinstance(obs_std, np.ndarray):
-                    if obs_std.shape[0] == sum(groups_sizes):
-                        std = obs_std[start:group_size][subgroup_idx]
-                    elif obs_std.shape[0] == num_groups:
-                        std = obs_std[i]
-                    else:
-                        raise ValueError("len(obs_std) should be either num_groups or sum(groups_sizes)")
-
-                elif isinstance(obs_std, (float, int)):
-                    std = obs_std
+            if isinstance(obs_std, np.ndarray):
+                if obs_std.shape[0] == sum(groups_sizes):
+                    std = obs_std[start:group_size]
+                elif obs_std.shape[0] == num_groups:
+                    std = obs_std[i]
                 else:
-                    raise ValueError("obs_std is not an array or int/float.")
+                    raise ValueError("len(obs_std) should be either num_groups or sum(groups_sizes)")
 
-                group_stds[subgroup_idx] = std
-                subgroup_errors = np.random.randn(subgroup_size) * std
-                group_errors[subgroup_idx] = subgroup_errors
-                group_answers[subgroup_idx] = subgroup_fixed_features.dot(beta) + subgroup_random_features.dot(random_effects) + subgroup_errors
+            elif isinstance(obs_std, (float, int)):
+                std = obs_std
+            else:
+                raise ValueError("obs_std is not an array or int/float.")
 
-                true_group_labels[start + subgroup_idx] = group_label_counter
+            group_stds = std
+            group_errors = np.random.randn(group_size) * std
+            group_answers = group_fixed_features.dot(beta) + group_random_features.dot(random_effects) + group_errors
 
-                random_effects_list[-1][key] = random_effects
-                group_label_counter += 1
+            true_group_labels[start: start + group_size] = i
 
+            random_effects_list.append((group_label, random_effects))
 
             order_of_objects += list(range(start, start + group_size))
             start += group_size
 
             reference_loss_value += np.linalg.norm(group_errors) ** 2
-            data['fixed_features'].append(group_continuous_features[:, fixed_features_idx])
-            data['random_features'].append(group_continuous_features[:, random_features_idx])
+            data['fixed_features'].append(group_fixed_features)
+            data['random_features'].append(group_random_features)
             data['answers'].append(group_answers)
-            data['obs_stds'].append(group_stds)
-            if num_categorical_features > 0:
-                data['categorical_features'].append(categorical_features)
+            data['obs_stds'].append(np.ones(group_size)*group_stds)
 
             errors_list.append(group_errors)
 
         data['group_labels'] = np.arange(start=0, stop=num_groups, step=1)
         data['order_of_objects'] = np.array(order_of_objects)
+        data['categorical_features'] = categorical_features_list
 
-        # remove difference between active/inactive
+        # save information about active categorical features
+        active_categorical_set = [0] + [i+1 for i, l in enumerate(categorical_features_idx) if features_labels[l-1] == 5]
+
+        # remove difference between active/inactive categorical features
         for i, label in enumerate(features_labels):
             if label == 6:
                 features_labels[i] = 5
 
-        all_columns_labels = [3 if random_intercept else 1] + features_labels + [4, 0]
+        #  [intercept] + [current_group_division, default_group_division] + [features] + [STDs]
+        all_columns_labels =  [3 if random_intercept else 1] + [0, 5] + features_labels + [4]
         data['column_labels'] = all_columns_labels
-        generated_problem = LinearLMEProblem(**data)
+
+        # We pivot the groups back to the original group division
+        generated_problem = LinearLMEProblem(**data).pivot()
         generated_problem = generated_problem.to_x_y() if as_x_y else generated_problem
 
         if return_true_model_coefficients:
@@ -393,6 +407,7 @@ class LinearLMEProblem(LMEProblem):
                 "beta": beta,
                 "gamma": gamma,
                 "per_group_coefficients": per_group_coefficients,
+                "active_categorical_set": active_categorical_set,
                 "true_group_labels": true_group_labels,
                 "random_effects": random_effects_list,
                 "errors": np.array(errors_list),
@@ -496,7 +511,7 @@ class LinearLMEProblem(LMEProblem):
 
         data["order_of_objects"] = order_of_objects
 
-        return LinearLMEProblem(**data), None
+        return LinearLMEProblem(**data)
 
     def to_x_y(self) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -558,9 +573,22 @@ class LinearLMEProblem(LMEProblem):
         all_answers = all_answers[np.array(self.order_of_objects).argsort()]
         return data_with_column_labels, all_answers
 
+    def pivot(self, categorical_features_set: set = (0, )):
+        x, y = self.to_x_y()
+        group_labels_idx = [i for i, label in enumerate(x[0, :]) if label == 0]
+        assert len(group_labels_idx) == 1, "More than one group label column is found. Check labels."
+        categorical_features_idxs = [i for i, label in enumerate(x[0, :]) if label == 5]
+        indexing_features_idxs = np.array([categorical_features_idxs[i] for i in categorical_features_set])
+        indexing_features = x[1:, indexing_features_idxs]
+        tupled_indexing_features = [tuple(s) for s in indexing_features]
+        for i, s in enumerate(set(tupled_indexing_features)):
+            subgroup_idxs = np.array([i+1 for i, t in enumerate(tupled_indexing_features) if t == s])
+            x[subgroup_idxs, group_labels_idx[0]] = i
+        return LinearLMEProblem.from_x_y(x, y, random_intercept=True if self.column_labels[0] == 3 else False)
+
 
 if __name__ == "__main__":
     data = LinearLMEProblem.generate(groups_sizes=[60, 40, 25],
-                                     features_labels=[3, 3, 6, 5, 5],
-                                     random_intercept=True)
+                                     features_labels=[3, 5, 3, 6, 2, 5],
+                                     random_intercept=False)
     pass

@@ -10,6 +10,7 @@ from skmixed.legacy.oracles import LinearLMEOracle as OldOracle
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.helpers import random_effects_to_matrix
 
+
 class TestLinearLMEOracle(TestCase):
 
     def test_compare_to_old_oracle(self):

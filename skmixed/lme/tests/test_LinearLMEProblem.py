@@ -8,7 +8,7 @@ from skmixed.lme.problems import LinearLMEProblem
 class TestLinearLMEProblem(unittest.TestCase):
     def test_creation_and_from_to_x_y(self):
         problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[20, 30, 50],
-                                                             features_labels=[3, 3, 1, 2, 5, 6],
+                                                             features_labels=[3, 5, 3, 1, 2, 6],
                                                              random_intercept=True,
                                                              obs_std=0.1,
                                                              seed=42)
@@ -17,7 +17,7 @@ class TestLinearLMEProblem(unittest.TestCase):
         x2, y2 = problem2.to_x_y()
         self.assertTrue(np.all(x1 == x2) and np.all(y1 == y2))
         test_problem, true_test_parameters = LinearLMEProblem.generate(groups_sizes=[3, 4, 5],
-                                                                       features_labels=[3, 3, 1, 2, 5, 6],
+                                                                       features_labels=[3, 5, 3, 1, 2, 6],
                                                                        random_intercept=True,
                                                                        beta=true_parameters["beta"],
                                                                        gamma=true_parameters["gamma"],
@@ -28,11 +28,11 @@ class TestLinearLMEProblem(unittest.TestCase):
 
         self.assertTrue(np.all(true_parameters["beta"] == true_test_parameters["beta"])
                         and np.all(true_parameters["gamma"] == true_test_parameters["gamma"]))
-        for us_subgroups, test_us_subgroups in zip(true_parameters["random_effects"], true_test_parameters["random_effects"]):
-            for k, u1 in us_subgroups.items():
-                u2 = test_us_subgroups.get(k, None)
-                if u2 is not None:
-                    self.assertTrue(np.all(u1 == u2))
+        test_us = dict(true_test_parameters["random_effects"])
+        for k, u1 in true_parameters["random_effects"]:
+            u2 = test_us.get(k, None)
+            if u2 is not None:
+                self.assertTrue(np.all(u1 == u2))
 
     def test_creation_from_no_data(self):
         problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
@@ -65,6 +65,22 @@ class TestLinearLMEProblem(unittest.TestCase):
         self.assertTrue(np.all(x2 == x), msg="x is not the same after from/to transformation")
         self.assertTrue(np.all(y2 == y), msg="y is not the same after from/to transformation")
 
+    def test_pivoting(self):
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                             features_labels=[3, 3, 1, 2, 6, 5],
+                                                             random_intercept=True,
+                                                             obs_std=0.1,
+                                                             seed=42)
+        x1, y1 = problem.to_x_y()
+        problem2 = problem.pivot((0, 1))
+        unique_pivot_groups = set([tuple(s) for s in x1[1:, np.array([1, 6])]])
+        assert problem2.num_groups == len(unique_pivot_groups)
+        x2, y2 = problem2.to_x_y()
+        problem3 = LinearLMEProblem.from_x_y(x2, y2).pivot()
+        assert problem3.num_groups == 3
+        x3, y3 = problem3.to_x_y()
+        self.assertTrue(np.all(x3 == x1), msg="x is not the same after from/to transformation")
+        self.assertTrue(np.all(y3 == y1), msg="y is not the same after from/to transformation")
 
 if __name__ == '__main__':
     unittest.main()
