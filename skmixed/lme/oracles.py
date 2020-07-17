@@ -281,6 +281,33 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         return self.loss(beta, gamma) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
 
+    def _hodges2001ddf(self, beta, gamma):
+        raise NotImplementedError("Work in progress")
+        self._recalculate_cholesky(gamma)
+        kernel = 0
+        tail = 0
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            # Form the beta kernel
+            Lx = L_inv.dot(x)
+            kernel += Lx.T.dot(Lx)
+            tail += Lx.T.dot(L_inv)
+
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            # Form the gamma kernel
+            xi = y - x.dot(beta)
+            stds_inv_mat = np.diag(1 / stds)
+            # If the variance of R.E. is 0 then the R.E. is 0, so we take it into account separately
+            # to keep matrices invertible.
+            # TODO: figure out what to do when gammas are empty (H_gamma)
+            mask = np.abs(gamma) > 1e-10
+            z_masked = z[:, mask]
+            gamma_masked = gamma[mask]
+            u_nonzero = np.linalg.solve(np.diag(1 / gamma_masked) + z_masked.T.dot(stds_inv_mat).dot(z_masked),
+                                        z_masked.T.dot(stds_inv_mat).dot(xi)
+                                        )
+            u = np.zeros(len(gamma))
+            u[mask] = u_nonzero
+
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
     """
