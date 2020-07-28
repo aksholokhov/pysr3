@@ -18,6 +18,7 @@
 from typing import Callable
 
 import numpy as np
+import scipy as sp
 from scipy.linalg.lapack import get_lapack_funcs
 
 from skmixed.lme.problems import LinearLMEProblem
@@ -281,32 +282,43 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         return self.loss(beta, gamma) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
 
-    def _hodges2001ddf(self, beta, gamma):
-        raise NotImplementedError("Work in progress")
+    def _hat_matrix(self, gamma):
+        # TODO: write tests for hat matrix
         self._recalculate_cholesky(gamma)
-        kernel = 0
-        tail = 0
+        h = []
+        h_beta_kernel = 0
+        h_beta_tail = 0
+        # Form the beta kernel and tail
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
-            # Form the beta kernel
             Lx = L_inv.dot(x)
-            kernel += Lx.T.dot(Lx)
-            tail += Lx.T.dot(L_inv)
+            h_beta_kernel += Lx.T.dot(Lx)
+            h_beta_tail += Lx.T.dot(L_inv)
 
+        h_beta = np.linalg.inv(h_beta_kernel).dot(h_beta_tail)
+
+        ddf = 0
+        # we treat R.E. with very small variance
+        # as effectively no R.E. to improve the stability of matrix inversions
+        mask = np.abs(gamma) > 1e-10
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
-            # Form the gamma kernel
-            xi = y - x.dot(beta)
+            # Form the h_gamma
             stds_inv_mat = np.diag(1 / stds)
             # If the variance of R.E. is 0 then the R.E. is 0, so we take it into account separately
             # to keep matrices invertible.
-            # TODO: figure out what to do when gammas are empty (H_gamma)
-            mask = np.abs(gamma) > 1e-10
             z_masked = z[:, mask]
             gamma_masked = gamma[mask]
-            u_nonzero = np.linalg.solve(np.diag(1 / gamma_masked) + z_masked.T.dot(stds_inv_mat).dot(z_masked),
-                                        z_masked.T.dot(stds_inv_mat).dot(xi)
-                                        )
-            u = np.zeros(len(gamma))
-            u[mask] = u_nonzero
+            h_gamma_kernel = np.diag(1 / gamma_masked) + z_masked.T.dot(stds_inv_mat).dot(z_masked)
+            h_gamma_tail = z_masked.T.dot(stds_inv_mat)
+            h_gamma = np.zeros((self.problem.num_random_effects, z.shape[0]))
+            h_gamma[mask, :] = np.linalg.inv(h_gamma_kernel).dot(h_gamma_tail)
+            h_full = h_gamma + x.dot(h_beta).dot(np.eye(self.problem.num_random_effects) + h_gamma)
+            h.append(h_full)
+
+        return sp.linalg.block_diag(*h)
+
+    def _hodges2001ddf(self, gamma, **kwargs):
+        h_matrix = self._hat_matrix(gamma)
+        return np.trace(h_matrix)
 
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
