@@ -283,23 +283,33 @@ class LinearLMEOracle:
         return self.loss(beta, gamma) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
 
     def _hat_matrix(self, gamma):
-        # TODO: write tests for hat matrix
         self._recalculate_cholesky(gamma)
-        h = []
+
         h_beta_kernel = 0
-        h_beta_tail = 0
+        h_beta_tail = []
+        xs = []
+        ys = []
         # Form the beta kernel and tail
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             Lx = L_inv.dot(x)
             h_beta_kernel += Lx.T.dot(Lx)
-            h_beta_tail += Lx.T.dot(L_inv)
+            h_beta_tail.append(Lx.T.dot(L_inv))
+            xs.append(x)
+            ys.append(y)
 
-        h_beta = np.linalg.inv(h_beta_kernel).dot(h_beta_tail)
+        h_beta = np.concatenate([np.linalg.inv(h_beta_kernel).dot(tail) for tail in h_beta_tail], axis=1)
+        xs = np.concatenate(xs, axis=0)
+        ys = np.concatenate(ys)
+        beta = h_beta.dot(ys)
+        h_beta = xs.dot(h_beta)
 
-        ddf = 0
+
+
         # we treat R.E. with very small variance
         # as effectively no R.E. to improve the stability of matrix inversions
         mask = np.abs(gamma) > 1e-10
+
+        random_effects_parts = []
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             # Form the h_gamma
             stds_inv_mat = np.diag(1 / stds)
@@ -309,12 +319,13 @@ class LinearLMEOracle:
             gamma_masked = gamma[mask]
             h_gamma_kernel = np.diag(1 / gamma_masked) + z_masked.T.dot(stds_inv_mat).dot(z_masked)
             h_gamma_tail = z_masked.T.dot(stds_inv_mat)
-            h_gamma = np.zeros((self.problem.num_random_effects, z.shape[0]))
-            h_gamma[mask, :] = np.linalg.inv(h_gamma_kernel).dot(h_gamma_tail)
-            h_full = h_gamma + x.dot(h_beta).dot(np.eye(self.problem.num_random_effects) + h_gamma)
-            h.append(h_full)
+            h_gamma_i = np.zeros((self.problem.num_random_effects, z.shape[0]))
+            h_gamma_i[mask, :] = np.linalg.inv(h_gamma_kernel).dot(h_gamma_tail)
+            random_effects_parts.append(z.dot(h_gamma_i))
 
-        return sp.linalg.block_diag(*h)
+        h_gamma = sp.linalg.block_diag(*random_effects_parts)
+        h = h_beta + h_gamma - h_gamma.dot(h_beta)
+        return h
 
     def _hodges2001ddf(self, gamma, **kwargs):
         h_matrix = self._hat_matrix(gamma)
