@@ -279,6 +279,8 @@ class LinearLMEOracle:
         return n_eff
 
     def jones2010bic(self, beta, gamma, **kwargs):
+        # From here
+        # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
         self._recalculate_cholesky(gamma)
         return self.loss(beta, gamma) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
 
@@ -328,8 +330,23 @@ class LinearLMEOracle:
         return h
 
     def _hodges2001ddf(self, gamma, **kwargs):
+        # From here:
+        # https://www.jstor.org/stable/2673485?seq=1
+
         h_matrix = self._hat_matrix(gamma)
         return np.trace(h_matrix)
+
+    def vaida2005aic(self, beta, gamma, **kwargs):
+        # From here
+        # https://www.jstor.org/stable/2673485?seq=1
+        rho = self._hodges2001ddf(gamma)
+        n = self.problem.num_obs
+        p = self.problem.num_fixed_effects
+        q = self.problem.num_random_effects
+        alpha = 2*n/(n - p - 2)*(rho - (rho - p)/(n - p))
+        # The likelihood here is conditional in the original paper
+        # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
+        return self.loss(beta, gamma) + 2*alpha*(p+q)
 
 
 class LinearLMEOracleRegularized(LinearLMEOracle):

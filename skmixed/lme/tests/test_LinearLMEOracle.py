@@ -192,6 +192,20 @@ class TestLinearLMEOracle(TestCase):
             n_eff = oracle._jones2010n_eff()
             assert np.allclose(n_eff, sum([ni/(1+(ni-1)*rho) for ni in problem.groups_sizes]))
 
+    def test_hodges2001ddf(self):
+        # From here:
+        # https://www.jstor.org/stable/2673485?seq=1
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                             features_labels=[3, 3, 3],
+                                                             random_intercept=True,
+                                                             obs_std=0.1,
+                                                             seed=42)
+        oracle = LinearLMEOracle(problem)
+        true_gamma = true_parameters['gamma']
+        ddf = oracle._hodges2001ddf(true_gamma)
+        #  #|beta| <= DDoF <= #|beta| + num_groups*#|u|
+        assert 4 <= ddf <= 4+4*3
+
     def test_hat_matrix(self):
         for seed in range(10):
             problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
