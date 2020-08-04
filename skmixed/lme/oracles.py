@@ -348,6 +348,14 @@ class LinearLMEOracle:
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
         return self.loss(beta, gamma) + 2*alpha*(p+q)
 
+    def get_ic(self, ic, beta, gamma, **kwargs):
+        if ic == "IC_vaida2005aic":
+            return self.vaida2005aic(beta, gamma, **kwargs)
+        elif ic == "IC_jones2010bic":
+            return self.jones2010bic(beta, gamma, **kwargs)
+        else:
+            raise ValueError(f"Unknown information criterion: {ic}")
+
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
     """

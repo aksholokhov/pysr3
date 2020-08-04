@@ -365,7 +365,10 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         sparse_per_group_coefficients = get_per_group_coefficients(tbeta, sparse_us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
-        self.logger_.add('iterations', iteration)
+        # self.logger_.add('iterations', iteration) # TODO: fix inner + outer iterations counter
+        for key in self.logger_keys:
+            if key.startswith("IC_"):
+                self.logger_.add(key, oracle.get_ic(key, beta=beta, gamma=gamma, tbeta=tbeta, tgamma=tgamma))
 
         self.coef_ = {
             "beta": beta,
