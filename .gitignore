@@ -11,3 +11,4 @@ docs/generated
 docs/_build
 *.csv
 *.pdf
+*.png
