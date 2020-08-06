@@ -592,6 +592,13 @@ class LinearLMEProblem(LMEProblem):
             x[subgroup_idxs, group_labels_idx[0]] = i
         return LinearLMEProblem.from_x_y(x, y, random_intercept=True if self.column_labels[0] == 3 else False)
 
+    def reconfigure_columns(self, new_columns_labels):
+        x, y = self.to_x_y()
+        assert len(new_columns_labels) == x.shape[1], f"new_column_labels have size {len(new_columns_labels)}, " \
+                                                     f"but X has {x.shape[1]} columns. These two should match."
+        x[0, :] = new_columns_labels
+        return LinearLMEProblem.from_x_y(x, y, random_intercept=True if self.column_labels[0] == 3 else 1)
+
     def bootstrap(self, seed=42):
         np.random.seed(seed)
         categorical_features_idx = np.zeros(self.num_categorical_features, dtype=int)

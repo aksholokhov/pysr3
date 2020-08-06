@@ -282,7 +282,7 @@ class LinearLMEOracle:
         # From here
         # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
         self._recalculate_cholesky(gamma)
-        return self.loss(beta, gamma) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
+        return self.loss(beta, gamma, **kwargs) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
 
     def _hat_matrix(self, gamma):
         self._recalculate_cholesky(gamma)
@@ -302,10 +302,7 @@ class LinearLMEOracle:
         h_beta = np.concatenate([np.linalg.inv(h_beta_kernel).dot(tail) for tail in h_beta_tail], axis=1)
         xs = np.concatenate(xs, axis=0)
         ys = np.concatenate(ys)
-        beta = h_beta.dot(ys)
         h_beta = xs.dot(h_beta)
-
-
 
         # we treat R.E. with very small variance
         # as effectively no R.E. to improve the stability of matrix inversions
@@ -346,7 +343,7 @@ class LinearLMEOracle:
         alpha = 2*n/(n - p - 2)*(rho - (rho - p)/(n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return self.loss(beta, gamma) + 2*alpha*(p+q)
+        return 2*self.loss(beta, gamma, **kwargs) + alpha*(p+q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         if ic == "IC_vaida2005aic":
