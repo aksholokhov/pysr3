@@ -59,6 +59,7 @@ class Tree(BaseEstimator, RegressorMixin):
             if all([gain == np.infty for gain in all_gains]):    # Granularity stop
                 break
             best_gain_idx = np.argmin(all_gains)
+            # assert len(best_gain_idx) == 1, "More than one best feature option"
             gain_difference = previous_information_gain - all_gains[best_gain_idx]
             if gain_difference <= self.minimal_gain:            # Information gain stop
                 break
@@ -71,7 +72,6 @@ class Tree(BaseEstimator, RegressorMixin):
         self.coef_ = {"chosen_categorical_features": set(chosen_features)}
         self.fitted_model_ = model
 
-
     def predict(self, x):
         # check_is_fitted(self, 'coef_')    # TODO: figure out why this check does not work
         problem = LinearLMEProblem.from_x_y(x)
@@ -83,18 +83,46 @@ class Tree(BaseEstimator, RegressorMixin):
         return  self.fitted_model_.predict_problem(pivoted_problem)
 
 
-if __name__ == "__main__":
-    problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
-                                                        features_labels=[3, 3, 6, 5, 5, 6],
-                                                        random_intercept=True,
-                                                        obs_std=0.1,
-                                                        seed=0)
-    continuous_model = LinearLMESparseModel(lb=0, lg=0)
-    tree_model = Tree(model=continuous_model)
-    tree_model.fit_problem(problem)
-    y_pred = tree_model.predict_problem(problem)
-    x, y_true = problem.to_x_y()
-    explained_variance = explained_variance_score(y_true, y_pred)
-    mse = mean_squared_error(y_true, y_pred)
-    a = 3
-    pass
+class Forest(BaseEstimator, RegressorMixin):
+
+    def __init__(self, continuous_model, num_trees=10, max_depth=3, information_criterion="IC_vaida2005aic",
+                 minimal_gain=1e1):
+        self.model = continuous_model
+        self.num_trees = num_trees
+        self.max_depth = max_depth
+        self.information_criterion=information_criterion
+        self.minimal_gain=minimal_gain
+
+    def fit_problem(self, problem: LinearLMEProblem, seed=42):
+        self.trees_ = []
+        self.bootstrap_idxs_ = []
+        assert problem.answers is not None, "Problem does not include the target variable"
+        for i in range(self.num_trees):
+            bootstrap_problem = problem.bootstrap(seed=i+seed)
+            tree = Tree(model=clone(self.model),
+                        max_depth=self.max_depth,
+                        information_criterion=self.information_criterion,
+                        minimal_gain=self.minimal_gain)
+            tree.fit_problem(bootstrap_problem)
+            self.trees_.append(tree)
+            self.bootstrap_idxs_.append(bootstrap_problem.categorical_features_bootstrap_idx)
+
+    def get_ensemble_predictions(self, problem: LinearLMEProblem):
+        # check_is_fitted(self, "trees_", "bootstrap_idxs_")
+        predictions = []
+        for tree, bootstrap_idxs in zip(self.trees_, self.bootstrap_idxs_):
+            bootstrap_problem = problem.bootstrap(categorical_features_idx=bootstrap_idxs, do_bootstrap_objects=False)
+            answers = tree.predict_problem(bootstrap_problem)
+            predictions.append(answers)
+        return predictions
+
+    def predict_problem(self, problem: LinearLMEProblem):
+        predictions = self.get_ensemble_predictions(problem)
+        return np.mean(predictions, axis=0)
+
+    def get_prediction_uncertainty(self, problem, percentile=5):
+        assert 0 < percentile < 50, "Percentile should be between 0 and 50"
+        predictions = np.array(self.get_ensemble_predictions(problem))
+        lower_percentile = np.percentile(predictions, axis=0, q=percentile)
+        higher_percentile = np.percentile(predictions, axis=0, q=100-percentile)
+        return lower_percentile, higher_percentile

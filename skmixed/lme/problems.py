@@ -599,12 +599,14 @@ class LinearLMEProblem(LMEProblem):
         x[0, :] = new_columns_labels
         return LinearLMEProblem.from_x_y(x, y, random_intercept=True if self.column_labels[0] == 3 else 1)
 
-    def bootstrap(self, seed=42):
+    def bootstrap(self, seed=42, categorical_features_idx=None, do_bootstrap_objects=True):
         np.random.seed(seed)
-        categorical_features_idx = np.zeros(self.num_categorical_features, dtype=int)
-        categorical_features_idx[1:] = np.random.choice(range(1, self.num_categorical_features),
-                                                    size=self.num_categorical_features-1,
-                                                    replace=True)
+        if categorical_features_idx is None:
+            categorical_features_idx = np.zeros(self.num_categorical_features, dtype=int)
+            categorical_features_idx[1:] = np.random.choice(range(1, self.num_categorical_features),
+                                                        size=self.num_categorical_features-1,
+                                                        replace=True)
+
         data = {
             'fixed_features': [],
             'random_features': [],
@@ -618,7 +620,10 @@ class LinearLMEProblem(LMEProblem):
         }
 
         for i, ((x, y, z, l), group_size) in enumerate(zip(self, self.groups_sizes)):
-            objects_idx = np.random.choice(range(group_size), size=group_size, replace=True)
+            if do_bootstrap_objects:
+                objects_idx = np.random.choice(range(group_size), size=group_size, replace=True)
+            else:
+                objects_idx = np.array(range(group_size))
             data['fixed_features'].append(x[objects_idx, :])  # Continuous features are not bootstrapped
             # same for random effects
             data['random_features'].append(z[objects_idx, :])
