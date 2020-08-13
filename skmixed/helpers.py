@@ -26,7 +26,7 @@ def get_per_group_coefficients(beta, random_effects, labels):
     ----------
     beta: np.ndarray, shape=(n,), n is the number of fixed effects.
         Vector of fixed effects.
-    random_effects: np.ndarray, shape=(m, k), m groups, k random effects.
+    random_effects: np.ndarray or list, shape=(m, k), m groups, k random effects.
         Array of random effects.
     labels: np.ndarray[int], shape=(t,), t -- number of columns in the dataset INCLUDING INTERCEPT.
         Vector of labels of the column's dataset, including intercept. Labels can be the following integers:

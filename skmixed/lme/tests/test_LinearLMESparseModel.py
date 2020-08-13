@@ -46,7 +46,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             model = LinearLMESparseModel(**model_parameters)
 
             x, y = problem.to_x_y()
-            model.fit(x, y)
+            model.fit_problem(problem)
 
             logger = model.logger_
             loss = np.array(logger.get("loss"))

@@ -22,6 +22,7 @@ class TestForest(unittest.TestCase):
                                                                  random_intercept=True,
                                                                  obs_std=0.1,
                                                                  seed=i)
+            X, y = problem.to_x_y()
             continuous_model = LinearLMESparseModel(lb=0, lg=0, nnz_tbeta=2, nnz_tgamma=2)
             forest = Forest(continuous_model, num_trees=10, max_depth=3)
             forest.fit_problem(problem)

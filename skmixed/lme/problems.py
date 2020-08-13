@@ -210,13 +210,9 @@ class LinearLMEProblem(LMEProblem):
                                                         generator_params["max_features"])
             features_labels = np.random.randint(1, 4, len_features_labels).tolist()
 
-        # We add the intercept manually since it is not mentioned in features_labels.
         categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5, 6)])
         active_categorical_features_idx = np.array([i + 1 for i, label in enumerate(features_labels) if label in (5,)])
-
-        # We consider the group label, which is always present, to be an active categorical feature
-        num_categorical_features = len(categorical_features_idx) + 1
-        num_active_categorical_features = len(active_categorical_features_idx) + 1
+        num_categorical_features = len(categorical_features_idx)
 
         continuous_features_idx = np.array(
             [0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 2, 3)])
@@ -224,6 +220,7 @@ class LinearLMEProblem(LMEProblem):
         # We calculate continuous features idxes like other feature don't exist
         # because we need these structures for slicing over continuous features
         continuous_features_labels = [l for l in features_labels if l in (1, 2, 3)]
+        # We add the intercept manually since it is not mentioned in features_labels.
         fixed_features_idx = np.array(
             [0] + [i + 1 for i, label in enumerate(continuous_features_labels) if label in (1, 3)])
         random_features_idx = np.array(([0] if random_intercept else [])
@@ -248,12 +245,13 @@ class LinearLMEProblem(LMEProblem):
                     num_random_features
                 )
 
+        num_features_to_generate = len(features_labels)
         # features covariance matrix describes covariances only presented in features_labels (meaningful features),
         # so we exclude the intercept feature when we generate random correlated data.
         if features_covariance_matrix is None:
-            features_covariance_matrix = np.eye(num_continuous_features - 1)
+            features_covariance_matrix = np.eye(num_features_to_generate)
         else:
-            assert features_covariance_matrix.shape[0] == num_continuous_features - 1 == \
+            assert features_covariance_matrix.shape[0] == num_features_to_generate == \
                    features_covariance_matrix.shape[1], \
                 "features_covariance_matrix should be n*n where n is the number of continuous features"
 
@@ -282,39 +280,44 @@ class LinearLMEProblem(LMEProblem):
         # Generate true group division based on active categorical features
         got_good_subdivision = False
 
-        new_group_sizes = []
+        new_groups = []
         categorical_features_list = []
 
+        all_data_in_one_matrix = None
+        assert generator_params["num_attempts_to_generate_cat_features"] > 0, \
+            "num_attempts_to_generate_cat_features should be > 0"
         for _ in range(generator_params["num_attempts_to_generate_cat_features"]):
+            # generate ALL the data iteratively and
             # try to find features which don't give too much granular subdivision
-            active_categorical_features = np.random.randint(0, 2, (num_objects, num_active_categorical_features))
-            active_categorical_features[:, 0] = np.repeat(range(num_groups), groups_sizes)
+            if num_features_to_generate > 0:
+                all_data_in_one_matrix = np.random.multivariate_normal(np.zeros(num_features_to_generate),
+                                                                   features_covariance_matrix,
+                                                                   num_objects)
+                # add intercept to the left
+                all_data_in_one_matrix = np.hstack([np.ones(num_objects).reshape((-1, 1)), all_data_in_one_matrix])
+            else:
+                # just the intercept
+                all_data_in_one_matrix = np.ones((num_objects, 1))
+            groups_column = np.repeat(range(num_groups), groups_sizes).reshape((-1, 1))
+            active_categorical_features = groups_column
+            categorical_features = groups_column
+            if num_categorical_features > 0:
+                categorical_features = all_data_in_one_matrix[:, categorical_features_idx]
+                categorical_features[categorical_features > 0] = 1
+                categorical_features[categorical_features < 0] = 0
+                all_data_in_one_matrix[:, categorical_features_idx] = categorical_features
+                categorical_features = np.hstack([groups_column, categorical_features])
+                if len(active_categorical_features_idx) > 0:
+                    active_categorical_features = np.hstack([active_categorical_features, all_data_in_one_matrix[:, active_categorical_features_idx]])
+
+            # add groups labels as an always-present categorical feature
             tupled_categorical_features = [tuple(s) for s in active_categorical_features]
             unique_sub_labels = set(tupled_categorical_features)
             sub_labels_counters = [tupled_categorical_features.count(s) for s in unique_sub_labels]
             if all([s > 2 for s in sub_labels_counters]):
-                if num_categorical_features - num_active_categorical_features > 0:
-                    non_active_categorical_features = np.random.randint(0, 2, (num_objects,
-                                                                               num_categorical_features -
-                                                                               num_active_categorical_features))
-                    categorical_features = np.zeros((num_objects, num_categorical_features))
-                    categorical_features[:, 0] = active_categorical_features[:, 0]
-                    actives_counter = 1
-                    non_actives_counter = 0
-                    for i, l in enumerate(categorical_features_idx):
-                        # intercept is not in features_labels, hence we do -1 back
-                        if features_labels[l - 1] == 5:
-                            categorical_features[:, i + 1] = active_categorical_features[:, actives_counter]
-                            actives_counter += 1
-                        elif features_labels[l - 1] == 6:
-                            categorical_features[:, i + 1] = non_active_categorical_features[:, non_actives_counter]
-                            non_actives_counter += 1
-                else:
-                    categorical_features = active_categorical_features
-
                 for s in unique_sub_labels:
                     subgroup_idxs = np.array([i for i, t in enumerate(tupled_categorical_features) if t == s])
-                    new_group_sizes.append((s, len(subgroup_idxs)))
+                    new_groups.append((s, subgroup_idxs))
                     categorical_features_list.append(categorical_features[subgroup_idxs, :])
                 got_good_subdivision = True
                 break
@@ -323,7 +326,7 @@ class LinearLMEProblem(LMEProblem):
             raise Exception("No good subdivision found. Reduce the number of categorical features"
                             " or increase the number of objects")
 
-        num_groups = len(new_group_sizes)
+        num_groups = len(new_groups)
 
         random_effects_list = []
         errors_list = []
@@ -332,15 +335,10 @@ class LinearLMEProblem(LMEProblem):
         reference_loss_value = 0
         start = 0
 
-        for i, (group_label, group_size) in enumerate(new_group_sizes):
+        for i, (group_label, group_idxs) in enumerate(new_groups):
+            group_size = len(group_idxs)
 
-            group_continuous_features = np.zeros((group_size, num_continuous_features))
-            group_continuous_features[:, 0] = 1  # intercept
-
-            if num_continuous_features > 1:
-                group_continuous_features[:, 1:] = np.random.multivariate_normal(np.zeros(num_continuous_features - 1),
-                                                                                 features_covariance_matrix,
-                                                                                 group_size)
+            group_continuous_features = all_data_in_one_matrix[np.ix_(group_idxs, continuous_features_idx)]
             group_fixed_features = group_continuous_features[:, fixed_features_idx]
             group_random_features = group_continuous_features[:, random_features_idx]
 
@@ -428,6 +426,7 @@ class LinearLMEProblem(LMEProblem):
                  y: Optional[np.ndarray] = None,
                  columns_labels: List[int] = None,
                  random_intercept: bool = True,
+                 add_group_as_categorical_feature=False,
                  **kwargs):
         """
         Transforms matrices x (data) and y(answers) into an instance of LinearLMEProblem
@@ -478,7 +477,9 @@ class LinearLMEProblem(LMEProblem):
         assert all(x[:, obs_std_idx] != 0), "Errors' STDs can't be zero. Check for zeros in the respective column."
         fixed_features_idx = [i for i, t in enumerate(columns_labels) if t == 1 or t == 3]
         random_features_idx = [i for i, t in enumerate(columns_labels) if t == 2 or t == 3]
-        categorical_features_idx = [i for i, t in enumerate(columns_labels) if t == 5]
+        # We include the groups column to the list of categorical features
+        categorical_features_idx = [group_labels_idx] if add_group_as_categorical_feature else []
+        categorical_features_idx += [i for i, t in enumerate(columns_labels) if t == 5]
         num_categorical_features = len(categorical_features_idx)
         groups_labels = unique_labels(x[:, group_labels_idx])
 
@@ -579,7 +580,7 @@ class LinearLMEProblem(LMEProblem):
         all_answers = all_answers[np.array(self.order_of_objects).argsort()]
         return data_with_column_labels, all_answers
 
-    def pivot(self, categorical_features_set: set = (0,)):
+    def pivot(self, categorical_features_set=(0,)):
         x, y = self.to_x_y()
         group_labels_idx = [i for i, label in enumerate(x[0, :]) if label == 0]
         assert len(group_labels_idx) == 1, "More than one group label column is found. Check labels."
@@ -595,7 +596,7 @@ class LinearLMEProblem(LMEProblem):
     def reconfigure_columns(self, new_columns_labels):
         x, y = self.to_x_y()
         assert len(new_columns_labels) == x.shape[1], f"new_column_labels have size {len(new_columns_labels)}, " \
-                                                     f"but X has {x.shape[1]} columns. These two should match."
+                                                      f"but X has {x.shape[1]} columns. These two should match."
         x[0, :] = new_columns_labels
         return LinearLMEProblem.from_x_y(x, y, random_intercept=True if self.column_labels[0] == 3 else 1)
 
@@ -604,8 +605,8 @@ class LinearLMEProblem(LMEProblem):
         if categorical_features_idx is None:
             categorical_features_idx = np.zeros(self.num_categorical_features, dtype=int)
             categorical_features_idx[1:] = np.random.choice(range(1, self.num_categorical_features),
-                                                        size=self.num_categorical_features-1,
-                                                        replace=True)
+                                                            size=self.num_categorical_features - 1,
+                                                            replace=True)
 
         data = {
             'fixed_features': [],
@@ -633,15 +634,16 @@ class LinearLMEProblem(LMEProblem):
             data['order_of_objects'] += np.arange(group_size).tolist()
 
             if self.num_categorical_features > 0:
-                data['categorical_features'].append(self.categorical_features[i][np.ix_(objects_idx, categorical_features_idx)])
+                data['categorical_features'].append(
+                    self.categorical_features[i][np.ix_(objects_idx, categorical_features_idx)])
 
         return LinearLMEProblem(**data)
 
 
 if __name__ == "__main__":
     problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[60, 40, 25],
-                                     features_labels=[3, 5, 3, 6, 2, 5],
-                                     random_intercept=False)
+                                                         features_labels=[3, 5, 3, 6, 2, 5],
+                                                         random_intercept=False)
 
     bootstrap_problem = problem.bootstrap(seed=42)
     X1, y1 = problem.to_x_y()
