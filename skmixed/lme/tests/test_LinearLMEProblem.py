@@ -6,6 +6,25 @@ from skmixed.lme.problems import LinearLMEProblem
 
 
 class TestLinearLMEProblem(unittest.TestCase):
+    def test_correctness(self):
+        problem_parameters = {
+            "groups_sizes": [20, 5, 10, 50],
+            "features_labels": [3, 3, 3],
+            "random_intercept": True,
+            "features_covariance_matrix": np.array([
+                [1, 0, 0],
+                [0, 1, 0.7],
+                [0, 0.7, 1]
+            ]),
+            "obs_std": 0.1,
+        }
+        problem, true_parameters = LinearLMEProblem.generate(**problem_parameters,
+                                                             seed=0)
+        x1, y1 = problem.to_x_y()
+        problem2 = LinearLMEProblem.from_x_y(x1, y1)
+        for i, (x, y, z, l) in enumerate(problem2):
+            assert np.allclose(y, x.dot(true_parameters['beta']) + z.dot(true_parameters['random_effects'][i][1]) + true_parameters['errors'][i])
+
     def test_creation_and_from_to_x_y(self):
         problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[20, 30, 50],
                                                              features_labels=[3, 5, 3, 1, 2, 6],
@@ -13,6 +32,7 @@ class TestLinearLMEProblem(unittest.TestCase):
                                                              obs_std=0.1,
                                                              seed=42)
         x1, y1 = problem.to_x_y()
+
         problem2 = LinearLMEProblem.from_x_y(x1, y1)
         x2, y2 = problem2.to_x_y()
         self.assertTrue(np.all(x1 == x2) and np.all(y1 == y2))

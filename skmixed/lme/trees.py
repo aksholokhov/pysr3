@@ -39,7 +39,8 @@ class Tree(BaseEstimator, RegressorMixin):
         problem = problem.pivot((0,))
         model = clone(self.model)
         model.logger_keys = model.logger_keys + (self.information_criterion,)
-        model.fit_problem(problem)
+        x, y = problem.to_x_y()
+        model.fit() # TODO: fix it back to fit_problem
 
         previous_information_gain = model.logger_.get(self.information_criterion)
         for i in range(self.max_depth):

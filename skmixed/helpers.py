@@ -53,14 +53,14 @@ def get_per_group_coefficients(beta, random_effects, labels):
         fixed_effects_counter = 0
         random_effects_counter = 0
 
-        for j, label in enumerate(labels):
-            if label == 1:
+        for j, feature_label in enumerate(labels):
+            if feature_label == 1:
                 per_group_coefficients[j] = beta[fixed_effects_counter]
                 fixed_effects_counter += 1
-            elif label == 2:
+            elif feature_label == 2:
                 per_group_coefficients[j] = u[random_effects_counter]
                 random_effects_counter += 1
-            elif label == 3:
+            elif feature_label == 3:
                 per_group_coefficients[j] = beta[fixed_effects_counter] + u[random_effects_counter]
                 fixed_effects_counter += 1
                 random_effects_counter += 1

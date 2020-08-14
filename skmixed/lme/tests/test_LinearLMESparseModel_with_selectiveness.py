@@ -33,7 +33,7 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             "n_iter_outer": 20,
         }
 
-        max_mse = 0.05
+        max_mse = 0.1
         min_explained_variance = 0.9
         fixed_effects_min_accuracy = 0.7
         random_effects_min_accuracy = 0.7

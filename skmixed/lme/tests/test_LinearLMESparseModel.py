@@ -46,7 +46,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             model = LinearLMESparseModel(**model_parameters)
 
             x, y = problem.to_x_y()
-            model.fit_problem(problem)
+            model.fit(x, y)
 
             logger = model.logger_
             loss = np.array(logger.get("loss"))
@@ -109,7 +109,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "n_iter_outer": 20
         }
 
-        max_mse = 0.05
+        max_mse = 0.1
         min_explained_variance = 0.9
         fixed_effects_min_accuracy = 0.7
         random_effects_min_accuracy = 0.7
