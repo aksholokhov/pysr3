@@ -291,8 +291,8 @@ class LinearLMEProblem(LMEProblem):
             # try to find features which don't give too much granular subdivision
             if num_features_to_generate > 0:
                 all_data_in_one_matrix = np.random.multivariate_normal(np.zeros(num_features_to_generate),
-                                                                   features_covariance_matrix,
-                                                                   num_objects)
+                                                                       features_covariance_matrix,
+                                                                       num_objects)
                 # add intercept to the left
                 all_data_in_one_matrix = np.hstack([np.ones(num_objects).reshape((-1, 1)), all_data_in_one_matrix])
             else:
@@ -308,7 +308,8 @@ class LinearLMEProblem(LMEProblem):
                 all_data_in_one_matrix[:, categorical_features_idx] = categorical_features
                 categorical_features = np.hstack([groups_column, categorical_features])
                 if len(active_categorical_features_idx) > 0:
-                    active_categorical_features = np.hstack([active_categorical_features, all_data_in_one_matrix[:, active_categorical_features_idx]])
+                    active_categorical_features = np.hstack(
+                        [active_categorical_features, all_data_in_one_matrix[:, active_categorical_features_idx]])
 
             # add groups labels as an always-present categorical feature
             tupled_categorical_features = [tuple(s) for s in active_categorical_features]

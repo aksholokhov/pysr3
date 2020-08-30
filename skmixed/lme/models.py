@@ -150,15 +150,68 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             random_intercept=True,
             **kwargs):
         """
+                Fits a Linear Model with Linear Mixed-Effects to the given data.
+
+                Parameters
+                ----------
+                x : np.ndarray
+                    Data. If columns_labels = None then it's assumed that columns_labels are in the first row of x.
+
+                y : np.ndarray
+                    Answers, real-valued array.
+
+                columns_labels : np.ndarray
+                    List of column labels. There shall be only one column of group labels and answers STDs,
+                    and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
+
+                        - 1 : fixed effect
+                        - 2 : random effect
+                        - 3 : both fixed and random,
+                        - 0 : groups labels
+                        - 4 : answers standard deviations
+
+                initial_parameters : np.ndarray
+                    Dict with possible fields:
+
+                        -   | 'beta0' : np.ndarray, shape = [n],
+                            | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
+                        -   | 'gamma0' : np.ndarray, shape = [k],
+                            | Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
+                        -   | 'tbeta0' : np.ndarray, shape = [n],
+                            | Initial estimate of sparse fixed effects. If None then it defaults to an all-zeros vector.
+                        -   | 'tgamma0' : np.ndarray, shape = [k],
+                            | Initial estimate of sparse random covariances. If None then it defaults to an all-zeros vector.
+
+                warm_start : bool, default is False
+                    Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
+                    Throws NotFittedError if set to True when not fitted.
+
+                random_intercept : bool, default = True
+                    Whether treat the intercept as a random effect.
+                kwargs :
+                    Not used currently, left here for passing debugging parameters.
+
+                Returns
+                -------
+                self : LinearLMESparseModel
+                    Fitted regression model.
+                """
+
+        problem = LinearLMEProblem.from_x_y(x, y, columns_labels, random_intercept=random_intercept, **kwargs)
+        return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
+
+    def fit_problem(self,
+                    problem: LinearLMEProblem,
+                    initial_parameters: dict = None,
+                    warm_start=False,
+                    **kwargs):
+        """
         Fits a Linear Model with Linear Mixed-Effects to the given data.
 
         Parameters
         ----------
-        x : np.ndarray
-            Data. If columns_labels = None then it's assumed that columns_labels are in the first row of x.
-
-        y : np.ndarray
-            Answers, real-valued array.
+        problem : LinearLMEProblem
+            Problem to fit the model in. Must contain answers.
 
         columns_labels : np.ndarray
             List of column labels. There shall be only one column of group labels and answers STDs,
@@ -197,7 +250,6 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             Fitted regression model.
         """
 
-        problem = LinearLMEProblem.from_x_y(x, y, columns_labels, random_intercept=random_intercept, **kwargs)
         if initial_parameters is None:
             initial_parameters = {}
         beta0 = initial_parameters.get("beta", None)
@@ -274,8 +326,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         loss = oracle.loss(beta, gamma, tbeta, tgamma)
         self.logger_ = Logger(self.logger_keys)
 
+        # ========= OUTER ITERATION ============
         outer_iteration = 0
-
         while (outer_iteration < self.n_iter_outer
                and (np.linalg.norm(beta - tbeta) > self.tol_outer
                     or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
@@ -285,6 +337,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             prev_beta = np.infty
             prev_gamma = np.infty
 
+            # =========== MIDDLE ITERATION =============
             iteration = 0
             while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
                     or np.linalg.norm(tgamma - prev_tgamma) > self.tol
@@ -306,7 +359,6 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                     return self
 
                 if self.solver == 'pgd':
-                    inner_iteration = 0
 
                     prev_beta = beta
                     prev_gamma = gamma
@@ -314,13 +366,15 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                     prev_tgamma = tgamma
 
                     beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
+
+                    # =============== INNER (GAMMA) ITERATION ===========
                     gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
+                    # projecting the gradient to the set of constraints
                     direction = projected_direction(gamma, -gradient_gamma)
+
+                    inner_iteration = 0
                     while (np.linalg.norm(direction) > self.tol_inner
                            and inner_iteration < self.n_iter_inner):
-                        # gradient_gamma = oracle.gradient_gamma(beta, gamma, tgamma)
-                        # projecting the gradient to the set of constraints
-                        # direction = projected_direction(gamma, -gradient_gamma)
                         if self.use_line_search:
                             # line search method
                             step_len = 0.1
@@ -355,8 +409,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             # gradient_at_tgamma = oracle.gradient_gamma(tbeta, tgamma, tgamma)
             # direction_at_sparse_point = projected_direction(tgamma, -gradient_at_tgamma)
             outer_iteration += 1
-            oracle.lb = 2*(1+oracle.lb)
-            oracle.lg = 2*(1+oracle.lg)
+            oracle.lb = 2 * (1 + oracle.lb)
+            oracle.lg = 2 * (1 + oracle.lg)
 
         us = oracle.optimal_random_effects(beta, gamma)
         sparse_us = oracle.optimal_random_effects(tbeta, tgamma)
@@ -381,7 +435,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         return self
 
-    def predict(self, x, columns_labels=None, use_sparse_coefficients=False):
+    def predict(self, x, columns_labels=None, **kwargs):
         """
         Makes a prediction if .fit(X, y) was called before and throws an error otherwise.
 
@@ -403,6 +457,29 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         """
         check_is_fitted(self, 'coef_')
         problem = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
+        return self.predict_problem(problem, **kwargs)
+
+    def predict_problem(self, problem, use_sparse_coefficients=False, **kwargs):
+        """
+        Makes a prediction if .fit(X, y) was called before and throws an error otherwise.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Data matrix. Should have the same format as the data which was used for fitting the model:
+            the number of columns and the columns' labels should be the same. It may contain new groups, in which case
+            the prediction will be formed using the fixed effects only.
+
+        use_sparse_coefficients : bool, default is False
+            If true then uses sparse coefficients, tbeta and tgamma, for making a prediction, otherwise uses
+            beta and gamma.
+
+        Returns
+        -------
+        y : np.ndarray
+            Models predictions.
+        """
+        check_is_fitted(self, 'coef_')
 
         if use_sparse_coefficients:
             beta = self.coef_['tbeta']

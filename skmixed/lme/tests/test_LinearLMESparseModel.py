@@ -46,14 +46,15 @@ class TestLinearLMESparseModel(unittest.TestCase):
             model = LinearLMESparseModel(**model_parameters)
 
             x, y = problem.to_x_y()
-            model.fit(x, y)
+            # model.fit(x, y)
+            model.fit_problem(problem)
 
             logger = model.logger_
             loss = np.array(logger.get("loss"))
             self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
                             msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
-            y_pred = model.predict(x)
+            y_pred = model.predict_problem(problem)
             explained_variance = explained_variance_score(y, y_pred)
             mse = mean_squared_error(y, y_pred)
 
@@ -130,7 +131,8 @@ class TestLinearLMESparseModel(unittest.TestCase):
                                          nnz_tgamma=sum(true_gamma))
 
             x, y = problem.to_x_y()
-            model.fit(x, y)
+            # model.fit(x, y)
+            model.fit_problem(problem)
 
             logger = model.logger_
             loss = np.array(logger.get("loss"))
@@ -138,7 +140,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             # self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
             #                 msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
-            y_pred = model.predict(x)
+            y_pred = model.predict_problem(problem)
             explained_variance = explained_variance_score(y, y_pred)
             mse = mean_squared_error(y, y_pred)
 
@@ -219,23 +221,25 @@ class TestLinearLMESparseModel(unittest.TestCase):
         x, y = problem.to_x_y()
 
         model = LinearLMESparseModel(**model_parameters)
-        model.fit(x, y)
+        # model.fit(x, y)
+        model.fit_problem(problem)
         params = model.get_params()
-        y_pred = model.predict(x)
+        y_pred = model.predict_problem(problem)
 
         model2 = LinearLMESparseModel(**model2_parameters)
-        model2.fit(x, y)
+        #model2.fit(x, y)
+        model2.fit_problem(problem)
         params2 = model2.get_params()
-        y_pred2 = model2.predict(x)
+        y_pred2 = model2.predict_problem(problem)
 
         model.set_params(**params2)
-        model.fit(x, y)
-        y_pred_with_other_params = model.predict(x)
+        model.fit_problem(problem)
+        y_pred_with_other_params = model.predict_problem(problem)
         assert np.equal(y_pred_with_other_params, y_pred2).all(),\
             "set_params or get_params is not working properly"
         model2.set_params(**params)
-        model2.fit(x, y)
-        y_pred2_with_other_params = model2.predict(x)
+        model2.fit_problem(problem)
+        y_pred2_with_other_params = model2.predict_problem(problem)
         assert np.equal(y_pred2_with_other_params, y_pred).all(), \
             "set_params or get_params is not working properly"
 
@@ -270,7 +274,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
         problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=42)
         x, y = problem.to_x_y()
         model = LinearLMESparseModel(**model_parameters)
-        model.fit(x, y)
+        model.fit_problem(problem)
         model.coef_["beta"] = true_model_parameters["beta"]
         model.coef_["random_effects"] = random_effects_to_matrix(true_model_parameters["random_effects"])
         good_score = model.score(x, y)

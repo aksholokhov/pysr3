@@ -64,8 +64,8 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
                                           )
 
             x, y = problem.to_x_y()
-            model.fit(x, y)
-            model2.fit(x, y)
+            model.fit_problem(problem)
+            model2.fit_problem(problem)
 
             logger = model.logger_
 
@@ -74,11 +74,11 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             # self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
             #                 msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
-            y_pred = model.predict(x)
+            y_pred = model.predict_problem(problem)
             explained_variance = explained_variance_score(y, y_pred)
             mse = mean_squared_error(y, y_pred)
 
-            y_pred2 = model2.predict(x)
+            y_pred2 = model2.predict_problem(problem)
             explained_variance2 = explained_variance_score(y, y_pred2)
             mse2 = mean_squared_error(y, y_pred2)
 
