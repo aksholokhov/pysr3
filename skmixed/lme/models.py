@@ -327,10 +327,11 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         self.logger_ = Logger(self.logger_keys)
 
         # ========= OUTER ITERATION ============
+        # TODO: rethink where to use relative tolerance and where to use absolute tolerance
         outer_iteration = 0
         while (outer_iteration < self.n_iter_outer
                and (np.linalg.norm(beta - tbeta) > self.tol_outer
-                    or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
+                    or np.linalg.norm(gamma - tgamma)> self.tol_outer)):
 
             prev_tbeta = np.infty
             prev_tgamma = np.infty
@@ -419,7 +420,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         sparse_per_group_coefficients = get_per_group_coefficients(tbeta, sparse_us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
-        self.logger_.add('iterations', iteration)
+        #self.logger_.add('iterations', iteration)
 
         self.coef_ = {
             "beta": beta,

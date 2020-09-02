@@ -133,6 +133,15 @@ class LinearLMEOracle:
             result += 1 / 2 * np.sum(L_inv.dot(xi) ** 2) - np.sum(np.log(np.diag(L_inv)))
         return result
 
+    def demarginalized_loss(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> float:
+        result = 0
+        self._recalculate_cholesky(gamma)
+        us = self.optimal_random_effects(beta, gamma)
+        for (x, y, z, stds), u in zip(self.problem, us):
+            r = y - x.dot(beta) - z.dot(u)
+            result += 1 / 2 * sum(r**2 / stds) + 1 / 2 * sum(np.log(stds))
+        return result
+
     def gradient_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         """
         Returns the gradient of the loss function with respect to gamma: ∇_𝛄[ℒ](β, 𝛄)
@@ -252,6 +261,7 @@ class LinearLMEOracle:
         """
 
         random_effects = []
+        self._recalculate_cholesky(gamma)
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             stds_inv_mat = np.diag(1 / stds)
@@ -338,8 +348,8 @@ class LinearLMEOracle:
         # https://www.jstor.org/stable/2673485?seq=1
         rho = self._hodges2001ddf(gamma)
         n = self.problem.num_obs
-        p = self.problem.num_fixed_effects
-        q = self.problem.num_random_effects
+        p = sum(beta != 0)
+        q = sum(gamma != 0)
         alpha = 2*n/(n - p - 2)*(rho - (rho - p)/(n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.

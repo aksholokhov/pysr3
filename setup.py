@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 experiments_require=[
-    'pandas', 'matplotlib', 'jupyter', 'environment_kernels'
+    'pandas', 'matplotlib', 'jupyter', 'environment_kernels', 'seaborn'
 ]
 
 setuptools.setup(
