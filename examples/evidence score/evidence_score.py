@@ -19,8 +19,8 @@ from skmixed.lme.models import LinearLMESparseModel
 from skmixed.lme.trees import Tree, Forest
 
 # %%
-figures_folder_path = Path("figures/evidence_score")
-backups_folder_path = Path("backups/evidence_score")
+figures_folder_path = Path("figures")
+backups_folder_path = Path("backups")
 datasets_folder_path = Path("/Users/aksh/Storage/repos/skmixed/datasets/evidence_score_data/")
 redmeat_datasets = [f for f in datasets_folder_path.iterdir() if str(f.name) != ".DS_Store"]
 
@@ -61,7 +61,7 @@ categorical_features_columns = [
 
 categorical_features_columns = []
 # %% generate intercept only solutions
-for dataset_path in redmeat_datasets:
+for dataset_path in redmeat_datasets[:3]:
     print(dataset_path)
 
     data = pd.read_csv(dataset_path)
@@ -84,9 +84,17 @@ for dataset_path in redmeat_datasets:
     column_labels = [0, 4] + [3] * len(categorical_features_columns)
     X = np.vstack([column_labels, X])
 
+    # Features which participate in selection (all except the intercept)
+    participation_in_selection = np.array([False] + [True] * len(categorical_features_columns))
+
     # Fitting the model
     problem = LinearLMEProblem.from_x_y(X, y, random_intercept=True, add_group_as_categorical_feature=True)
-    model = LinearLMESparseModel(lb=0, lg=0, nnz_tbeta=1, nnz_tgamma=1, n_iter_outer=1, initializer=None, tol=1e-5)
+    model = LinearLMESparseModel(lb=0, lg=0,
+                                 nnz_tbeta=1, nnz_tgamma=1,
+                                 n_iter_outer=1,
+                                 initializer=None,
+                                 tol=1e-5,
+                                 participation_in_selection=participation_in_selection)
     model.fit_problem(problem)
     y_pred = model.predict_problem(problem)
 
@@ -173,7 +181,7 @@ maybe_categorical_features_columns = [
 ]
 
 
-for dataset_path in redmeat_datasets:
+for dataset_path in redmeat_datasets[:3]:
     print(f"{dataset_path.name}")
     categorical_features_columns = []
     data = pd.read_csv(dataset_path)

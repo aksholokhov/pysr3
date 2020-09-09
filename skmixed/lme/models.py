@@ -73,6 +73,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                  regularization_type: str = "l2",
                  nnz_tbeta: int = 3,
                  nnz_tgamma: int = 3,
+                 participation_in_selection = None,
                  logger_keys: Set = ('converged',)):
         """
         init: initializes the model.
@@ -123,6 +124,10 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         nnz_tgamma : int,
             How many non-zero coefficients are allowed in t𝛄.
+
+        participation_in_selection : Tuple of Int, Optional, default = None
+            Which features participate in selection. Defaults to None, which means all features participate in
+            selection process
         """
 
         self.tol = tol
@@ -140,6 +145,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         self.nnz_tgamma = nnz_tgamma
         self.logger_keys = logger_keys
         self.regularization_type = regularization_type
+        self.participation_in_selection = participation_in_selection
 
     def fit(self,
             x: np.ndarray,
@@ -263,7 +269,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                                 lb=self.lb,
                                                 lg=self.lg,
                                                 nnz_tbeta=self.nnz_tbeta,
-                                                nnz_tgamma=self.nnz_tgamma
+                                                nnz_tgamma=self.nnz_tgamma,
+                                                participation_in_selection=self.participation_in_selection
                                                 )
         elif self.regularization_type == "loss-weighted":
             oracle = LinearLMEOracleW(problem,
@@ -274,6 +281,13 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                       )
         else:
             raise ValueError("regularization_type is not understood.")
+
+        if self.participation_in_selection is not None:
+            assert len(self.participation_in_selection) == problem.num_fixed_effects
+            assert sum(~self.participation_in_selection) <= self.nnz_tbeta
+            participation_idx_gamma = oracle.beta_to_gamma_map[self.participation_in_selection]
+            participation_idx_gamma = (participation_idx_gamma[participation_idx_gamma >= 0]).astype(int)
+            assert sum(~participation_idx_gamma) <= self.nnz_tgamma
 
         num_fixed_effects = problem.num_fixed_effects
         num_random_effects = problem.num_random_effects

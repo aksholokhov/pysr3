@@ -400,7 +400,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
     """
 
-    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3):
+    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3, participation_in_selection=None):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -416,6 +416,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             Number of non-zero elements allowed in tβ
         nnz_tgamma : int
             Number of non-zero elements allowed in t𝛄
+        participation_in_selection : Tuple of Int, Optional, default = None
+            Which features participate in selection. Defaults to None, which means all features participate in
+            selection process
         """
 
         super().__init__(problem)
@@ -423,6 +426,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         self.lg = lg
         self.k = nnz_tbeta
         self.j = nnz_tgamma
+        self.participation_in_selection = participation_in_selection
 
     def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, _dont_solve_wrt_beta=False, **kwargs):
         """
@@ -506,8 +510,12 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         tbeta : np.ndarray, shape = [n]
             Minimizer of the loss function w.r.t tbeta with other arguments fixed.
         """
-
-        return self._take_only_k_max(beta, self.k, **kwargs)
+        if self.participation_in_selection is not None:
+            result = np.copy(beta)
+            result[self.participation_in_selection] = self._take_only_k_max(beta[self.participation_in_selection],
+                                                                            self.k - sum(~self.participation_in_selection))
+        else:
+            return self._take_only_k_max(beta, self.k, **kwargs)
 
     def loss(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
         """
@@ -607,7 +615,13 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         idx_gamma = self.beta_to_gamma_map[idx]
         idx_gamma = (idx_gamma[idx_gamma >= 0]).astype(int)
         tgamma[idx_gamma] = gamma[idx_gamma]
-        return self._take_only_k_max(tgamma, self.j)
+        if self.participation_in_selection is not None:
+            participation_idx = self.beta_to_gamma_map[self.participation_in_selection]
+            participation_idx = (participation_idx[participation_idx >= 0]).astype(int)
+            tgamma[~participation_idx] = gamma[~participation_idx]
+            return self._take_only_k_max(tgamma, self.j - sum(~participation_idx))
+        else:
+            return self._take_only_k_max(tgamma, self.j)
 
 
 class LinearLMEOracleW(LinearLMEOracleRegularized):
