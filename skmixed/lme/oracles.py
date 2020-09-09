@@ -278,6 +278,14 @@ class LinearLMEOracle:
             random_effects.append(u)
         return np.array(random_effects)
 
+    def optimal_obs_std(self, beta, gamma, **kwargs):
+        self._recalculate_cholesky(gamma)
+        result = 0
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            r = y - x.dot(beta)
+            result += sum(L_inv.dot(r)**2)
+        return result / self.problem.num_obs
+
     def _jones2010n_eff(self):
         n_eff = 0
         for (x, y, z, stds), L in zip(self.problem, self.omega_cholesky):
