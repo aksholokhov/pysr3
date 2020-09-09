@@ -487,8 +487,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         """
 
         b = np.zeros(len(x))
-        idx_k_max = np.abs(x).argsort()[-k:]
-        b[idx_k_max] = x[idx_k_max]
+        if k > 0:
+            idx_k_max = np.abs(x).argsort()[-k:]
+            b[idx_k_max] = x[idx_k_max]
         return b
 
     def optimal_tbeta(self, beta: np.ndarray, **kwargs):
@@ -514,6 +515,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             result = np.copy(beta)
             result[self.participation_in_selection] = self._take_only_k_max(beta[self.participation_in_selection],
                                                                             self.k - sum(~self.participation_in_selection))
+            return result
         else:
             return self._take_only_k_max(beta, self.k, **kwargs)
 
@@ -618,8 +620,12 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         if self.participation_in_selection is not None:
             participation_idx = self.beta_to_gamma_map[self.participation_in_selection]
             participation_idx = (participation_idx[participation_idx >= 0]).astype(int)
-            tgamma[~participation_idx] = gamma[~participation_idx]
-            return self._take_only_k_max(tgamma, self.j - sum(~participation_idx))
+            # if tbeta = 0 then tgamma = 0 even if this coordinate does not participate in feature selection
+            not_participation_idx = self.beta_to_gamma_map[~self.participation_in_selection & (tbeta != 0)]
+            not_participation_idx = (not_participation_idx[not_participation_idx >= 0]).astype(int)
+            tgamma[not_participation_idx] = gamma[not_participation_idx]
+            tgamma[participation_idx] = self._take_only_k_max(tgamma[participation_idx], self.j - sum(~self.participation_in_selection))
+            return tgamma
         else:
             return self._take_only_k_max(tgamma, self.j)
 

@@ -18,6 +18,8 @@ from skmixed.lme.models import LinearLMESparseModel
 
 from skmixed.lme.trees import Tree, Forest
 
+np.seterr(all='raise', invalid='raise')
+
 # %%
 figures_folder_path = Path("figures")
 backups_folder_path = Path("backups")
@@ -181,7 +183,7 @@ maybe_categorical_features_columns = [
 ]
 
 
-for dataset_path in redmeat_datasets[:3]:
+for dataset_path in redmeat_datasets[1:3]:
     print(f"{dataset_path.name}")
     categorical_features_columns = []
     data = pd.read_csv(dataset_path)
@@ -218,6 +220,9 @@ for dataset_path in redmeat_datasets[:3]:
     column_labels = [0, 4] + [3] * len(categorical_features_columns)
     X = np.vstack([column_labels, X])
 
+    # Features which participate in selection (all except the intercept)
+    participation_in_selection = np.array([False] + [True] * len(categorical_features_columns))
+
     # plot coefficients trajectory
     figure = plt.figure(figsize=(12, 18))
     grid = plt.GridSpec(nrows=3, ncols=2)
@@ -236,7 +241,7 @@ for dataset_path in redmeat_datasets[:3]:
     for nnz_tbeta in range(len(categorical_features_columns)+1, 0, -1):
         for nnz_tgamma in range(nnz_tbeta, nnz_tbeta - 1, -1):
             model = LinearLMESparseModel(nnz_tbeta=nnz_tbeta, nnz_tgamma=nnz_tgamma, n_iter_outer=20, initializer=None,
-                                         tol=1e-5, tol_outer=1e-5)
+                                         tol=1e-5, tol_outer=1e-5, participation_in_selection=participation_in_selection)
             model_w = LinearLMESparseModel(nnz_tbeta=nnz_tbeta, nnz_tgamma=nnz_tgamma, n_iter_outer=20, initializer=None,
                                            regularization_type="loss-weighted", tol=1e-5, tol_outer=1e-5)
             model.fit_problem(problem)
