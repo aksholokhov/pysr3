@@ -63,7 +63,7 @@ categorical_features_columns = [
 
 categorical_features_columns = []
 # %% generate intercept only solutions
-for dataset_path in redmeat_datasets[:3]:
+for dataset_path in redmeat_datasets:
     print(dataset_path)
 
     data = pd.read_csv(dataset_path)
@@ -183,13 +183,12 @@ maybe_categorical_features_columns = [
 ]
 
 
-for dataset_path in redmeat_datasets[1:3]:
+for dataset_path in redmeat_datasets:
     print(f"{dataset_path.name}")
     categorical_features_columns = []
     data = pd.read_csv(dataset_path)
     # This is Peng's formula for getting a covariate variable (exposure)
     data["linear_exposure"] = (data["b_0"] + data["b_1"]) / 2 - (data["a_0"] + data["a_1"]) / 2
-    # TODO: ask Peng what I should use as SE given the transformation of target
     data["target"] = data["ln_effect"] / data["linear_exposure"]
     # normalization
     target_se = np.sqrt(data["target"].var())
