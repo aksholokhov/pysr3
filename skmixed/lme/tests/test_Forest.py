@@ -2,7 +2,6 @@ import unittest
 
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
-from matplotlib import pyplot as plt
 
 from skmixed.lme.models import LinearLMESparseModel
 from skmixed.lme.problems import LinearLMEProblem
@@ -33,6 +32,3 @@ class TestForest(unittest.TestCase):
             x, y_true = problem.to_x_y()
             lower_quantile, higher_quantile = forest.get_prediction_uncertainty(problem)
             errors = np.array([y_pred - lower_quantile, higher_quantile - y_pred])
-            plt.scatter(y_true, y_pred)
-            plt.errorbar(y_true, y_pred, yerr=errors, fmt='none')
-            plt.show()
