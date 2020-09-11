@@ -139,7 +139,7 @@ class LinearLMEOracle:
         us = self.optimal_random_effects(beta, gamma)
         for (x, y, z, stds), u in zip(self.problem, us):
             r = y - x.dot(beta) - z.dot(u)
-            result += 1 / 2 * sum(r**2 / stds) + 1 / 2 * sum(np.log(stds))
+            result += 1 / 2 * sum(r ** 2 / stds) + 1 / 2 * sum(np.log(stds))
         return result
 
     def gradient_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
@@ -196,6 +196,31 @@ class LinearLMEOracle:
             Lxi = L_inv.dot(xi).reshape((len(xi), 1))
             hessian += (-Lz.T.dot(Lz) + 2 * (Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (Lz.T.dot(Lz))
         return 1 / 2 * hessian
+
+    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        self._recalculate_cholesky(gamma)
+        gradient = 0
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            xi = y - x.dot(beta)
+            gradient += - (L_inv.dot(x)).T.dot(L_inv.dot(xi))
+        return gradient
+
+    def x_to_beta_gamma(self, x):
+        beta = x[:self.problem.num_fixed_effects]
+        gamma = x[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects]
+        return beta, gamma
+
+    def joint_loss(self, x):
+        beta, gamma = self.x_to_beta_gamma(x)
+        return self.loss(beta, gamma)
+
+    def joint_gradient(self, x):
+        beta, gamma = self.x_to_beta_gamma(x)
+        gradient = np.zeros(len(x))
+        gradient[:self.problem.num_fixed_effects] = self.gradient_beta(beta, gamma)
+        gradient[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects] = \
+            self.gradient_gamma(beta, gamma)
+        return gradient
 
     def optimal_beta(self, gamma: np.ndarray, _dont_solve_wrt_beta=False, **kwargs):
         """
@@ -283,7 +308,7 @@ class LinearLMEOracle:
         result = 0
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             r = y - x.dot(beta)
-            result += sum(L_inv.dot(r)**2)
+            result += sum(L_inv.dot(r) ** 2)
         return result / self.problem.num_obs
 
     def _jones2010n_eff(self):
@@ -300,7 +325,7 @@ class LinearLMEOracle:
         # From here
         # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
         self._recalculate_cholesky(gamma)
-        return self.loss(beta, gamma, **kwargs) + (len(beta) + len(gamma))*np.log(self._jones2010n_eff())
+        return self.loss(beta, gamma, **kwargs) + (len(beta) + len(gamma)) * np.log(self._jones2010n_eff())
 
     def _hat_matrix(self, gamma):
         self._recalculate_cholesky(gamma)
@@ -308,18 +333,15 @@ class LinearLMEOracle:
         h_beta_kernel = 0
         h_beta_tail = []
         xs = []
-        ys = []
         # Form the beta kernel and tail
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             Lx = L_inv.dot(x)
             h_beta_kernel += Lx.T.dot(Lx)
             h_beta_tail.append(Lx.T.dot(L_inv))
             xs.append(x)
-            ys.append(y)
 
         h_beta = np.concatenate([np.linalg.inv(h_beta_kernel).dot(tail) for tail in h_beta_tail], axis=1)
         xs = np.concatenate(xs, axis=0)
-        ys = np.concatenate(ys)
         h_beta = xs.dot(h_beta)
 
         # we treat R.E. with very small variance
@@ -358,10 +380,10 @@ class LinearLMEOracle:
         n = self.problem.num_obs
         p = sum(beta != 0)
         q = sum(gamma != 0)
-        alpha = 2*n/(n - p - 2)*(rho - (rho - p)/(n - p))
+        alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2*self.loss(beta, gamma, **kwargs) + alpha*(p+q)
+        return 2 * self.loss(beta, gamma, **kwargs) + alpha * (p + q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         if ic == "IC_vaida2005aic":
@@ -400,7 +422,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
     """
 
-    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3, participation_in_selection=None):
+    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3,
+                 participation_in_selection=None):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -514,7 +537,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         if self.participation_in_selection is not None:
             result = np.copy(beta)
             result[self.participation_in_selection] = self._take_only_k_max(beta[self.participation_in_selection],
-                                                                            self.k - sum(~self.participation_in_selection))
+                                                                            self.k - sum(
+                                                                                ~self.participation_in_selection))
             return result
         else:
             return self._take_only_k_max(beta, self.k, **kwargs)
@@ -624,7 +648,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             not_participation_idx = self.beta_to_gamma_map[~self.participation_in_selection & (tbeta != 0)]
             not_participation_idx = (not_participation_idx[not_participation_idx >= 0]).astype(int)
             tgamma[not_participation_idx] = gamma[not_participation_idx]
-            tgamma[participation_idx] = self._take_only_k_max(tgamma[participation_idx], self.j - sum(~self.participation_in_selection))
+            tgamma[participation_idx] = self._take_only_k_max(tgamma[participation_idx],
+                                                              self.j - sum(~self.participation_in_selection))
             return tgamma
         else:
             return self._take_only_k_max(tgamma, self.j)
@@ -686,8 +711,8 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
         if self.drop_penalties_beta is None or self.drop_penalties_gamma is None:
             self._recalculate_drop_matrices(beta, gamma)
         return (super(LinearLMEOracleRegularized, self).loss(beta, gamma, **kwargs)
-                + self.lb / 2 * sum(self.drop_penalties_beta*(beta - tbeta) ** 2)
-                + self.lg / 2 * sum(self.drop_penalties_gamma*(gamma - tgamma) ** 2))
+                + self.lb / 2 * sum(self.drop_penalties_beta * (beta - tbeta) ** 2)
+                + self.lg / 2 * sum(self.drop_penalties_gamma * (gamma - tgamma) ** 2))
 
     def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, beta: np.ndarray = None, **kwargs):
         if self.drop_penalties_beta is None:
@@ -715,7 +740,7 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
     def optimal_tbeta(self, beta: np.ndarray, gamma: np.ndarray = None, **kwargs):
         self._recalculate_drop_matrices(beta, gamma)
         tbeta = np.zeros(len(beta))
-        idx_k_max = np.abs(self.drop_penalties_beta*beta).argsort()[-self.k:]
+        idx_k_max = np.abs(self.drop_penalties_beta * beta).argsort()[-self.k:]
         tbeta[idx_k_max] = beta[idx_k_max]
         return tbeta
 
@@ -733,4 +758,42 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
 
     def jones2010bic(self, beta, gamma, tbeta=None, tgamma=None, **kwargs):
         self._recalculate_cholesky(gamma)
-        return self.loss(beta, gamma, tbeta, tgamma) + (2*len(beta) + 2*len(gamma))*np.log(self._jones2010n_eff())
+        return self.loss(beta, gamma, tbeta, tgamma) + (2 * len(beta) + 2 * len(gamma)) * np.log(self._jones2010n_eff())
+
+
+class LinearLMELassoOracle(LinearLMEOracle):
+    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1):
+        """
+        Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
+
+        Parameters
+        ----------
+        problem: LinearLMEProblem
+            The set of data and answers. See the docs for LinearLMEProblem for more details.
+        lb : float
+            Regularization coefficient (inverse std) for ||β||_1
+        lg : float
+            Regularization coefficient (inverse std) for ||𝛄||_1
+        """
+
+        super().__init__(problem)
+        self.lb = lb
+        self.lg = lg
+        lambdas = np.zeros(problem.num_fixed_effects+problem.num_random_effects)
+        lambdas[:problem.num_fixed_effects] = lb
+        lambdas[problem.num_fixed_effects:problem.num_fixed_effects+problem.num_random_effects] = lg
+        self.lambdas = lambdas
+
+    def full_loss(self, x):
+        return self.joint_loss(x) + self.lambdas.dot(abs(x))
+
+    def prox_l1(self, x, step_len):
+        """
+        Applies proximal operator of l1 norm to x and returns result
+
+        Parameters
+        ----------
+        x : np.ndarray
+            vector to apply the proximal operator on
+        """
+        return np.sign(x)*np.maximum(0.0, np.abs(x) - self.lambdas*step_len)
