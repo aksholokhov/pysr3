@@ -18,7 +18,7 @@
 import numpy as np
 
 
-def get_per_group_coefficients(beta, us, labels):
+def get_per_group_coefficients(beta, random_effects, labels):
     """
     Derives per group coefficients from the vectors of fixed and per-cluster random effects.
 
@@ -26,7 +26,7 @@ def get_per_group_coefficients(beta, us, labels):
     ----------
     beta: np.ndarray, shape=(n,), n is the number of fixed effects.
         Vector of fixed effects.
-    us: np.ndarray, shape=(m, k), m groups, k random effects.
+    random_effects: np.ndarray or list, shape=(m, k), m groups, k random effects.
         Array of random effects.
     labels: np.ndarray[int], shape=(t,), t -- number of columns in the dataset INCLUDING INTERCEPT.
         Vector of labels of the column's dataset, including intercept. Labels can be the following integers:
@@ -41,26 +41,38 @@ def get_per_group_coefficients(beta, us, labels):
     per_group_coefficients: np.ndarray, shape=(m, t)
         Array of cluster coefficients: m clusters times t coefficients.
     """
+    is_arrays = False
+    if all([type(s) == np.ndarray for s in random_effects]):
+        random_effects = [(None, u) for u in random_effects]
+        is_arrays = True
 
-    num_studies = us.shape[0]
+    per_group_coefficients_list = []
 
-    per_group_coefficients = np.zeros((num_studies, len(labels)))
-
-    for i, u in enumerate(us):
+    for i, (label, u) in enumerate(random_effects):
+        per_group_coefficients = np.zeros(len(labels))
         fixed_effects_counter = 0
         random_effects_counter = 0
 
-        for j, label in enumerate(labels):
-            if label == 1:
-                per_group_coefficients[i, j] = beta[fixed_effects_counter]
+        for j, feature_label in enumerate(labels):
+            if feature_label == 1:
+                per_group_coefficients[j] = beta[fixed_effects_counter]
                 fixed_effects_counter += 1
-            elif label == 2:
-                per_group_coefficients[i, j] = u[random_effects_counter]
+            elif feature_label == 2:
+                per_group_coefficients[j] = u[random_effects_counter]
                 random_effects_counter += 1
-            elif label == 3:
-                per_group_coefficients[i, j] = beta[fixed_effects_counter] + u[random_effects_counter]
+            elif feature_label == 3:
+                per_group_coefficients[j] = beta[fixed_effects_counter] + u[random_effects_counter]
                 fixed_effects_counter += 1
                 random_effects_counter += 1
             else:
                 continue
-    return per_group_coefficients
+
+        per_group_coefficients_list.append((label, per_group_coefficients))
+    if is_arrays:
+        return random_effects_to_matrix(per_group_coefficients_list)
+    else:
+        return per_group_coefficients_list
+
+
+def random_effects_to_matrix(random_effects):
+    return np.array([u for k, u in random_effects])

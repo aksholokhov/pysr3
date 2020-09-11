@@ -8,6 +8,7 @@ from scipy.misc import derivative
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 from skmixed.legacy.oracles import LinearLMEOracle as OldOracle
 from skmixed.lme.problems import LinearLMEProblem
+from skmixed.helpers import random_effects_to_matrix
 
 
 class TestLinearLMEOracle(TestCase):
@@ -106,7 +107,7 @@ class TestLinearLMEOracle(TestCase):
                                                              random_intercept=True,
                                                              seed=random_seed)
         beta = true_parameters['beta']
-        us = true_parameters['random_effects']
+        us = random_effects_to_matrix(true_parameters['random_effects'])
         empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_groups
         rtol = 1e-1
         atol = 1e-1
@@ -173,6 +174,61 @@ class TestLinearLMEOracle(TestCase):
                 true_beta_to_gamma_map,
                 oracle.beta_to_gamma_map
             ))
+
+    def test_jones2010n_eff(self):
+        # This test is based on the fact that
+        # in case of a random intercept model the n_eff can be represented through intraclass correlation rho.
+        # See original Jones2010 paper for more details.
+        for seed in range(10):
+            problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                                 features_labels=[],
+                                                                 random_intercept=True,
+                                                                 obs_std=0.1,
+                                                                 seed=seed)
+            oracle = LinearLMEOracle(problem)
+            gamma = true_parameters['gamma']
+            rho = gamma/(gamma + 0.1)
+            oracle._recalculate_cholesky(true_parameters['gamma'])
+            n_eff = oracle._jones2010n_eff()
+            assert np.allclose(n_eff, sum([ni/(1+(ni-1)*rho) for ni in problem.groups_sizes]))
+
+    def test_hodges2001ddf(self):
+        # From here:
+        # https://www.jstor.org/stable/2673485?seq=1
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                             features_labels=[3, 3, 3],
+                                                             random_intercept=True,
+                                                             obs_std=0.1,
+                                                             seed=42)
+        oracle = LinearLMEOracle(problem)
+        true_gamma = true_parameters['gamma']
+        ddf = oracle._hodges2001ddf(true_gamma)
+        #  #|beta| <= DDoF <= #|beta| + num_groups*#|u|
+        assert 4 <= ddf <= 4+4*3
+
+    def test_hat_matrix(self):
+        for seed in range(10):
+            problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                                 features_labels=[3, 3],
+                                                                 random_intercept=True,
+                                                                 obs_std=0.1,
+                                                                 seed=seed)
+            oracle = LinearLMEOracle(problem)
+            gamma = true_parameters['gamma']
+            optimal_beta = oracle.optimal_beta(gamma)
+            us = oracle.optimal_random_effects(optimal_beta, gamma)
+            ys_true = []
+            ys_optimal_true = []
+            for (x, y, z, l), u in zip(problem, us):
+                ys_optimal_true.append(x.dot(optimal_beta) + z.dot(u))
+                ys_true.append(y)
+            ys_true = np.concatenate(ys_true)
+            ys_optimal_true = np.concatenate(ys_optimal_true)
+            hat_matrix = oracle._hat_matrix(gamma)
+            ys_optimal_hat = hat_matrix.dot(ys_true)
+            assert np.allclose(ys_optimal_true, ys_optimal_hat)
+
+
 
 
 if __name__ == '__main__':
