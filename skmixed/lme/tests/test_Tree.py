@@ -2,7 +2,6 @@ import unittest
 
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
-from matplotlib import pyplot as plt
 
 from skmixed.lme.models import LinearLMESparseModel
 from skmixed.lme.problems import LinearLMEProblem
