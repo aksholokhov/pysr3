@@ -1,5 +1,4 @@
 from pathlib import Path
-from sys import exit
 
 import json
 import numpy as np
@@ -7,11 +6,9 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import matplotlib.dates as mdates
 
-from sklearn.preprocessing import normalize
-
 from skmixed.lme.models import LinearLMESparseModel
 
-data_path = Path("/Users/aksh/Storage/repos/covid-data/covid-19/seir-pipeline-outputs/")
+data_path = Path("/Users/aksh/Storage/repos/IHME_data/covid-19/seir-pipeline-outputs/")
 covariates_version = "2020_05_09.01.10"
 regression_version = "vis_test_3"
 betas_path = data_path / 'regression' / regression_version / "betas"
@@ -40,15 +37,13 @@ def format_xaxis(ax, start_date, end_date, major_tick_interval_days=14, margins_
     # format the coords message box
     ax.format_xdata = mdates.DateFormatter('%Y-%m-%d')
 
-
-if __name__ == "__main__":
+def launch_covid_experiment(num_groups=60):
     from matplotlib import rcParams
 
     rcParams['font.family'] = 'monospace'
 
     # Read the data
     num_groups = 15
-    covariates_df = pd.read_csv(covariates_path)
     coefficients_df = pd.read_csv(coefficients_path)
     groups = list(coefficients_df['group_id'].unique())
     groups = groups[:num_groups]
@@ -66,7 +61,7 @@ if __name__ == "__main__":
     X = all_betas[["location_id"] + covariates + ["std"]].to_numpy()
     columns_labels = [0] + len(covariates) * [3] + [4]
     y = all_betas["beta"].to_numpy()
-    print("done data");
+    print("done data")
 
     # Fit the model
     model = LinearLMESparseModel(lb=0, lg=0, initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=1)
@@ -91,7 +86,6 @@ if __name__ == "__main__":
                                                                   use_sparse_coefficients=True)
     print("done fitting smart")
 
-
     # Evaluate the model
     def print_on_plot(elements, ax, x0=0.2, y0=9, h=0.4):
         offset = 0
@@ -104,7 +98,6 @@ if __name__ == "__main__":
                 offset += h
             else:
                 raise ValueError("wrong type: %s" % type(s))
-
 
     fig = plt.figure(figsize=(12, 7 * len(groups)))
     grid = plt.GridSpec(len(groups), 2)
@@ -139,7 +132,6 @@ if __name__ == "__main__":
 
         effect2coef = [0, 2, 3, 4, 5]
 
-
         def coef_to_color(beta, gamma):
             if beta == 0:
                 return "red"
@@ -148,18 +140,17 @@ if __name__ == "__main__":
             else:
                 return "black"
 
-
         sorted_errors_idx = np.argsort([ihme_error, dense_error, sparse_error, weighted_sparse_error])
         colors_for_errors = ["", "", "", ""]
         for k, color in enumerate(["green", "blue", "black", "black"]):
             colors_for_errors[sorted_errors_idx[k]] = color
 
-        #if ihme_error > weighted_sparse_error:
+        # if ihme_error > weighted_sparse_error:
         #    counter += 1
         statistics = [
                          "RMSE:",
-                         #"%-12s: %.2e" % ("  IHME", ihme_error),
-                         #"%-12s: %.2e" % ("  Dense MM", dense_error),
+                         # "%-12s: %.2e" % ("  IHME", ihme_error),
+                         # "%-12s: %.2e" % ("  Dense MM", dense_error),
                          ("%-12s: %.2e" % ("  IHME", ihme_error), colors_for_errors[0]),
                          ("%-12s: %.2e" % ("  Dense MM", dense_error), colors_for_errors[1]),
                          ("%-12s: %.2e" % ("  R&S", sparse_error), colors_for_errors[2]),
@@ -223,3 +214,6 @@ if __name__ == "__main__":
     max_err = max(max(ihme_scores), max(me_scores))
     plt.plot([0, max_err], [0, max_err], '--b')
     plt.savefig("comparison_0.pdf")
+
+if __name__ == "__main__":
+    launch_covid_experiment()

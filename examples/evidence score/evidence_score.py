@@ -23,7 +23,7 @@ np.seterr(all='raise', invalid='raise')
 # %%
 figures_folder_path = Path("figures")
 backups_folder_path = Path("backups")
-datasets_folder_path = Path("/Users/aksh/Storage/repos/skmixed/datasets/evidence_score_data/")
+datasets_folder_path = Path("/Users/aksh/Storage/repos/IHME_data/evidence_score_data/")
 redmeat_datasets = [f for f in datasets_folder_path.iterdir() if str(f.name) != ".DS_Store"]
 
 # %% settings for redmeat_colorectal.csv dataset

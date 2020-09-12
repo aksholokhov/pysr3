@@ -106,7 +106,6 @@ class LinearLMEProblem(LMEProblem):
                  features_labels: Optional[List[int]] = None,
                  random_intercept: bool = False,
                  features_covariance_matrix: Optional[np.ndarray] = None,
-                 # True parameters:
                  obs_std: Optional[Union[int, float, Sized]] = 0.1,
                  beta: Optional[np.ndarray] = None,
                  gamma: Optional[np.ndarray] = None,
@@ -137,7 +136,8 @@ class LinearLMEProblem(LMEProblem):
 
         features_labels : List, Optional
             List of features labels which define whether a role of features in the problem: 1 -- fixed only,
-            2 -- random only, 3 -- both. Does NOT include intercept (it's handled with the random_intercept parameter).
+            2 -- random only, 3 -- both, 5 -- categorical (active), 6 -- categorical (inactive).
+            Does NOT include intercept (it's handled with the random_intercept parameter).
             If None then generates a random list from U[1, 4]^k where k ~ U[1, 10]
 
         random_intercept : bool, default is False
@@ -147,6 +147,7 @@ class LinearLMEProblem(LMEProblem):
         features_covariance_matrix : np.ndarray, Optional, Symmetric and PSD
             Covariance matrix of the features from features labels (columns from the dataset to be generated).
             If None then defaults to the identity matrix, in which case all features are independent.
+            Should be the size of len(features_labels).
 
         obs_std : float or np.ndarray
             Standard deviations of measurement errors. Can be:
@@ -191,8 +192,18 @@ class LinearLMEProblem(LMEProblem):
 
         Returns
         -------
-        problem:
-                Generated problem
+        problem : LinearLMEProblem
+            Generated problem
+        true_parameters : dict, optional
+            True parameters for genrated problem:
+                - "beta" : true beta,
+                - "gamma" : true gamma,
+                - "per_group_coefficients": true per group coefficients (b such that y = Xb, where X is from to_x_y())
+                - "active_categorical_set": set of categorical features which were used for true latent group division
+                - "true_group_labels": labels from true latent group division
+                - "random_effects": true random effects
+                - "errors": true errors
+                - "reference_loss_value": loss value when true beta, gamma and random effects are used.
         """
 
         if generator_params is None:
@@ -399,7 +410,7 @@ class LinearLMEProblem(LMEProblem):
         data['column_labels'] = all_columns_labels
 
         # We pivot the groups back to the original group division
-        generated_problem = LinearLMEProblem(**data).pivot()
+        generated_problem = LinearLMEProblem(**data).pivot(categorical_features_set=(0, ))
         generated_problem = generated_problem.to_x_y() if as_x_y else generated_problem
 
         if return_true_model_coefficients:
@@ -581,7 +592,21 @@ class LinearLMEProblem(LMEProblem):
         all_answers = all_answers[np.array(self.order_of_objects).argsort()]
         return data_with_column_labels, all_answers
 
-    def pivot(self, categorical_features_set=(0,)):
+    def pivot(self, categorical_features_set):
+        """
+        Get a transformed problem such that its groups labels are formed by all different combinations of
+        features values from categorical_features_set.
+
+        Parameters
+        ----------
+        categorical_features_set : Set(Int), required
+            Set of columns labels which will be used for pivoting
+
+        Returns
+        -------
+        problem : LinearLMEProblem
+            Pivoted problem
+        """
         x, y = self.to_x_y()
         group_labels_idx = [i for i, label in enumerate(x[0, :]) if label == 0]
         assert len(group_labels_idx) == 1, "More than one group label column is found. Check labels."
@@ -602,6 +627,21 @@ class LinearLMEProblem(LMEProblem):
         return LinearLMEProblem.from_x_y(x, y, random_intercept=True if self.column_labels[0] == 3 else 1)
 
     def bootstrap(self, seed=42, categorical_features_idx=None, do_bootstrap_objects=True):
+        """
+        Generate a bootstrap problem from this problem.
+
+        Parameters
+        ----------
+        seed : int
+            random seed
+        categorical_features_idx
+        do_bootstrap_objects
+
+        Returns
+        -------
+        problem : LinearLMEProblem
+            bootstrapped problem
+        """
         np.random.seed(seed)
         if categorical_features_idx is None:
             categorical_features_idx = np.zeros(self.num_categorical_features, dtype=int)

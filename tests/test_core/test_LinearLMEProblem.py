@@ -96,11 +96,12 @@ class TestLinearLMEProblem(unittest.TestCase):
         unique_pivot_groups = set([tuple(s) for s in x1[1:, np.array([1, 6])]])
         assert problem2.num_groups == len(unique_pivot_groups)
         x2, y2 = problem2.to_x_y()
-        problem3 = LinearLMEProblem.from_x_y(x2, y2).pivot()
+        problem3 = LinearLMEProblem.from_x_y(x2, y2).pivot((0, ))
         assert problem3.num_groups == 3
         x3, y3 = problem3.to_x_y()
         self.assertTrue(np.all(x3 == x1), msg="x is not the same after from/to transformation")
         self.assertTrue(np.all(y3 == y1), msg="y is not the same after from/to transformation")
+
 
 if __name__ == '__main__':
     unittest.main()

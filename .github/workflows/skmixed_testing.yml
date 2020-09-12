@@ -34,5 +34,4 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest tests/test_core
-        pytest tests/test_sparse_models
+        pytest tests
