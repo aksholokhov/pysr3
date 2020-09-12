@@ -15,6 +15,10 @@ API Summary:
     skmixed.lme.problems.LinearLMEProblem
     skmixed.lme.oracles.LinearLMEOracle
     skmixed.lme.oracles.LinearLMEOracleRegularized
+    skmixed.lme.cascades.LMECascadeOracle
+    skmixed.lme.cascades.LMECascade
+    skmixed.lme.trees.Tree
+    skmixed.lme.trees.Forest
     skmixed.helpers
     skmixed.logger
 

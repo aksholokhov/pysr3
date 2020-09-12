@@ -194,8 +194,10 @@ class LinearLMEProblem(LMEProblem):
         -------
         problem : LinearLMEProblem
             Generated problem
+
         true_parameters : dict, optional
             True parameters for genrated problem:
+
                 - "beta" : true beta,
                 - "gamma" : true gamma,
                 - "per_group_coefficients": true per group coefficients (b such that y = Xb, where X is from to_x_y())

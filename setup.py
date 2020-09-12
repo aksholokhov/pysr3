@@ -7,9 +7,13 @@ experiments_require=[
     'pandas', 'matplotlib', 'jupyter', 'environment_kernels', 'seaborn'
 ]
 
+docs_require=[
+    'sphinx', 'sphinx_rtd_theme'
+]
+
 setuptools.setup(
     name="skmixed",
-    version="0.0.6",
+    version="0.1.0",
     author="Aleksei Sholokhov",
     author_email="aksh@uw.edu",
     description="Linear Mixed-Effects Models compatible with SciKit-Learn",
@@ -24,5 +28,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['numpy', 'scipy', 'sklearn', 'pytest']
+    install_requires=['numpy', 'scipy', 'sklearn', 'pytest'],
 )
