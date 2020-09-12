@@ -1,12 +1,12 @@
 from typing import Set
 
 import numpy as np
-from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_consistent_length, check_is_fitted
 
 from skmixed.logger import Logger
 from skmixed.lme.oracles import LinearLMEOracle
+
+# TODO: implement sigma inference
 
 
 class LMECascadeOracle:
@@ -164,79 +164,3 @@ class LMECascade(BaseEstimator, RegressorMixin):
         }
 
         return self
-
-
-if __name__ == "__main__":
-    import pandas as pd
-    from pathlib import Path
-    from numpy.linalg import lstsq
-    import json
-
-    from skmixed.lme.models import LinearLMESparseModel
-    from skmixed.lme.problems import LinearLMEProblem
-    from skmixed.lme.oracles import LinearLMEOracle
-
-    dataset_generator_directory = Path("/Users/aksh/Storage/repos/multilevel-model")
-    dataset = "simulation-2"
-    dataset_path = dataset_generator_directory / dataset / (dataset + ".csv")
-    hierarchy_path = dataset_generator_directory / "hierarchy.csv"
-    true_coefficients_path = dataset_generator_directory / dataset / "KEY" / ("PARAMS-" + dataset + ".csv")
-    true_answers_path = dataset_generator_directory / dataset / "KEY" / ("TRUTH-" + dataset + ".csv")
-    true_parameters_path = dataset_generator_directory / dataset / ("SETTINGS-" + dataset + ".json")
-
-    data = pd.read_csv(dataset_path)
-    hierarchy = pd.read_csv(hierarchy_path)
-    hierarchy = hierarchy[hierarchy.location_id.isin(data.location_id.unique())]
-    hierarchy = hierarchy[['location_name', 'location_id', 'parent_id', 'level']].reset_index(drop=True)
-
-    data = data.merge(hierarchy, on="location_id", how="left")
-
-    levels = sorted(data["level"].unique())
-
-    covariates_colnames = [column for column in data.columns if column.startswith("x_")]
-    target_colname = ["observation"]
-
-    num_fixed_effects = len(covariates_colnames) + 1
-
-    data["intercept"] = 1
-    data["predictions"] = 0
-    data["residues"] = 0
-    data["se"] = 0
-    hierarchy["se"] = 1
-
-    hierarchy_dict = {row["location_id"]: row["parent_id"] for i, row in hierarchy.iterrows()}
-
-    current_level = data["level"] == 0
-    level0_data = data[current_level][["intercept"] + covariates_colnames].to_numpy()
-    level0_target = data[current_level]["observation"].to_numpy()
-    level0_coefficients = lstsq(level0_data, level0_target, rcond=None)[0]
-    data.loc[current_level, "predictions"] = level0_data.dot(level0_coefficients)
-    data.loc[current_level, "residues"] = data.loc[current_level, "observation"] - data.loc[
-        current_level, "predictions"]
-    current_se = np.sqrt((data.loc[current_level, "residues"].var()))
-
-    problems = []
-
-    for level in levels:
-        current_level = data["level"] == level
-        data.loc[current_level, "se"] = current_se
-        X = data[current_level][covariates_colnames + ["location_id", "se"]].to_numpy()
-        column_labels = [1] * len(covariates_colnames) + [0, 4]
-        X = np.vstack([column_labels, X])
-        y = data[current_level]["observation"].to_numpy()
-        problem = LinearLMEProblem.from_x_y(X, y, random_intercept=True)
-        problems.append(problem)
-
-    model = LMECascade()
-    model.fit_problem(problems, hierarchy_dict)
-    beta = model.coef_["beta"]
-
-    answers = [{"location_id": group, "intercept": beta[0] + u[0], "effect_0": beta[1]} for group, u in
-               model.coef_["random_effects"].items()]
-    coefficients = pd.DataFrame(answers)
-    true_coefficients = pd.read_csv(true_coefficients_path)
-    coefficients = coefficients.merge(true_coefficients, on="location_id", how="inner", suffixes=('_pred', '_true'))
-    with open(true_parameters_path) as f:
-        true_parameters = json.load(f)
-
-    coefficients[["location_id", "intercept_true", "intercept_pred", "effect_0_true", "effect_0_pred"]]

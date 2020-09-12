@@ -1,14 +1,31 @@
+# Caches
 .DS_*
 *pycache*
 *dask*
 *.egg-info
-.idea
-.ipynb_checkpoints
-skmixed_env
 dist
 build
+.ipynb_checkpoints
+
+# Idea files (see https://intellij-support.jetbrains.com/hc/en-us/articles/206544839-How-to-manage-projects-under-Version-Control-Systems)
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/inspectionProfiles
+
+# environment
+skmixed_env
+
+# docs
 docs/generated
 docs/_build
+
+# Specific files extensions
 *.csv
 *.pdf
 *.png
+*.jpeg
+*.jpg
+
+# outputs in examples
+examples/evidence score/backups
+examples/*/figures
