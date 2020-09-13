@@ -20,6 +20,8 @@ from typing import Callable
 import numpy as np
 import scipy as sp
 from scipy.linalg.lapack import get_lapack_funcs
+from scipy.optimize import minimize
+from scipy.optimize import LinearConstraint
 
 from skmixed.lme.problems import LinearLMEProblem
 
@@ -196,6 +198,26 @@ class LinearLMEOracle:
             Lxi = L_inv.dot(xi).reshape((len(xi), 1))
             hessian += (-Lz.T.dot(Lz) + 2 * (Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (Lz.T.dot(Lz))
         return 1 / 2 * hessian
+
+    def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        self._recalculate_cholesky(gamma)
+        direction = -self.gradient_gamma(beta, gamma, **kwargs)
+        max_step_len = 0.1
+        # projecting the direction onto the constraints (positive box for gamma)
+        direction[(direction < 0) & (gamma <= 1e-15)] = 0
+        for i, _ in enumerate(gamma):
+            if direction[i] < 0:
+                max_step_len = min(-gamma[i] / direction[i], max_step_len)
+        res = sp.optimize.minimize(
+            fun=lambda a: self.loss(beta, gamma + a * direction, **kwargs),
+            x0=np.zeros(1),
+            method="TNC",
+            jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a*direction, **kwargs)),
+            # hess=lambda a: direction.dot(self.hessian_gamma(beta, gamma, **kwargs).dot(direction)),
+            bounds=[(0, max_step_len)]
+        )
+        step_len = res.x
+        return gamma + step_len*direction
 
     def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
         self._recalculate_cholesky(gamma)
@@ -779,9 +801,9 @@ class LinearLMELassoOracle(LinearLMEOracle):
         super().__init__(problem)
         self.lb = lb
         self.lg = lg
-        lambdas = np.zeros(problem.num_fixed_effects+problem.num_random_effects)
+        lambdas = np.zeros(problem.num_fixed_effects + problem.num_random_effects)
         lambdas[:problem.num_fixed_effects] = lb
-        lambdas[problem.num_fixed_effects:problem.num_fixed_effects+problem.num_random_effects] = lg
+        lambdas[problem.num_fixed_effects:problem.num_fixed_effects + problem.num_random_effects] = lg
         self.lambdas = lambdas
 
     def full_loss(self, x):
@@ -796,4 +818,4 @@ class LinearLMELassoOracle(LinearLMEOracle):
         x : np.ndarray
             vector to apply the proximal operator on
         """
-        return np.sign(x)*np.maximum(0.0, np.abs(x) - self.lambdas*step_len)
+        return np.sign(x) * np.maximum(0.0, np.abs(x) - self.lambdas * step_len)

@@ -244,6 +244,7 @@ for dataset_path in redmeat_datasets:
             model_w = LinearLMESparseModel(nnz_tbeta=nnz_tbeta, nnz_tgamma=nnz_tgamma, n_iter_outer=20, initializer=None,
                                            regularization_type="loss-weighted", tol=1e-5, tol_outer=1e-5)
             model.fit_problem(problem)
+
             #model_w.fit_problem(problem)
             y_pred = model.predict_problem(problem, use_sparse_coefficients=True)
             #y_pred_w = model_w.predict_problem(problem, use_sparse_coefficients=True)

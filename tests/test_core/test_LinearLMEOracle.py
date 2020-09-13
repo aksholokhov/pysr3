@@ -52,32 +52,25 @@ class TestLinearLMEOracle(TestCase):
                             msg="Optimal random effects don't match with old oracle")
         return None
 
-    def test_gamma_derivatives(self):
-        trials = 5
-        rtol = 1e-3
-        atol = 1e-2
-        dx = rtol / 1000
-        for random_seed in np.random.randint(0, 1000, size=trials):
-            np.random.seed(random_seed)
-            problem, true_parameters = LinearLMEProblem.generate(features_labels=[3, 3],
-                                                                 random_intercept=False,
-                                                                 seed=random_seed)
-            beta = true_parameters['beta']
-            oracle = LinearLMEOracle(problem)
-            points = np.random.rand(30, 2)
-            beta = np.random.rand(len(beta))
-
-            oracle_gradient = np.array([oracle.gradient_gamma(beta, g) for g in points])
-            partial_derivative_1 = np.array(
-                [derivative(lambda x: oracle.loss(beta, np.array([x, g[1]])), g[0], dx=dx) for g in points])
-            partial_derivative_2 = np.array(
-                [derivative(lambda x: oracle.loss(beta, np.array([g[0], x])), g[1], dx=dx) for g in points])
-            for i, (a, c, d, e) in enumerate(zip(points, oracle_gradient, partial_derivative_1, partial_derivative_2)):
-                self.assertTrue(allclose(c[0], d, rtol=rtol, atol=atol),
-                                msg="Gamma gradient does not match with numerical partial derivative: %d" % i)
-                self.assertTrue(allclose(c[1], e, rtol=rtol, atol=atol),
-                                msg="Gamma gradient does not match with numerical partial derivative: %d" % i)
-        return None
+    def test_gradient_gamma(self):
+        trials = 100
+        random_seed = 34
+        r = 1e-6
+        rtol = 1e-4
+        atol = 1e-5
+        problem, true_parameters = LinearLMEProblem.generate(seed=random_seed)
+        oracle = LinearLMEOracle(problem)
+        np.random.seed(random_seed)
+        for j in range(trials):
+            beta = np.random.rand(problem.num_fixed_effects)
+            gamma = np.random.rand(problem.num_random_effects)
+            dg = np.random.rand(problem.num_random_effects)
+            gradient = oracle.gradient_gamma(beta, gamma)
+            maybe_dir = gradient.dot(dg)
+            true_dir = (oracle.loss(beta, gamma + r * dg)
+                        - oracle.loss(beta, gamma - r * dg)
+                        ) / (2*r)
+            self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol), msg="Gradient does not look right")
 
     def test_hessian_gamma(self):
         trials = 100
@@ -97,7 +90,6 @@ class TestLinearLMEOracle(TestCase):
             true_dir = (oracle.gradient_gamma(beta, gamma + r * dg)
                         - oracle.gradient_gamma(beta, gamma - r * dg)
                         ) / (2 * r)
-
             self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol), msg="Hessian does not look right")
 
     def test_no_data_problem(self):
