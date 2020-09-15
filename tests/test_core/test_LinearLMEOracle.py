@@ -105,7 +105,7 @@ class TestLinearLMEOracle(TestCase):
             # pgd_log = np.array(oracle.logger)
             optimal_gamma_ip = oracle.optimal_gamma(beta, gamma, method="ip", log_progress=False)
             # ip_log = np.array(oracle.logger)
-            from matplotlib import pyplot as plt
+            # from matplotlib import pyplot as plt
             # plt.scatter(ip_log[:, 0], ip_log[:, 1], label="ip")
             # plt.scatter(pgd_log[:, 0], pgd_log[:, 1], label="pgd")
             # plt.legend()
