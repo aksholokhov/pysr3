@@ -215,21 +215,12 @@ class LinearLMEOracle:
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
             res = sp.optimize.minimize(
                 fun=lambda a: self.loss(beta, gamma + a * direction, **kwargs),
-                x0=np.array([max_step_len]),
+                x0=np.array([0]),
                 method="TNC",
                 jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a * direction, **kwargs)),
                 bounds=[(0, max_step_len)]
             )
             step_len = res.x
-            if self.loss(beta, gamma + step_len * direction, **kwargs) > self.loss(beta, gamma, **kwargs):
-                res = sp.optimize.minimize(
-                    fun=lambda a: self.loss(beta, gamma + a * direction, **kwargs),
-                    x0=np.array([0]),
-                    method="TNC",
-                    jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a * direction, **kwargs)),
-                    bounds=[(0, max_step_len)]
-                )
-                step_len = res.x
             gamma = gamma + step_len * direction
             gamma[gamma <= 1e-18] = 0  # killing effective zeros
             iteration += 1
@@ -251,7 +242,7 @@ class LinearLMEOracle:
         F = lambda x, mu: F_coord(x[:n], x[n:], mu)
         dF_coord = lambda v, g: np.block([
             [np.diag(g), np.diag(v)],
-            [-I, self.hessian_gamma(beta, g, take_only_positive_part=False, **kwargs)]
+            [-I, self.hessian_gamma(beta, g, take_only_positive_part=True, **kwargs)]
         ])
         dF = lambda x: dF_coord(x[:n], x[n:])
         v = np.ones(n)
@@ -278,21 +269,19 @@ class LinearLMEOracle:
                                             dF(x + alpha * direction).dot(direction)),
                                        bounds=[(0, max_step_len)])
             step_len = res.x
-            if np.linalg.norm(F(x + step_len * direction, mu)) > np.linalg.norm(F(x, mu)):
-                # Line search failed, probably stuck in a local minimum
-                res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-                                           x0=np.array([0]),
-                                           method="TNC",
-                                           jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-                                               dF(x + alpha * direction).dot(direction)),
-                                           bounds=[(0, max_step_len)])
-                step_len = res.x
+            # if np.linalg.norm(F(x + step_len * direction, mu)) > np.linalg.norm(F(x, mu)):
+            #     # Line search failed, probably stuck in a local minimum
+            #     res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+            #                                x0=np.array([0]),
+            #                                method="TNC",
+            #                                jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+            #                                    dF(x + alpha * direction).dot(direction)),
+            #                                bounds=[(0, max_step_len)])
+            #     step_len = res.x
             x = x + step_len * direction
-            x[x <= 1e-18] = 0 # killing effective zeros
+            x[x <= 1e-18] = 0  # killing effective zeros
             mu = 0.1 * x[:n].dot(x[n:]) / n
             iteration += 1
-            losses.append(self.loss(beta, x[n:], **kwargs))
-            losses_kkt.append(np.linalg.norm(F(x, mu)))
             if log_progress:
                 self.logger.append(x[n:])
         return x[n:]

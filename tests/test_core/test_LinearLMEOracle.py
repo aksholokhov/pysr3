@@ -93,9 +93,7 @@ class TestLinearLMEOracle(TestCase):
             self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol), msg="Hessian does not look right")
 
     def test_optimal_gamma_consistency_ip_vs_pgd(self):
-        self.assertTrue(True)
-        return None
-        trials = 5
+        trials = 10
         rtol = 1e-2
         atol = 1e-2
         for j in range(trials):
@@ -103,15 +101,15 @@ class TestLinearLMEOracle(TestCase):
             oracle = LinearLMEOracle(problem, n_iter_inner=1000)
             beta = np.random.rand(problem.num_fixed_effects)
             gamma = np.random.rand(problem.num_random_effects)
-            optimal_gamma_pgd = oracle.optimal_gamma(beta, gamma, method="pgd", log_progress=True)
-            pgd_log = np.array(oracle.logger)
-            optimal_gamma_ip = oracle.optimal_gamma(beta, gamma, method="ip", log_progress=True)
-            ip_log = np.array(oracle.logger)
+            optimal_gamma_pgd = oracle.optimal_gamma(beta, gamma, method="pgd", log_progress=False)
+            # pgd_log = np.array(oracle.logger)
+            optimal_gamma_ip = oracle.optimal_gamma(beta, gamma, method="ip", log_progress=False)
+            # ip_log = np.array(oracle.logger)
             from matplotlib import pyplot as plt
-            plt.scatter(ip_log[:, 0], ip_log[:, 1], label="ip")
-            plt.scatter(pgd_log[:, 0], pgd_log[:, 1], label="pgd")
-            plt.legend()
-            plt.show()
+            # plt.scatter(ip_log[:, 0], ip_log[:, 1], label="ip")
+            # plt.scatter(pgd_log[:, 0], pgd_log[:, 1], label="pgd")
+            # plt.legend()
+            # plt.show()
             self.assertTrue(allclose(optimal_gamma_pgd, optimal_gamma_ip, rtol=rtol, atol=atol),
                             msg="PGD and IP do not match")
 
