@@ -34,7 +34,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1000,
+            "n_iter_inner": 1,
             "n_iter_outer": 1  # we don't care about tbeta and tgamma, so we don't increase regularization iteratively
         }
 
@@ -106,7 +106,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1000,
+            "n_iter_inner": 1,
             "n_iter_outer": 20
         }
 
@@ -202,7 +202,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1000,
+            "n_iter_inner": 1,
         }
         # Now we want to solve a regularized problem to get two different models
         model2_parameters = {
@@ -215,7 +215,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1000,
+            "n_iter_inner": 1,
         }
         problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=42)
         x, y = problem.to_x_y()
@@ -268,7 +268,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1000,
+            "n_iter_inner": 1,
         }
 
         problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=42)

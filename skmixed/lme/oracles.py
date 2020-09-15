@@ -44,7 +44,7 @@ class LinearLMEOracle:
 
     """
 
-    def __init__(self, problem: LinearLMEProblem):
+    def __init__(self, problem: LinearLMEProblem, n_iter_inner=1, tol_inner=1e-4):
         """
         Creates an oracle on top of the given problem
 
@@ -74,6 +74,8 @@ class LinearLMEOracle:
             else:
                 continue
         self.beta_to_gamma_map = beta_to_gamma_map
+        self.n_iter_inner = n_iter_inner
+        self.tol_inner = tol_inner
 
     def _recalculate_cholesky(self, gamma: np.ndarray):
         """
@@ -171,7 +173,7 @@ class LinearLMEOracle:
             grad_gamma += 1 / 2 * np.sum(Lz ** 2, axis=0) - 1 / 2 * Lz.T.dot(L_inv.dot(xi)) ** 2
         return grad_gamma
 
-    def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+    def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, take_only_positive_part=False, **kwargs) -> np.ndarray:
         """
         Returns the Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄).
 
@@ -196,28 +198,112 @@ class LinearLMEOracle:
             xi = y - x.dot(beta)
             Lz = L_inv.dot(z)
             Lxi = L_inv.dot(xi).reshape((len(xi), 1))
-            hessian += (-Lz.T.dot(Lz) + 2 * (Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (Lz.T.dot(Lz))
+            hessian += ((0 if take_only_positive_part else -Lz.T.dot(Lz)) + 2 * (Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (
+                Lz.T.dot(Lz))
         return 1 / 2 * hessian
 
-    def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
-        self._recalculate_cholesky(gamma)
+    def optimal_gamma_pgd(self, beta: np.ndarray, gamma: np.ndarray, log_progress=False, **kwargs):
+        step_len = 1
+        iteration = 0
         direction = -self.gradient_gamma(beta, gamma, **kwargs)
-        max_step_len = 0.1
         # projecting the direction onto the constraints (positive box for gamma)
-        direction[(direction < 0) & (gamma <= 1e-15)] = 0
-        for i, _ in enumerate(gamma):
-            if direction[i] < 0:
-                max_step_len = min(-gamma[i] / direction[i], max_step_len)
-        res = sp.optimize.minimize(
-            fun=lambda a: self.loss(beta, gamma + a * direction, **kwargs),
-            x0=np.zeros(1),
-            method="TNC",
-            jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a*direction, **kwargs)),
-            # hess=lambda a: direction.dot(self.hessian_gamma(beta, gamma, **kwargs).dot(direction)),
-            bounds=[(0, max_step_len)]
-        )
-        step_len = res.x
-        return gamma + step_len*direction
+        direction[(direction < 0) & (gamma == 0.0)] = 0
+        if log_progress:
+            self.logger = [gamma]
+        while step_len > 0 and iteration < self.n_iter_inner and np.linalg.norm(direction) > self.tol_inner:
+            ind_neg_dir = np.where(direction < 0.0)[0]
+            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
+            res = sp.optimize.minimize(
+                fun=lambda a: self.loss(beta, gamma + a * direction, **kwargs),
+                x0=np.array([max_step_len]),
+                method="TNC",
+                jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a * direction, **kwargs)),
+                bounds=[(0, max_step_len)]
+            )
+            step_len = res.x
+            if self.loss(beta, gamma + step_len * direction, **kwargs) > self.loss(beta, gamma, **kwargs):
+                res = sp.optimize.minimize(
+                    fun=lambda a: self.loss(beta, gamma + a * direction, **kwargs),
+                    x0=np.array([0]),
+                    method="TNC",
+                    jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a * direction, **kwargs)),
+                    bounds=[(0, max_step_len)]
+                )
+                step_len = res.x
+            gamma = gamma + step_len * direction
+            gamma[gamma <= 1e-18] = 0  # killing effective zeros
+            iteration += 1
+            direction = -self.gradient_gamma(beta, gamma, **kwargs)
+            # projecting the direction onto the constraints (positive box for gamma)
+            direction[(direction < 0) & (gamma == 0.0)] = 0
+            if log_progress:
+                self.logger.append(gamma)
+        return gamma
+
+    def optimal_gamma_ip(self, beta: np.ndarray, gamma: np.ndarray, log_progress=False, **kwargs):
+        n = len(gamma)
+        I = np.eye(n)
+        # v = x[:n], g = x[n:]
+        F_coord = lambda v, g, mu: np.concatenate([
+            v * g - mu,
+            self.gradient_gamma(beta, g, **kwargs) - v
+        ])
+        F = lambda x, mu: F_coord(x[:n], x[n:], mu)
+        dF_coord = lambda v, g: np.block([
+            [np.diag(g), np.diag(v)],
+            [-I, self.hessian_gamma(beta, g, take_only_positive_part=False, **kwargs)]
+        ])
+        dF = lambda x: dF_coord(x[:n], x[n:])
+        v = np.ones(n)
+        g = gamma
+        x = np.concatenate([v, g])
+        mu = v.dot(gamma) / n
+        step_len = 1
+        iteration = 0
+        losses = []
+        losses_kkt = []
+        if log_progress:
+            self.logger = [gamma]
+        while step_len != 0 and iteration < self.n_iter_inner and np.linalg.norm(F(x, mu)) > self.tol_inner:
+            F_current = F(x, mu)
+            dF_current = dF(x)
+            direction = np.linalg.solve(dF_current, -F_current)
+            direction[(x == 0.0) & (direction < 0.0)] = 0
+            ind_neg_dir = np.where(direction < 0.0)[0]
+            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
+            res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+                                       x0=np.array([max_step_len]),
+                                       method="TNC",
+                                       jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+                                            dF(x + alpha * direction).dot(direction)),
+                                       bounds=[(0, max_step_len)])
+            step_len = res.x
+            if np.linalg.norm(F(x + step_len * direction, mu)) > np.linalg.norm(F(x, mu)):
+                # Line search failed, probably stuck in a local minimum
+                res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+                                           x0=np.array([0]),
+                                           method="TNC",
+                                           jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+                                               dF(x + alpha * direction).dot(direction)),
+                                           bounds=[(0, max_step_len)])
+                step_len = res.x
+            x = x + step_len * direction
+            x[x <= 1e-18] = 0 # killing effective zeros
+            mu = 0.1 * x[:n].dot(x[n:]) / n
+            iteration += 1
+            losses.append(self.loss(beta, x[n:], **kwargs))
+            losses_kkt.append(np.linalg.norm(F(x, mu)))
+            if log_progress:
+                self.logger.append(x[n:])
+        return x[n:]
+
+    def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, method="pgd", **kwargs):
+        if method == "pgd":
+            return self.optimal_gamma_pgd(beta, gamma, **kwargs)
+        elif method == "ip":
+            return self.optimal_gamma_ip(beta, gamma, **kwargs)
+        else:
+            raise ValueError(f"Unknown method: {method}")
 
     def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
         self._recalculate_cholesky(gamma)
@@ -445,7 +531,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
     """
 
     def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3,
-                 participation_in_selection=None):
+                 participation_in_selection=None, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -466,7 +552,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             selection process
         """
 
-        super().__init__(problem)
+        super().__init__(problem, **kwargs)
         self.lb = lb
         self.lg = lg
         self.k = nnz_tbeta
@@ -679,8 +765,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
 class LinearLMEOracleW(LinearLMEOracleRegularized):
 
-    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3):
-        super().__init__(problem, lb, lg, nnz_tbeta, nnz_tgamma)
+    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3, **kwargs):
+        super().__init__(problem, lb, lg, nnz_tbeta, nnz_tgamma, **kwargs)
         self.beta = None
         self.drop_penalties_beta = None
         self.drop_penalties_gamma = None

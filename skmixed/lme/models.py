@@ -66,7 +66,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                  solver: str = "pgd",
                  initializer=None,
                  n_iter: int = 1000,
-                 n_iter_inner: int = 20,
+                 n_iter_inner: int = 1,
                  n_iter_outer: int = 1,
                  use_line_search: bool = True,
                  lb: float = 1,
@@ -271,7 +271,9 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                                 lg=self.lg,
                                                 nnz_tbeta=self.nnz_tbeta,
                                                 nnz_tgamma=self.nnz_tgamma,
-                                                participation_in_selection=self.participation_in_selection
+                                                participation_in_selection=self.participation_in_selection,
+                                                n_iter_inner=self.n_iter_inner,
+                                                tol_inner=self.tol_inner
                                                 )
         elif self.regularization_type == "loss-weighted":
             oracle = LinearLMEOracleW(problem,
@@ -367,18 +369,17 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                     self.logger_.add("converged", 0)
                     return self
 
-                if self.solver == 'pgd':
-                    prev_beta = beta
-                    prev_gamma = gamma
-                    prev_tbeta = tbeta
-                    prev_tgamma = tgamma
+                prev_beta = beta
+                prev_gamma = gamma
+                prev_tbeta = tbeta
+                prev_tgamma = tgamma
 
-                    beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
-                    gamma = oracle.optimal_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma)
-                    tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
-                    tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
+                beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
+                gamma = oracle.optimal_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, method=self.solver)
+                tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
+                tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
 
-                    iteration += 1
+                iteration += 1
 
                 if len(self.logger_keys) > 0:
                     loss = oracle.loss(beta, gamma, tbeta, tgamma)
