@@ -112,6 +112,9 @@ class TestLinearLMEOracle(TestCase):
             # plt.show()
             self.assertTrue(allclose(optimal_gamma_pgd, optimal_gamma_ip, rtol=rtol, atol=atol),
                             msg="PGD and IP do not match")
+            loss_pgd = oracle.loss(beta, optimal_gamma_pgd)
+            loss_ip = oracle.loss(beta, optimal_gamma_ip)
+            self.assertTrue(allclose(loss_pgd, loss_ip, rtol=rtol, atol=atol))
 
     def test_no_data_problem(self):
         random_seed = 43
