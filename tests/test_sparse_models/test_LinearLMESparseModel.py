@@ -33,8 +33,8 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "logger_keys": ('converged', 'loss',),
             "tol": 1e-6,
             "n_iter": 1000,
-            "tol_inner": 1e-4,
-            "n_iter_inner": 1,
+            "tol_inner": 1e-6,
+            "n_iter_inner": 100,
             "n_iter_outer": 1  # we don't care about tbeta and tgamma, so we don't increase regularization iteratively
         }
 
@@ -51,7 +51,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
 
             logger = model.logger_
             loss = np.array(logger.get("loss"))
-            self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
+            self.assertTrue(np.all(loss[1:-1] - loss[:-2] <= 0) and loss[-1] - loss[-2] <= 1e-13,  # sometimes the very last step goes up to machine precision and then stops
                             msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
             y_pred = model.predict_problem(problem)
@@ -106,7 +106,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1,
+            "n_iter_inner": 100,
             "n_iter_outer": 20
         }
 

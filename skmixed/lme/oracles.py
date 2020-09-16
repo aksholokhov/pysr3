@@ -44,7 +44,7 @@ class LinearLMEOracle:
 
     """
 
-    def __init__(self, problem: LinearLMEProblem, n_iter_inner=1, tol_inner=1e-4):
+    def __init__(self, problem: LinearLMEProblem, n_iter_inner=1, tol_inner=1e-4, warm_start_duals=False):
         """
         Creates an oracle on top of the given problem
 
@@ -76,6 +76,8 @@ class LinearLMEOracle:
         self.beta_to_gamma_map = beta_to_gamma_map
         self.n_iter_inner = n_iter_inner
         self.tol_inner = tol_inner
+        if warm_start_duals:
+            self.v = None
 
     def _recalculate_cholesky(self, gamma: np.ndarray):
         """
@@ -251,10 +253,10 @@ class LinearLMEOracle:
         mu = v.dot(gamma) / n
         step_len = 1
         iteration = 0
-        losses = []
-        losses_kkt = []
         if log_progress:
             self.logger = [gamma]
+        losses = []
+        losses_kkt = []
         while step_len != 0 and iteration < self.n_iter_inner and np.linalg.norm(F(x, mu)) > self.tol_inner:
             F_current = F(x, mu)
             dF_current = dF(x)
@@ -282,6 +284,8 @@ class LinearLMEOracle:
             x[x <= 1e-18] = 0  # killing effective zeros
             mu = 0.1 * x[:n].dot(x[n:]) / n
             iteration += 1
+            losses.append(self.loss(beta, x[n:], **kwargs))
+            losses_kkt.append(np.linalg.norm(F(x, mu)))
             if log_progress:
                 self.logger.append(x[n:])
         return x[n:]
