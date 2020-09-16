@@ -30,7 +30,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "lb": 0,        # We expect the coefficient vectors to be dense so we turn regularization off.
             "lg": 0,        # Same.
             "initializer": 'EM',
-            "solver": "pgd",
             "logger_keys": ('converged', 'loss',),
             "tol": 1e-6,
             "n_iter": 1000,
@@ -103,7 +102,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "lb": 20,
             "lg": 2,
             "initializer": None,
-            "solver": "pgd",
             "logger_keys": ('converged', 'loss',),
             "tol": 1e-6,
             "n_iter": 1000,

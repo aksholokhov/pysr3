@@ -25,12 +25,11 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             "lb": 0.01,
             "lg": 0.01,
             "initializer": None,
-            "solver": "pgd",
             "logger_keys": ('converged', 'loss',),
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1,
+            "n_iter_inner": 100,
             "n_iter_outer": 20,
         }
 

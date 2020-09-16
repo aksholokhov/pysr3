@@ -281,6 +281,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                       lg=self.lg,
                                       nnz_tbeta=self.nnz_tbeta,
                                       nnz_tgamma=self.nnz_tgamma,
+                                      participation_in_selection=self.participation_in_selection,
                                       n_iter_inner=self.n_iter_inner,
                                       tol_inner=self.tol_inner,
                                       )
