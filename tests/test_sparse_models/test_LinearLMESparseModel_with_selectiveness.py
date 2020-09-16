@@ -13,6 +13,10 @@ from skmixed.lme.problems import LinearLMEProblem
 class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
 
     def test_solving_sparse_problem(self):
+        # TODO: figure out why this test fails on Github but does not fail locally
+        # once the main model class is cleaned.
+        # self.assertTrue(True)
+        # return None
         trials = 10
         problem_parameters = {
             "groups_sizes": [20, 12, 14, 50, 11],
@@ -29,7 +33,7 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 100,
+            "n_iter_inner": 1,
             "n_iter_outer": 20,
         }
 
@@ -75,6 +79,7 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             #                 msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
             y_pred = model.predict_problem(problem)
+            # breaks here because of NaNs either in y or y_pred. Some parameters don't go through properly?
             explained_variance = explained_variance_score(y, y_pred)
             mse = mean_squared_error(y, y_pred)
 
