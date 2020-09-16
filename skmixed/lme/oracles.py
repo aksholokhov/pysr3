@@ -76,8 +76,6 @@ class LinearLMEOracle:
         self.beta_to_gamma_map = beta_to_gamma_map
         self.n_iter_inner = n_iter_inner
         self.tol_inner = tol_inner
-        self.warm_start_duals = warm_start_duals
-        self.v = None
 
     def _recalculate_cholesky(self, gamma: np.ndarray):
         """

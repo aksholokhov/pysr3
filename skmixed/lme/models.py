@@ -274,14 +274,15 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                                 participation_in_selection=self.participation_in_selection,
                                                 n_iter_inner=self.n_iter_inner,
                                                 tol_inner=self.tol_inner,
-                                                **kwargs
                                                 )
         elif self.regularization_type == "loss-weighted":
             oracle = LinearLMEOracleW(problem,
                                       lb=self.lb,
                                       lg=self.lg,
                                       nnz_tbeta=self.nnz_tbeta,
-                                      nnz_tgamma=self.nnz_tgamma
+                                      nnz_tgamma=self.nnz_tgamma,
+                                      n_iter_inner=self.n_iter_inner,
+                                      tol_inner=self.tol_inner,
                                       )
         else:
             raise ValueError("regularization_type is not understood.")
