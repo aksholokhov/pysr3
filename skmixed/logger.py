@@ -18,5 +18,9 @@ class Logger:
         self.dict[key] = value
         return self
 
+    def append(self, key, value):
+        self.dict[key] += value
+        return self
+
     def get(self, key):
         return self.dict[key]

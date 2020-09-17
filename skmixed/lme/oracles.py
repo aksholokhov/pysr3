@@ -271,15 +271,6 @@ class LinearLMEOracle:
                                             dF(x + alpha * direction).dot(direction)),
                                        bounds=[(0, max_step_len)])
             step_len = res.x
-            # if np.linalg.norm(F(x + step_len * direction, mu)) > np.linalg.norm(F(x, mu)):
-            #     # Line search failed, probably stuck in a local minimum
-            #     res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-            #                                x0=np.array([0]),
-            #                                method="TNC",
-            #                                jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-            #                                    dF(x + alpha * direction).dot(direction)),
-            #                                bounds=[(0, max_step_len)])
-            #     step_len = res.x
             x = x + step_len * direction
             x[x <= 1e-18] = 0  # killing effective zeros
             mu = 0.1 * x[:n].dot(x[n:]) / n
@@ -289,66 +280,6 @@ class LinearLMEOracle:
             if log_progress:
                 self.logger.append(x[n:])
         return x[n:]
-
-    def optimal_everything_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
-                              **kwargs):
-        n = len(gamma)
-        I = np.eye(n)
-        v = np.ones(n)
-        g = gamma
-        x = np.concatenate([v, g])
-        mu = 0.1 * v.dot(gamma) / n
-        step_len = 1
-        iteration = 0
-        if log_progress:
-            self.logger = [gamma]
-        losses = []
-        losses_kkt = []
-        F_coord = lambda v, g, mu: np.concatenate([
-            v * g - mu,
-            self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
-        ])
-        F = lambda x, mu: F_coord(x[:n], x[n:], mu)
-        while step_len != 0 and iteration < self.n_iter_inner and np.linalg.norm(F(x, mu)) > self.tol_inner:
-            # v = x[:n], g = x[n:]
-            F_coord = lambda v, g, mu: np.concatenate([
-                v * g - mu,
-                self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
-            ])
-            F = lambda x, mu: F_coord(x[:n], x[n:], mu)
-            dF_coord = lambda v, g: np.block([
-                [np.diag(g), np.diag(v)],
-                [-I, self.hessian_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
-            ])
-            dF = lambda x: dF_coord(x[:n], x[n:])
-            F_current = F(x, mu)
-            dF_current = dF(x)
-            direction = np.linalg.solve(dF_current, -F_current)
-            direction[(x == 0.0) & (direction < 0.0)] = 0
-            ind_neg_dir = np.where(direction < 0.0)[0]
-            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
-            res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-                                       x0=np.array([max_step_len]),
-                                       method="TNC",
-                                       jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-                                           dF(x + alpha * direction).dot(direction)),
-                                       bounds=[(0, max_step_len)])
-            step_len = res.x
-            x = x + step_len * direction
-            x[x <= 1e-18] = 0  # killing effective zeros
-            gamma = x[n:]
-            # optimize other components
-            beta = self.optimal_beta(gamma, tbeta, beta=beta)
-            tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
-            tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
-            # adjust barrier relaxation
-            mu = 0.1 * x[:n].dot(x[n:]) / n
-            iteration += 1
-            losses.append(self.loss(beta, gamma, tbeta, tgamma, **kwargs))
-            losses_kkt.append(np.linalg.norm(F(x, mu)))
-            if log_progress:
-                self.logger.append(x[n:])
-        return beta, gamma, tbeta, tgamma, losses
 
     def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, method="pgd", **kwargs):
         if method == "pgd":
@@ -814,6 +745,108 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             return tgamma
         else:
             return self._take_only_k_max(tgamma, self.j)
+
+    def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
+                              **kwargs):
+        n = len(gamma)
+        I = np.eye(n)
+        v = np.ones(n)
+        g = gamma
+        x = np.concatenate([v, g])
+        mu = 0.1 * v.dot(gamma) / n
+        step_len = 1
+        iteration = 0
+        if log_progress:
+            self.logger = [gamma]
+        losses = []
+        losses_kkt = []
+        F_coord = lambda v, g, mu: np.concatenate([
+            v * g - mu,
+            self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+        ])
+        F = lambda x, mu: F_coord(x[:n], x[n:], mu)
+        while step_len != 0 and iteration < self.n_iter_inner and np.linalg.norm(F(x, mu)) > self.tol_inner:
+            # v = x[:n], g = x[n:]
+            F_coord = lambda v, g, mu: np.concatenate([
+                v * g - mu,
+                self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+            ])
+            F = lambda x, mu: F_coord(x[:n], x[n:], mu)
+            dF_coord = lambda v, g: np.block([
+                [np.diag(g), np.diag(v)],
+                [-I, self.hessian_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+            ])
+            dF = lambda x: dF_coord(x[:n], x[n:])
+            F_current = F(x, mu)
+            dF_current = dF(x)
+            direction = np.linalg.solve(dF_current, -F_current)
+            direction[(x == 0.0) & (direction < 0.0)] = 0
+            ind_neg_dir = np.where(direction < 0.0)[0]
+            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
+            res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+                                       x0=np.array([max_step_len]),
+                                       method="TNC",
+                                       jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+                                           dF(x + alpha * direction).dot(direction)),
+                                       bounds=[(0, max_step_len)])
+            step_len = res.x
+            x = x + step_len * direction
+            x[x <= 1e-18] = 0  # killing effective zeros
+            gamma = x[n:]
+            # optimize other components
+            beta = self.optimal_beta(gamma, tbeta, beta=beta)
+            tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
+            tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
+            # adjust barrier relaxation
+            mu = 0.1 * x[:n].dot(x[n:]) / n
+            iteration += 1
+            losses.append(self.loss(beta, gamma, tbeta, tgamma, **kwargs))
+            losses_kkt.append(np.linalg.norm(F(x, mu)))
+            if log_progress:
+                self.logger.append(x[n:])
+        return beta, gamma, tbeta, tgamma, losses
+
+    def find_optimal_parameters_pgd(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
+                              **kwargs):
+        step_len = 1
+        iteration = 0
+
+        if log_progress:
+            self.logger = [gamma]
+        losses = []
+
+        beta = self.optimal_beta(gamma, tbeta, beta=beta)
+        direction = -self.gradient_gamma(beta, gamma,tbeta=tbeta, tgamma=tgamma, **kwargs)
+        # projecting the direction onto the constraints (positive box for gamma)
+        direction[(direction < 0) & (gamma == 0.0)] = 0
+
+        while step_len > 0 and iteration < self.n_iter_inner and np.linalg.norm(direction) > self.tol_inner:
+            ind_neg_dir = np.where(direction < 0.0)[0]
+            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
+            res = sp.optimize.minimize(
+                fun=lambda a: self.loss(beta, gamma + a * direction, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                x0=np.array([0]),
+                method="TNC",
+                jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a * direction, tbeta=tbeta, tgamma=tgamma, **kwargs)),
+                bounds=[(0, max_step_len)]
+            )
+            step_len = res.x
+            gamma = gamma + step_len * direction
+            gamma[gamma <= 1e-18] = 0  # killing effective zeros
+            # optimize other components
+            tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
+            tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
+            losses.append(self.loss(beta, gamma, tbeta, tgamma, **kwargs))
+            iteration += 1
+            beta = self.optimal_beta(gamma, tbeta, beta=beta)
+            direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
+            # projecting the direction onto the constraints (positive box for gamma)
+            direction[(direction < 0) & (gamma == 0.0)] = 0
+            if log_progress:
+                self.logger.append(gamma)
+
+        return beta, gamma, tbeta, tgamma, losses
+
 
 
 class LinearLMEOracleW(LinearLMEOracleRegularized):
