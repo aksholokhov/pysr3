@@ -15,8 +15,6 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
     def test_solving_sparse_problem(self):
         # TODO: figure out why this test fails on Github but does not fail locally
         # once the main model class is cleaned.
-        self.assertTrue(True)
-        return None
         trials = 10
         problem_parameters = {
             "groups_sizes": [20, 12, 14, 50, 11],
