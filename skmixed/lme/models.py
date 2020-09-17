@@ -273,14 +273,14 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                                 nnz_tgamma=self.nnz_tgamma,
                                                 participation_in_selection=self.participation_in_selection,
                                                 n_iter_inner=self.n_iter_inner,
-                                                tol_inner=self.tol_inner,
+                                                tol_inner=self.tol_inner
                                                 )
         elif self.regularization_type == "loss-weighted":
             oracle = LinearLMEOracleW(problem,
                                       lb=self.lb,
                                       lg=self.lg,
                                       nnz_tbeta=self.nnz_tbeta,
-                                      nnz_tgamma=self.nnz_tgamma,
+                                      nnz_tgamma=self.nnz_tgamma
                                       )
         else:
             raise ValueError("regularization_type is not understood.")
@@ -348,46 +348,42 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             prev_gamma = np.infty
 
             # =========== MIDDLE ITERATION =============
-            if self.solver == "ip":
-                beta, gamma, tbeta, tgamma, losses = oracle.optimal_everything_ip(beta, gamma, tbeta, tgamma)
-                self.logger_.dict["loss"] = losses
-            else:
-                iteration = 0
-                while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
-                        or np.linalg.norm(tgamma - prev_tgamma) > self.tol
-                        or np.linalg.norm(beta - prev_beta) > self.tol
-                        or np.linalg.norm(gamma - prev_gamma) > self.tol)
-                       and iteration < self.n_iter):
+            iteration = 0
+            while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
+                    or np.linalg.norm(tgamma - prev_tgamma) > self.tol
+                    or np.linalg.norm(beta - prev_beta) > self.tol
+                    or np.linalg.norm(gamma - prev_gamma) > self.tol)
+                   and iteration < self.n_iter):
 
-                    if iteration >= self.n_iter:
-                        us = oracle.optimal_random_effects(beta, gamma)
-                        if len(self.logger_keys) > 0:
-                            loss = oracle.loss(beta, gamma, tbeta, tgamma)
-                            self.logger_.log(**locals())
-                        self.coef_ = {"beta": beta,
-                                      "gamma": gamma,
-                                      "tbeta": tbeta,
-                                      "tgamma": tgamma,
-                                      "random_effects": us
-                                      }
-                        self.logger_.add("converged", 0)
-                        return self
-
-                    prev_beta = beta
-                    prev_gamma = gamma
-                    prev_tbeta = tbeta
-                    prev_tgamma = tgamma
-
-                    beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
-                    gamma = oracle.optimal_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, method=self.solver)
-                    tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
-                    tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
-
-                    iteration += 1
-
+                if iteration >= self.n_iter:
+                    us = oracle.optimal_random_effects(beta, gamma)
                     if len(self.logger_keys) > 0:
                         loss = oracle.loss(beta, gamma, tbeta, tgamma)
-                        self.logger_.log(locals())
+                        self.logger_.log(**locals())
+                    self.coef_ = {"beta": beta,
+                                  "gamma": gamma,
+                                  "tbeta": tbeta,
+                                  "tgamma": tgamma,
+                                  "random_effects": us
+                                  }
+                    self.logger_.add("converged", 0)
+                    return self
+
+                prev_beta = beta
+                prev_gamma = gamma
+                prev_tbeta = tbeta
+                prev_tgamma = tgamma
+
+                beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
+                gamma = oracle.optimal_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, method=self.solver)
+                tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
+                tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
+
+                iteration += 1
+
+                if len(self.logger_keys) > 0:
+                    loss = oracle.loss(beta, gamma, tbeta, tgamma)
+                    self.logger_.log(locals())
 
             outer_iteration += 1
             oracle.lb = 2 * (1 + oracle.lb)

@@ -98,7 +98,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
 
         model_parameters = {
             # "nnz_tbeta": 4,  # we define them later in trial iterations
-            # "nnz_tgamma": 3,  # same
+            # "nnz_tgamma": 3,
             "lb": 20,
             "lg": 2,
             "initializer": None,
@@ -106,7 +106,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1,  # put 100 here for ip
+            "n_iter_inner": 1,
             "n_iter_outer": 20
         }
 
@@ -202,7 +202,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1,  # put 100 here for IP
+            "n_iter_inner": 1,
         }
         # Now we want to solve a regularized problem to get two different models
         model2_parameters = {
