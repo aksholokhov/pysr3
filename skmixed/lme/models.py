@@ -60,17 +60,15 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     """
 
     def __init__(self,
-                 tol: float = 1e-4,
                  tol_inner: float = 1e-4,
                  tol_outer: float = 1e-2,
                  solver: str = "pgd",
                  initializer=None,
-                 n_iter: int = 1000,
                  n_iter_inner: int = 1,
                  n_iter_outer: int = 1,
                  use_line_search: bool = True,
-                 lb: float = 1,
-                 lg: float = 1,
+                 lb: float = 0,
+                 lg: float = 0,
                  regularization_type: str = "l2",
                  nnz_tbeta: int = 3,
                  nnz_tgamma: int = 3,
@@ -81,16 +79,11 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        tol : float
-            Tolerance for stopping criterion: ||tβ_{k+1} - tβ_k|| <= tol and ||t𝛄_{k+1} - t𝛄_k|| <= tol.
-
-        tol_inner : float
-            Tolerance for inner optimization subroutine (min ℋ w.r.t. 𝛄) stopping criterion:
-            ||projected ∇ℋ|| <= tol_inner
 
         solver : {'pgd'} Solver to use in computational routines:
 
                 - 'pgd' : Projected Gradient Descent
+                - 'ip'  : Interior Point method
 
         initializer : {None, 'EM'}, Optional
             Whether to use an initializer before starting the main optimization routine:
@@ -98,8 +91,17 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 - None : Does not do any special initialization, starts with the given initial point.
                 - 'EM' : Performs one step of a naive EM-algorithm in order to improve the initial point.
 
-        n_iter : int
+
+        tol_outer : float
+            Tolerance for outer optimization subroutine. Stops when ||beta - tbeta|| <= tol_outer
+            and ||gamma - tgamma|| <= tol_outer
+
+        n_iter_outer : int
             Number of iterations for the outer optimization cycle.
+
+        tol_inner : float
+            Tolerance for inner optimization subroutine (min ℋ w.r.t. 𝛄) stopping criterion:
+            ||projected ∇ℋ|| <= tol_inner
 
         n_iter_inner : int
             Number of iterations for the inner optimization cycle.
@@ -131,12 +133,10 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             selection process
         """
 
-        self.tol = tol
         self.tol_inner = tol_inner
         self.tol_outer = tol_outer
         self.solver = solver
         self.initializer = initializer
-        self.n_iter = n_iter
         self.n_iter_inner = n_iter_inner
         self.n_iter_outer = n_iter_outer
         self.use_line_search = use_line_search

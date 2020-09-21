@@ -758,7 +758,6 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         iteration = 0
         if log_progress:
             self.logger = [gamma]
-        losses = []
         losses_kkt = []
         F_coord = lambda v, g, mu: np.concatenate([
             v * g - mu,
@@ -800,11 +799,11 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             # adjust barrier relaxation
             mu = 0.1 * x[:n].dot(x[n:]) / n
             iteration += 1
-            losses.append(self.loss(beta, gamma, tbeta, tgamma, **kwargs))
+            # losses.append(np.linalg.norm(F(x, mu)))
             losses_kkt.append(np.linalg.norm(F(x, mu)))
             if log_progress:
                 self.logger.append(x[n:])
-        return beta, gamma, tbeta, tgamma, losses
+        return beta, gamma, tbeta, tgamma, losses_kkt
 
     def find_optimal_parameters_pgd(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
                               **kwargs):
@@ -835,15 +834,14 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
             beta = self.optimal_beta(gamma, tbeta, beta=beta)
             direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
-            # projecting the direction onto the constraints (positive box for gamma)
-            proj_direction = direction.copy()
-            proj_direction[(direction < 0) & (gamma == 0.0)] = 0
-
-            # max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
+            # # projecting the direction onto the constraints (positive box for gamma)
+            # proj_direction = direction.copy()
+            # proj_direction[(direction < 0) & (gamma == 0.0)] = 0
 
             res = sp.optimize.minimize(
                 fun=lambda a: self.loss(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma, **kwargs),
                 x0=np.array([0]),
+                # TODO: figure out how to get gradients back (projecting directions?)
                 # method="TNC",
                 # jac=lambda a: direction.dot(self.gradient_gamma(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma, **kwargs)),
                 bounds=[(0, 1)]
