@@ -30,7 +30,7 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1000,
+            "n_iter_inner": 2000,
             "n_iter_outer": 20,
         }
 

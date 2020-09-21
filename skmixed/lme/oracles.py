@@ -836,17 +836,20 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             beta = self.optimal_beta(gamma, tbeta, beta=beta)
             direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
             # projecting the direction onto the constraints (positive box for gamma)
-            ind_neg_dir = np.where(direction < 0.0)[0]
-            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
+            proj_direction = direction.copy()
+            proj_direction[(direction < 0) & (gamma == 0.0)] = 0
+
+            # max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
+
             res = sp.optimize.minimize(
-                fun=lambda a: self.loss(beta, gamma + a * direction, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                fun=lambda a: self.loss(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma, **kwargs),
                 x0=np.array([0]),
-                method="TNC",
-                jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a * direction, tbeta=tbeta, tgamma=tgamma, **kwargs)),
-                bounds=[(0, max_step_len)]
+                # method="TNC",
+                # jac=lambda a: direction.dot(self.gradient_gamma(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma, **kwargs)),
+                bounds=[(0, 1)]
             )
             step_len = res.x
-            gamma = gamma + step_len * direction
+            gamma = np.clip(gamma + step_len * direction, 0, None)
             gamma[gamma <= 1e-18] = 0  # killing effective zeros
             # optimize other components
             tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
