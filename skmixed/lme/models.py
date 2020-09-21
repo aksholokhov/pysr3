@@ -63,7 +63,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                  tol: float = 1e-4,
                  tol_inner: float = 1e-4,
                  tol_outer: float = 1e-2,
-                 solver: str = "pgd",
+                 solver: str = "pgd2",
                  initializer=None,
                  n_iter: int = 1000,
                  n_iter_inner: int = 1,
@@ -280,7 +280,9 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                       lb=self.lb,
                                       lg=self.lg,
                                       nnz_tbeta=self.nnz_tbeta,
-                                      nnz_tgamma=self.nnz_tgamma
+                                      nnz_tgamma=self.nnz_tgamma,
+                                      n_iter_inner=self.n_iter_inner,
+                                      tol_inner=self.tol_inner
                                       )
         else:
             raise ValueError("regularization_type is not understood.")
@@ -384,6 +386,11 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                     if len(self.logger_keys) > 0:
                         loss = oracle.loss(beta, gamma, tbeta, tgamma)
                         self.logger_.log(locals())
+
+            elif self.solver == "pgd2":
+                beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
+                if "loss" in self.logger_keys:
+                    self.logger_.append("loss", losses)
 
             elif self.solver == "ip":
                 beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma)

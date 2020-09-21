@@ -811,6 +811,11 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         step_len = 1
         iteration = 0
 
+        prev_tbeta = np.infty
+        prev_tgamma = np.infty
+        prev_beta = np.infty
+        prev_gamma = np.infty
+
         if log_progress:
             self.logger = [gamma]
         losses = []
@@ -820,7 +825,15 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         # projecting the direction onto the constraints (positive box for gamma)
         direction[(direction < 0) & (gamma == 0.0)] = 0
 
-        while step_len > 0 and iteration < self.n_iter_inner and np.linalg.norm(direction) > self.tol_inner:
+        while step_len > 0 and iteration < self.n_iter_inner and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                        or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
+                        or np.linalg.norm(beta - prev_beta) > self.tol_inner
+                        or np.linalg.norm(gamma - prev_gamma) > self.tol_inner):
+            prev_beta = beta
+            prev_gamma = gamma
+            prev_tbeta = tbeta
+            prev_tgamma = tgamma
+
             ind_neg_dir = np.where(direction < 0.0)[0]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
             res = sp.optimize.minimize(

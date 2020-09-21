@@ -30,12 +30,12 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "lb": 0,        # We expect the coefficient vectors to be dense so we turn regularization off.
             "lg": 0,        # Same.
             "initializer": 'EM',
-            "solver": "pgd",
+            # "solver": "pgd",
             "logger_keys": ('converged', 'loss',),
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-6,
-            "n_iter_inner": 1,
+            "n_iter_inner": 1000,
             "n_iter_outer": 1  # we don't care about tbeta and tgamma, so we don't increase regularization iteratively
         }
 
@@ -102,13 +102,13 @@ class TestLinearLMESparseModel(unittest.TestCase):
             # "nnz_tgamma": 3,
             "lb": 20,
             "lg": 2,
-            "solver": "pgd",
+            # "solver": "pgd",
             "initializer": None,
             "logger_keys": ('converged', 'loss',),
             "tol": 1e-6,
             "n_iter": 1000,
             "tol_inner": 1e-4,
-            "n_iter_inner": 1,
+            "n_iter_inner": 1000,
             "n_iter_outer": 20
         }
 
