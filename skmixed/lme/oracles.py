@@ -820,20 +820,22 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             self.logger = [gamma]
         losses = []
 
-        beta = self.optimal_beta(gamma, tbeta, beta=beta)
-        direction = -self.gradient_gamma(beta, gamma,tbeta=tbeta, tgamma=tgamma, **kwargs)
-        # projecting the direction onto the constraints (positive box for gamma)
-        direction[(direction < 0) & (gamma == 0.0)] = 0
+        direction = np.infty
 
         while step_len > 0 and iteration < self.n_iter_inner and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
                         or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
                         or np.linalg.norm(beta - prev_beta) > self.tol_inner
-                        or np.linalg.norm(gamma - prev_gamma) > self.tol_inner):
+                        or np.linalg.norm(gamma - prev_gamma) > self.tol_inner) \
+                and np.linalg.norm(direction) > self.tol_inner:
+
             prev_beta = beta
             prev_gamma = gamma
             prev_tbeta = tbeta
             prev_tgamma = tgamma
 
+            beta = self.optimal_beta(gamma, tbeta, beta=beta)
+            direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
+            # projecting the direction onto the constraints (positive box for gamma)
             ind_neg_dir = np.where(direction < 0.0)[0]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
             res = sp.optimize.minimize(
@@ -851,10 +853,6 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
             losses.append(self.loss(beta, gamma, tbeta, tgamma, **kwargs))
             iteration += 1
-            beta = self.optimal_beta(gamma, tbeta, beta=beta)
-            direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
-            # projecting the direction onto the constraints (positive box for gamma)
-            direction[(direction < 0) & (gamma == 0.0)] = 0
             if log_progress:
                 self.logger.append(gamma)
 
