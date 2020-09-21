@@ -268,7 +268,7 @@ class LinearLMEOracle:
                                        x0=np.array([max_step_len]),
                                        method="TNC",
                                        jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-                                            dF(x + alpha * direction).dot(direction)),
+                                           dF(x + alpha * direction).dot(direction)),
                                        bounds=[(0, max_step_len)])
             step_len = res.x
             x = x + step_len * direction
@@ -746,8 +746,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         else:
             return self._take_only_k_max(tgamma, self.j)
 
-    def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
-                              **kwargs):
+    def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
+                                   log_progress=False,
+                                   **kwargs):
         n = len(gamma)
         I = np.eye(n)
         v = np.ones(n)
@@ -764,8 +765,24 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
         ])
         F = lambda x, mu: F_coord(x[:n], x[n:], mu)
-        while step_len != 0 and iteration < self.n_iter_inner and np.linalg.norm(F(x, mu)) > self.tol_inner:
-            # v = x[:n], g = x[n:]
+
+        prev_tbeta = np.infty
+        prev_tgamma = np.infty
+        prev_beta = np.infty
+        prev_gamma = np.infty
+
+        while step_len != 0 \
+                and iteration < self.n_iter_inner \
+                and np.linalg.norm(F(x, mu)) > self.tol_inner \
+                and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                     or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
+                     or np.linalg.norm(beta - prev_beta) > self.tol_inner
+                     or np.linalg.norm(gamma - prev_gamma) > self.tol_inner):
+            prev_beta = beta
+            prev_gamma = gamma
+            prev_tbeta = tbeta
+            prev_tgamma = tgamma
+
             F_coord = lambda v, g, mu: np.concatenate([
                 v * g - mu,
                 self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
@@ -805,8 +822,9 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 self.logger.append(x[n:])
         return beta, gamma, tbeta, tgamma, losses_kkt
 
-    def find_optimal_parameters_pgd(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
-                              **kwargs):
+    def find_optimal_parameters_pgd(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
+                                    log_progress=False,
+                                    **kwargs):
         step_len = 1
         iteration = 0
 
@@ -816,16 +834,19 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         prev_gamma = np.infty
 
         direction = np.infty
+        proj_direction = np.infty
 
         if log_progress:
             self.logger = [gamma]
         losses = []
 
-        while step_len > 0 and iteration < self.n_iter_inner and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
-                        or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
-                        or np.linalg.norm(beta - prev_beta) > self.tol_inner
-                        or np.linalg.norm(gamma - prev_gamma) > self.tol_inner) \
-                and np.linalg.norm(direction) > self.tol_inner:
+        while step_len > 0 \
+                and iteration < self.n_iter_inner \
+                and np.linalg.norm(proj_direction) > self.tol_inner \
+                and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                     or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
+                     or np.linalg.norm(beta - prev_beta) > self.tol_inner
+                     or np.linalg.norm(gamma - prev_gamma) > self.tol_inner):
 
             prev_beta = beta
             prev_gamma = gamma
@@ -834,12 +855,13 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
             beta = self.optimal_beta(gamma, tbeta, beta=beta)
             direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
-            # # projecting the direction onto the constraints (positive box for gamma)
-            # proj_direction = direction.copy()
-            # proj_direction[(direction < 0) & (gamma == 0.0)] = 0
+            # projecting the direction onto the constraints (positive box for gamma)
+            proj_direction = direction.copy()
+            proj_direction[(direction < 0) & (gamma == 0.0)] = 0
 
             res = sp.optimize.minimize(
-                fun=lambda a: self.loss(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma, **kwargs),
+                fun=lambda a: self.loss(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma,
+                                        **kwargs),
                 x0=np.array([0]),
                 # TODO: figure out how to get gradients back (projecting directions?)
                 # method="TNC",
@@ -858,7 +880,6 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 self.logger.append(gamma)
 
         return beta, gamma, tbeta, tgamma, losses
-
 
 
 class LinearLMEOracleW(LinearLMEOracleRegularized):

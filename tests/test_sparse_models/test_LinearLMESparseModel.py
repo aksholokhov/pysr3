@@ -32,7 +32,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "lb": 0,        # We expect the coefficient vectors to be dense so we turn regularization off.
             "lg": 0,        # Same.
             "initializer": 'EM',
-            # "solver": "pgd",
             "logger_keys": ('converged', 'loss',),
             "tol_inner": 1e-6,
             "tol_outer": 1e-6,
@@ -45,13 +44,11 @@ class TestLinearLMESparseModel(unittest.TestCase):
 
         for i in range(trials):
             with self.subTest(i=i):
+                problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=i)
+                x, y = problem.to_x_y()
                 for solver in self.solvers_to_test:
                     with self.subTest(solver=solver):
-                        problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=i)
                         model = LinearLMESparseModel(solver=solver, **model_parameters)
-
-                        x, y = problem.to_x_y()
-
                         model.fit_problem(problem)
 
                         logger = model.logger_
@@ -89,11 +86,8 @@ class TestLinearLMESparseModel(unittest.TestCase):
         }
 
         model_parameters = {
-            # "nnz_tbeta": 4,  # we define them later in trial iterations
-            # "nnz_tgamma": 3,
             "lb": 20,
             "lg": 2,
-            # "solver": "pgd",
             "initializer": None,
             "logger_keys": ('converged', 'loss',),
             "tol_inner": 1e-4,
@@ -103,30 +97,29 @@ class TestLinearLMESparseModel(unittest.TestCase):
 
         max_mse = 0.1
         min_explained_variance = 0.9
-        fixed_effects_min_accuracy = 0.7
-        random_effects_min_accuracy = 0.7
+        fixed_effects_min_accuracy = 0.8
+        random_effects_min_accuracy = 0.8
 
         for i in range(trials):
             with self.subTest(i=i):
+                np.random.seed(i)
+                true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
+                if sum(true_beta) == 0:
+                    true_beta[0] = 1
+                true_gamma = np.random.choice(2, size=11, p=np.array([0.3, 0.7])) * true_beta
+
+                problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
+                                                                           beta=true_beta,
+                                                                           gamma=true_gamma,
+                                                                           seed=i)
+                x, y = problem.to_x_y()
+
                 for solver in self.solvers_to_test:
                     with self.subTest(solver=solver):
-                        np.random.seed(i)
-                        true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
-                        if sum(true_beta) == 0:
-                            true_beta[0] = 1
-                        true_gamma = np.random.choice(2, size=11, p=np.array([0.3, 0.7]))*true_beta
-
-                        problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
-                                                                                   beta=true_beta,
-                                                                                   gamma=true_gamma,
-                                                                                   seed=i)
                         model = LinearLMESparseModel(**model_parameters,
                                                      solver=solver,
                                                      nnz_tbeta=sum(true_beta),
                                                      nnz_tgamma=sum(true_gamma))
-
-                        x, y = problem.to_x_y()
-                        # model.fit(x, y)
                         model.fit_problem(problem)
 
                         logger = model.logger_
