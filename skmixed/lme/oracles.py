@@ -816,11 +816,11 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         prev_beta = np.infty
         prev_gamma = np.infty
 
+        direction = np.infty
+
         if log_progress:
             self.logger = [gamma]
         losses = []
-
-        direction = np.infty
 
         while step_len > 0 and iteration < self.n_iter_inner and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
                         or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner

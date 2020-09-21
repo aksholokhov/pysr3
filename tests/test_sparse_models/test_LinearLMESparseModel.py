@@ -47,7 +47,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
             model = LinearLMESparseModel(**model_parameters)
 
             x, y = problem.to_x_y()
-            # model.fit(x, y)
+
             model.fit_problem(problem)
 
             logger = model.logger_
@@ -59,8 +59,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             explained_variance = explained_variance_score(y, y_pred)
             mse = mean_squared_error(y, y_pred)
 
-            # coefficients = model.coef_
-            # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
 
             self.assertGreater(explained_variance, min_explained_variance,
                                msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
@@ -74,18 +72,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
                                       mse,
                                       max_mse,
                                       i))
-
-            # coefficients = model.coef_
-            # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
-            # maybe_beta = coefficients["beta"]
-            # maybe_us = coefficients["random_effects"]
-            # maybe_gamma = coefficients["gamma"]
-            # maybe_tbeta = coefficients["tbeta"]
-            # maybe_tgamma = coefficients["tgamma"]
-            # maybe_cluster_coefficients = coefficients["per_cluster_coefficients"]
-            # maybe_sparse_cluster_coefficients = coefficients["sparse_per_cluster_coefficients"]
-        # cluster_coefficients = beta + us
-        # maybe_cluster_coefficients = maybe_beta + maybe_us
         return None
 
     def test_solving_sparse_problem(self):

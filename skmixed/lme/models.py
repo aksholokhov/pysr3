@@ -63,7 +63,7 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                  tol: float = 1e-4,
                  tol_inner: float = 1e-4,
                  tol_outer: float = 1e-2,
-                 solver: str = "pgd2",
+                 solver: str = "pgd",
                  initializer=None,
                  n_iter: int = 1000,
                  n_iter_inner: int = 1,
@@ -345,59 +345,14 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                     or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
 
             if self.solver == "pgd":
-                prev_tbeta = np.infty
-                prev_tgamma = np.infty
-                prev_beta = np.infty
-                prev_gamma = np.infty
-
-                iteration = 0
-                while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
-                        or np.linalg.norm(tgamma - prev_tgamma) > self.tol
-                        or np.linalg.norm(beta - prev_beta) > self.tol
-                        or np.linalg.norm(gamma - prev_gamma) > self.tol)
-                       and iteration < self.n_iter):
-
-                    if iteration >= self.n_iter:
-                        us = oracle.optimal_random_effects(beta, gamma)
-                        if len(self.logger_keys) > 0:
-                            loss = oracle.loss(beta, gamma, tbeta, tgamma)
-                            self.logger_.log(**locals())
-                        self.coef_ = {"beta": beta,
-                                      "gamma": gamma,
-                                      "tbeta": tbeta,
-                                      "tgamma": tgamma,
-                                      "random_effects": us
-                                      }
-                        self.logger_.add("converged", 0)
-                        return self
-
-                    prev_beta = beta
-                    prev_gamma = gamma
-                    prev_tbeta = tbeta
-                    prev_tgamma = tgamma
-
-                    beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
-                    gamma = oracle.optimal_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, method=self.solver)
-                    tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
-                    tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
-
-                    iteration += 1
-
-                    if len(self.logger_keys) > 0:
-                        loss = oracle.loss(beta, gamma, tbeta, tgamma)
-                        self.logger_.log(locals())
-
-            elif self.solver == "pgd2":
                 beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
-                if "loss" in self.logger_keys:
-                    self.logger_.append("loss", losses)
-
             elif self.solver == "ip":
                 beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma)
-                if "loss" in self.logger_keys:
-                    self.logger_.append("loss", losses)
             else:
                 raise ValueError(f"Unknown solver: {self.solver}")
+
+            if "loss" in self.logger_keys:
+                self.logger_.append("loss", losses)
 
             outer_iteration += 1
             oracle.lb = 2 * (1 + oracle.lb)
