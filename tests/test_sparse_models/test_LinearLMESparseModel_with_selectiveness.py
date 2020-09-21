@@ -58,17 +58,17 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
                                          nnz_tgamma=sum(true_gamma),
                                          regularization_type="loss-weighted"
                                          )
-            model2 = LinearLMESparseModel(**model_parameters,
-                                          nnz_tbeta=sum(true_beta),
-                                          nnz_tgamma=sum(true_gamma),
-                                          regularization_type="l2"
-                                          )
+            # model2 = LinearLMESparseModel(**model_parameters,
+            #                               nnz_tbeta=sum(true_beta),
+            #                               nnz_tgamma=sum(true_gamma),
+            #                               regularization_type="l2"
+            #                               )
 
             x, y = problem.to_x_y()
             model.fit_problem(problem)
-            model2.fit_problem(problem)
+            # model2.fit_problem(problem)
 
-            logger = model.logger_
+            # logger = model.logger_
 
             # TODO: It won't decrease monotonically because it may jump when we increase regularization.
             # loss = np.array(logger.get("loss"))
@@ -76,12 +76,15 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             #                 msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
             y_pred = model.predict_problem(problem)
+            if not np.isfinite(y_pred).all() or np.isnan(y_pred).any():
+                raise Exception(f"{i}: y_pred is not finite. Coefs: {model.coef_},\n logger: {model.logger_.dict}")
+
             explained_variance = explained_variance_score(y, y_pred)
             mse = mean_squared_error(y, y_pred)
 
-            y_pred2 = model2.predict_problem(problem)
-            explained_variance2 = explained_variance_score(y, y_pred2)
-            mse2 = mean_squared_error(y, y_pred2)
+            # y_pred2 = model2.predict_problem(problem)
+            # explained_variance2 = explained_variance_score(y, y_pred2)
+            # mse2 = mean_squared_error(y, y_pred2)
 
             coefficients = model.coef_
             maybe_tbeta = coefficients["tbeta"]
@@ -89,11 +92,11 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
             fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta != 0)
             random_effects_accuracy = accuracy_score(true_gamma, maybe_tgamma != 0)
 
-            coefficients2 = model2.coef_
-            maybe_tbeta2 = coefficients2["tbeta"]
-            maybe_tgamma2 = coefficients2["tgamma"]
-            fixed_effects_accuracy2 = accuracy_score(true_beta, maybe_tbeta2 != 0)
-            random_effects_accuracy2 = accuracy_score(true_gamma, maybe_tgamma2 != 0)
+            # coefficients2 = model2.coef_
+            # maybe_tbeta2 = coefficients2["tbeta"]
+            # maybe_tgamma2 = coefficients2["tgamma"]
+            # fixed_effects_accuracy2 = accuracy_score(true_beta, maybe_tbeta2 != 0)
+            # random_effects_accuracy2 = accuracy_score(true_gamma, maybe_tgamma2 != 0)
             # print("\n %d) MSE    EV FEA REA")
             # print("%.4f  %.4f %.4f %.4f" % (mse, explained_variance, fixed_effects_accuracy, random_effects_accuracy))
             # print("%.4f  %.4f %.4f %.4f" % (mse2, explained_variance2, fixed_effects_accuracy2, random_effects_accuracy2))
