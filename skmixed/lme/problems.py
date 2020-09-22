@@ -354,6 +354,7 @@ class LinearLMEProblem(LMEProblem):
 
             group_continuous_features = all_data_in_one_matrix[np.ix_(group_idxs, continuous_features_idx)]
             group_fixed_features = group_continuous_features[:, fixed_features_idx]
+            # TODO: this one fails if there are no random effects. Fix it.
             group_random_features = group_continuous_features[:, random_features_idx]
 
             random_effects = None

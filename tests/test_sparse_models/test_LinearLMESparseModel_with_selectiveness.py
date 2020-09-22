@@ -12,7 +12,7 @@ from skmixed.lme.problems import LinearLMEProblem
 
 class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
 
-    solvers_to_test = ["pgd"]
+    solvers_to_test = ["pgd", "ip"]
 
     def test_solving_sparse_problem(self):
         trials = 10

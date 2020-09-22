@@ -297,6 +297,25 @@ class LinearLMEOracle:
             gradient += - (L_inv.dot(x)).T.dot(L_inv.dot(xi))
         return gradient
 
+    def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        self._recalculate_cholesky(gamma)
+        hessian = 0
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            Lx = L_inv.dot(x)
+            hessian += Lx.T.dot(Lx)
+        return hessian
+
+    def hessian_beta_gamma(self,  beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        self._recalculate_cholesky(gamma)
+        hessian = 0
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            xi = y - x.dot(beta)
+            Lx = L_inv.dot(x)
+            Lz = L_inv.dot(z)
+            Lxi = L_inv.dot(xi)
+            hessian += np.diag(Lz.T.dot(Lxi)).dot(Lz.T.dot(Lx))
+        return hessian
+
     def x_to_beta_gamma(self, x):
         beta = x[:self.problem.num_fixed_effects]
         gamma = x[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects]
@@ -706,6 +725,12 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
         return super().hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_effects)
 
+    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, **kwargs) -> np.ndarray:
+        return super().gradient_beta(beta, gamma, **kwargs) + self.lb * (beta - tbeta)
+
+    def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        return super().hessian_beta(beta, gamma, **kwargs) + self.lb * np.eye(self.problem.num_fixed_effects)
+
     def optimal_tgamma(self, tbeta, gamma, **kwargs):
         """
         Returns tgamma which minimizes the loss function with all other variables fixed.
@@ -751,20 +776,21 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                                    **kwargs):
         n = len(gamma)
         I = np.eye(n)
+        Zb = np.zeros((len(beta), len(beta)))
         v = np.ones(n)
-        g = gamma
-        x = np.concatenate([v, g])
+        x = np.concatenate([v, beta, gamma])
         mu = 0.1 * v.dot(gamma) / n
         step_len = 1
         iteration = 0
         if log_progress:
             self.logger = [gamma]
         losses_kkt = []
-        F_coord = lambda v, g, mu: np.concatenate([
+        F_coord = lambda v, b, g, mu: np.concatenate([
             v * g - mu,
-            self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+            self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+            self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
         ])
-        F = lambda x, mu: F_coord(x[:n], x[n:], mu)
+        F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
 
         prev_tbeta = np.infty
         prev_tgamma = np.infty
@@ -783,38 +809,43 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             prev_tbeta = tbeta
             prev_tgamma = tgamma
 
-            F_coord = lambda v, g, mu: np.concatenate([
+            F_coord = lambda v, b, g, mu: np.concatenate([
                 v * g - mu,
-                self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+                self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
             ])
-            F = lambda x, mu: F_coord(x[:n], x[n:], mu)
-            dF_coord = lambda v, g: np.block([
-                [np.diag(g), np.diag(v)],
-                [-I, self.hessian_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+            F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
+            dF_coord = lambda v, b, g: np.block([
+                [np.diag(g), Zb, np.diag(v)],
+                [Zb, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs), self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T],
+                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs), self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
             ])
-            dF = lambda x: dF_coord(x[:n], x[n:])
+            dF = lambda x: dF_coord(x[:n], x[n:-n], x[-n:])
             F_current = F(x, mu)
             dF_current = dF(x)
             direction = np.linalg.solve(dF_current, -F_current)
-            direction[(x == 0.0) & (direction < 0.0)] = 0
+            # direction[(x == 0.0) & (direction < 0.0)] = 0
             ind_neg_dir = np.where(direction < 0.0)[0]
+            ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n)) ]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
-            res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-                                       x0=np.array([max_step_len]),
-                                       method="TNC",
-                                       jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-                                           dF(x + alpha * direction).dot(direction)),
-                                       bounds=[(0, max_step_len)])
-            step_len = res.x
+            # res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+            #                            x0=np.array([max_step_len]),
+            #                            method="TNC",
+            #                            jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+            #                                dF(x + alpha * direction).dot(direction)),
+            #                            bounds=[(0, max_step_len)])
+            # step_len = res.x
+            step_len = 0.99*max_step_len
             x = x + step_len * direction
-            x[x <= 1e-18] = 0  # killing effective zeros
-            gamma = x[n:]
+            # x[x <= 1e-18] = 0  # killing effective zeros
+            v = x[:n]
+            beta = x[n:-n]
+            gamma = x[-n:]
             # optimize other components
-            beta = self.optimal_beta(gamma, tbeta, beta=beta)
             tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
             tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
             # adjust barrier relaxation
-            mu = 0.1 * x[:n].dot(x[n:]) / n
+            mu = 0.1 * v.dot(gamma) / n
             iteration += 1
             # losses.append(np.linalg.norm(F(x, mu)))
             losses_kkt.append(np.linalg.norm(F(x, mu)))

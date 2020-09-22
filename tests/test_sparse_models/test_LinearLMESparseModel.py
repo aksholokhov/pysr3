@@ -11,7 +11,8 @@ from skmixed.helpers import random_effects_to_matrix
 
 class TestLinearLMESparseModel(unittest.TestCase):
 
-    solvers_to_test = ["pgd", "ip"]
+    solvers_to_test = ["pgd",
+                       "ip"]
 
     def test_solving_dense_problem(self):
         trials = 20
@@ -27,8 +28,8 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "obs_std": 0.1,
         }
         model_parameters = {
-            "nnz_tbeta": 2,
-            "nnz_tgamma": 2,
+            "nnz_tbeta": 4,
+            "nnz_tgamma": 4,
             "lb": 0,        # We expect the coefficient vectors to be dense so we turn regularization off.
             "lg": 0,        # Same.
             "initializer": 'EM',
@@ -50,7 +51,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
                     with self.subTest(solver=solver):
                         model = LinearLMESparseModel(solver=solver, **model_parameters)
                         model.fit_problem(problem)
-
                         logger = model.logger_
                         loss = np.array(logger.get("loss"))
                         if solver != "ip":

@@ -52,7 +52,7 @@ class TestLinearLMEOracle(TestCase):
                             msg="Optimal random effects don't match with old oracle")
         return None
 
-    def test_gradient_gamma(self):
+    def test_gradients(self):
         trials = 100
         random_seed = 34
         r = 1e-6
@@ -62,35 +62,77 @@ class TestLinearLMEOracle(TestCase):
         oracle = LinearLMEOracle(problem)
         np.random.seed(random_seed)
         for j in range(trials):
-            beta = np.random.rand(problem.num_fixed_effects)
-            gamma = np.random.rand(problem.num_random_effects)
-            dg = np.random.rand(problem.num_random_effects)
-            gradient = oracle.gradient_gamma(beta, gamma)
-            maybe_dir = gradient.dot(dg)
-            true_dir = (oracle.loss(beta, gamma + r * dg)
-                        - oracle.loss(beta, gamma - r * dg)
-                        ) / (2*r)
-            self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol), msg="Gradient does not look right")
+            with self.subTest(j=j):
+                beta = np.random.rand(problem.num_fixed_effects)
+                gamma = np.random.rand(problem.num_random_effects)
+                db = np.random.rand(problem.num_fixed_effects)
+                gradient_beta = oracle.gradient_beta(beta, gamma)
+                maybe_dir = gradient_beta.dot(db)
+                true_dir = (oracle.loss(beta + r * db, gamma)
+                            - oracle.loss(beta - r * db, gamma)
+                            ) / (2 * r)
+                self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
+                                msg="Gradient beta does not look right")
+                dg = np.random.rand(problem.num_random_effects)
+                gradient_gamma = oracle.gradient_gamma(beta, gamma)
+                maybe_dir = gradient_gamma.dot(dg)
+                true_dir = (oracle.loss(beta, gamma + r * dg)
+                            - oracle.loss(beta, gamma - r * dg)
+                            ) / (2 * r)
+                self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
+                                msg="Gradient gamma does not look right")
 
-    def test_hessian_gamma(self):
-        trials = 100
+    def test_hessians(self):
+        trials = 40
         random_seed = 34
-        r = 1e-6
-        rtol = 1e-5
-        atol = 1e-7
-        problem, true_parameters = LinearLMEProblem.generate(seed=random_seed)
+        r = 1e-5
+        rtol = 1e-4
+        atol = 1e-4
+        problem, true_parameters = LinearLMEProblem.generate(seed=random_seed, random_intercept=True)
         oracle = LinearLMEOracle(problem)
-        np.random.seed(random_seed)
+
         for j in range(trials):
-            beta = np.random.rand(problem.num_fixed_effects)
-            gamma = np.random.rand(problem.num_random_effects)
-            dg = np.random.rand(problem.num_random_effects)
-            hess = oracle.hessian_gamma(beta, gamma)
-            maybe_dir = hess.dot(dg)
-            true_dir = (oracle.gradient_gamma(beta, gamma + r * dg)
-                        - oracle.gradient_gamma(beta, gamma - r * dg)
-                        ) / (2 * r)
-            self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol), msg="Hessian does not look right")
+            with self.subTest(j=j):
+                np.random.seed(random_seed + j)
+
+                beta = np.random.rand(problem.num_fixed_effects)
+                gamma = np.random.rand(problem.num_random_effects)
+
+                db = np.random.rand(problem.num_fixed_effects)
+                hess = oracle.hessian_beta(beta, gamma)
+                maybe_dir = hess.dot(db)
+                true_dir = (oracle.gradient_beta(beta + r * db, gamma)
+                            - oracle.gradient_beta(beta - r * db, gamma)
+                            ) / (2 * r)
+                self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
+                                msg="Hessian beta does not look right")
+
+                dg = np.random.rand(problem.num_random_effects)
+                hess = oracle.hessian_gamma(beta, gamma)
+                maybe_dir = hess.dot(dg)
+                true_dir = (oracle.gradient_gamma(beta, gamma + r * dg)
+                            - oracle.gradient_gamma(beta, gamma - r * dg)
+                            ) / (2 * r)
+                self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
+                                msg="Hessian gamma does not look right")
+
+                db = np.random.rand(problem.num_fixed_effects)
+                hess = oracle.hessian_beta_gamma(beta, gamma)
+                maybe_dir = hess.dot(db)
+                true_dir = (oracle.gradient_gamma(beta + r * db, gamma)
+                            - oracle.gradient_gamma(beta - r * db, gamma)
+                            ) / (2 * r)
+                self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
+                                msg="Hessian gamma-beta does not look right")
+
+                dg = np.random.rand(problem.num_random_effects)
+                hess = oracle.hessian_beta_gamma(beta, gamma)
+                maybe_dir = hess.T.dot(dg)
+                true_dir = (oracle.gradient_beta(beta, gamma + r * dg)
+                            - oracle.gradient_beta(beta, gamma - r * dg)
+                            ) / (2 * r)
+                self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
+                                msg="Hessian beta-gamma does not look right")
 
     def test_optimal_gamma_consistency_ip_vs_pgd(self):
         trials = 10
@@ -203,10 +245,10 @@ class TestLinearLMEOracle(TestCase):
                                                                  seed=seed)
             oracle = LinearLMEOracle(problem)
             gamma = true_parameters['gamma']
-            rho = gamma/(gamma + 0.1)
+            rho = gamma / (gamma + 0.1)
             oracle._recalculate_cholesky(true_parameters['gamma'])
             n_eff = oracle._jones2010n_eff()
-            assert np.allclose(n_eff, sum([ni/(1+(ni-1)*rho) for ni in problem.groups_sizes]))
+            assert np.allclose(n_eff, sum([ni / (1 + (ni - 1) * rho) for ni in problem.groups_sizes]))
 
     def test_hodges2001ddf(self):
         # From here:
@@ -220,7 +262,7 @@ class TestLinearLMEOracle(TestCase):
         true_gamma = true_parameters['gamma']
         ddf = oracle._hodges2001ddf(true_gamma)
         #  #|beta| <= DDoF <= #|beta| + num_groups*#|u|
-        assert 4 <= ddf <= 4+4*3
+        assert 4 <= ddf <= 4 + 4 * 3
 
     def test_hat_matrix(self):
         for seed in range(10):
@@ -243,8 +285,6 @@ class TestLinearLMEOracle(TestCase):
             hat_matrix = oracle._hat_matrix(gamma)
             ys_optimal_hat = hat_matrix.dot(ys_true)
             assert np.allclose(ys_optimal_true, ys_optimal_hat)
-
-
 
 
 if __name__ == '__main__':
