@@ -26,7 +26,7 @@ class TestLinearLMESparseModel_with_selectiveness(unittest.TestCase):
         model_parameters = {
             "lb": 0.01,
             "lg": 0.01,
-            "initializer": None,
+            "initializer": "None",
             "logger_keys": ('converged', 'loss',),
             "tol_inner": 1e-4,
             "n_iter_inner": 1000,

@@ -18,7 +18,7 @@ from skmixed.lme.models import LinearLMESparseModel
 
 from skmixed.lme.trees import Tree, Forest
 
-np.seterr(all='raise', invalid='raise')
+# np.seterr(all='raise', invalid='raise')
 
 # %%
 figures_folder_path = Path("figures")
@@ -94,8 +94,8 @@ for dataset_path in redmeat_datasets:
     model = LinearLMESparseModel(lb=0, lg=0,
                                  nnz_tbeta=1, nnz_tgamma=1,
                                  n_iter_outer=1,
-                                 initializer=None,
-                                 tol=1e-5,
+                                 solver="ip",
+                                 initializer="None",
                                  participation_in_selection=participation_in_selection)
     model.fit_problem(problem)
     y_pred = model.predict_problem(problem)
@@ -239,10 +239,18 @@ for dataset_path in redmeat_datasets:
 
     for nnz_tbeta in range(len(categorical_features_columns)+1, 0, -1):
         for nnz_tgamma in range(nnz_tbeta, nnz_tbeta - 1, -1):
-            model = LinearLMESparseModel(nnz_tbeta=nnz_tbeta, nnz_tgamma=nnz_tgamma, n_iter_outer=20, initializer=None,
-                                         tol=1e-5, tol_outer=1e-5, participation_in_selection=participation_in_selection)
-            model_w = LinearLMESparseModel(nnz_tbeta=nnz_tbeta, nnz_tgamma=nnz_tgamma, n_iter_outer=20, initializer=None,
-                                           regularization_type="loss-weighted", tol=1e-5, tol_outer=1e-5)
+            model = LinearLMESparseModel(nnz_tbeta=nnz_tbeta,
+                                         nnz_tgamma=nnz_tgamma,
+                                         n_iter_outer=20,
+                                         tol_outer=1e-5,
+                                         solver="ip",
+                                         initializer="EM",
+                                         participation_in_selection=participation_in_selection)
+            model_w = LinearLMESparseModel(nnz_tbeta=nnz_tbeta,
+                                           nnz_tgamma=nnz_tgamma,
+                                           tol_outer=1e-5,
+                                           n_iter_outer=20, initializer="None",
+                                           regularization_type="loss-weighted")
             model.fit_problem(problem)
 
             #model_w.fit_problem(problem)

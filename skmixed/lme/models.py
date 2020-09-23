@@ -60,12 +60,12 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     """
 
     def __init__(self,
-                 tol_inner: float = 1e-4,
-                 tol_outer: float = 1e-2,
+                 tol_inner: float = 1e-5,
+                 tol_outer: float = 1e-5,
                  solver: str = "pgd",
-                 initializer=None,
-                 n_iter_inner: int = 1,
-                 n_iter_outer: int = 1,
+                 initializer: str = "None",
+                 n_iter_inner: int = 1000,
+                 n_iter_outer: int = 20,
                  use_line_search: bool = True,
                  lb: float = 0,
                  lg: float = 0,
@@ -673,7 +673,7 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
                     # line search method
                     fun = lambda alpha: oracle.joint_loss(x + alpha * direction)
                     res = minimize(fun, np.array([0]), bounds=[(0, max_step)])
-                    step_len = res.x*0.99
+                    step_len = res.x * 0.99
                 else:
                     # fixed step size
                     step_len = 1 / iteration
@@ -787,8 +787,8 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
         model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
         model.fit_problem(problem)
         while (sum(beta != 0) > self.nnz_tbeta or sum(gamma != 0) > self.nnz_tgamma) and iteration < self.n_iter_outer:
-            lb = 2*(0.1+lb)
-            lg = 2*(0.1+lg)
+            lb = 2 * (0.1 + lb)
+            lg = 2 * (0.1 + lg)
             model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
             model.fit_problem(problem)
             loss = np.array(model.logger_.get("loss"))

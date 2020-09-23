@@ -778,6 +778,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         I = np.eye(n)
         Zb = np.zeros((len(beta), len(beta)))
         v = np.ones(n)
+        # The packing of variables is x = [v (dual for gamma), beta, gamma]
+        # All Lagrange gradients (F) and hessians (dF) have the same order of blocks.
         x = np.concatenate([v, beta, gamma])
         mu = 0.1 * v.dot(gamma) / n
         step_len = 1
@@ -824,7 +826,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             F_current = F(x, mu)
             dF_current = dF(x)
             direction = np.linalg.solve(dF_current, -F_current)
-            # direction[(x == 0.0) & (direction < 0.0)] = 0
+            # Determining maximal step size (such that gamma >= 0 and v >= 0)
             ind_neg_dir = np.where(direction < 0.0)[0]
             ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n)) ]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))

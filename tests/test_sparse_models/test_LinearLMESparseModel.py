@@ -86,16 +86,17 @@ class TestLinearLMESparseModel(unittest.TestCase):
         }
 
         model_parameters = {
-            "lb": 20,
-            "lg": 2,
-            "initializer": None,
+            "lb": 0,
+            "lg": 0,
+            "initializer": "None",
             "logger_keys": ('converged', 'loss',),
-            "tol_inner": 1e-4,
+            "tol_inner": 1e-5,
+            "tol_outer": 1e-5,
             "n_iter_inner": 1000,
             "n_iter_outer": 20
         }
 
-        max_mse = 0.1
+        max_mse = 0.12
         min_explained_variance = 0.9
         fixed_effects_min_accuracy = 0.8
         random_effects_min_accuracy = 0.8
