@@ -118,7 +118,7 @@ class TestLinearLMEOracle(TestCase):
 
                 db = np.random.rand(problem.num_fixed_effects)
                 hess = oracle.hessian_beta_gamma(beta, gamma)
-                maybe_dir = hess.dot(db)
+                maybe_dir = hess.T.dot(db)
                 true_dir = (oracle.gradient_gamma(beta + r * db, gamma)
                             - oracle.gradient_gamma(beta - r * db, gamma)
                             ) / (2 * r)
@@ -127,7 +127,7 @@ class TestLinearLMEOracle(TestCase):
 
                 dg = np.random.rand(problem.num_random_effects)
                 hess = oracle.hessian_beta_gamma(beta, gamma)
-                maybe_dir = hess.T.dot(dg)
+                maybe_dir = hess.dot(dg)
                 true_dir = (oracle.gradient_beta(beta, gamma + r * dg)
                             - oracle.gradient_beta(beta, gamma - r * dg)
                             ) / (2 * r)

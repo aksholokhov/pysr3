@@ -281,7 +281,7 @@ class LinearLMEOracle:
                 self.logger.append(x[n:])
         return x[n:]
 
-    def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, method="pgd", **kwargs):
+    def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, method="pgd", **kwargs) -> np.ndarray:
         if method == "pgd":
             return self.optimal_gamma_pgd(beta, gamma, **kwargs)
         elif method == "ip":
@@ -289,32 +289,32 @@ class LinearLMEOracle:
         else:
             raise ValueError(f"Unknown method: {method}")
 
-    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)
-        gradient = 0
+        gradient = np.zeros(self.problem.num_fixed_effects)
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             gradient += - (L_inv.dot(x)).T.dot(L_inv.dot(xi))
         return gradient
 
-    def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+    def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)
-        hessian = 0
+        hessian = np.zeros((self.problem.num_fixed_effects, self.problem.num_fixed_effects))
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             Lx = L_inv.dot(x)
             hessian += Lx.T.dot(Lx)
         return hessian
 
-    def hessian_beta_gamma(self,  beta: np.ndarray, gamma: np.ndarray, **kwargs):
+    def hessian_beta_gamma(self,  beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)
-        hessian = 0
+        hessian = np.zeros((self.problem.num_random_effects, self.problem.num_fixed_effects))
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             Lx = L_inv.dot(x)
             Lz = L_inv.dot(z)
             Lxi = L_inv.dot(xi)
             hessian += np.diag(Lz.T.dot(Lxi)).dot(Lz.T.dot(Lx))
-        return hessian
+        return hessian.T
 
     def x_to_beta_gamma(self, x):
         beta = x[:self.problem.num_fixed_effects]
@@ -776,7 +776,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                                    **kwargs):
         n = len(gamma)
         I = np.eye(n)
-        Zb = np.zeros((len(beta), len(beta)))
+        Zb = np.zeros((len(gamma), len(beta)))
         v = np.ones(n)
         # The packing of variables is x = [v (dual for gamma), beta, gamma]
         # All Lagrange gradients (F) and hessians (dF) have the same order of blocks.
@@ -819,8 +819,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
             dF_coord = lambda v, b, g: np.block([
                 [np.diag(g), Zb, np.diag(v)],
-                [Zb, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs), self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T],
-                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs), self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+                [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs), self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
+                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T, self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
             ])
             dF = lambda x: dF_coord(x[:n], x[n:-n], x[-n:])
             F_current = F(x, mu)
