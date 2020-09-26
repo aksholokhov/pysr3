@@ -64,7 +64,7 @@ def launch_covid_experiment(num_groups=60):
     print("done data")
 
     # Fit the model
-    model = LinearLMESparseModel(lb=0, lg=0, initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=1)
+    model = LinearLMESparseModel(lb=0, lg=0, initializer="EM", n_iter_inner=100, n_iter_outer=1)
     model.fit(X, y, columns_labels=columns_labels)
     all_betas["prediction"] = model.predict(X, columns_labels=columns_labels)
     logger = model.logger_
@@ -72,7 +72,7 @@ def launch_covid_experiment(num_groups=60):
 
     model_sparse = LinearLMESparseModel(lb=0, lg=0, nnz_tbeta=3, nnz_tgamma=2,
                                         regularization_type="l2",
-                                        initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=15)
+                                        initializer="EM", n_iter_inner=100, n_iter_outer=15)
     model_sparse.fit(X, y, columns_labels=columns_labels)
     all_betas["sparse_prediction"] = model_sparse.predict(X, columns_labels=columns_labels,
                                                           use_sparse_coefficients=True)
@@ -80,7 +80,7 @@ def launch_covid_experiment(num_groups=60):
     #
     model_smart = LinearLMESparseModel(lb=0, lg=0, nnz_tbeta=3, nnz_tgamma=2,
                                        regularization_type="loss-weighted",
-                                       initializer="EM", n_iter=100, n_iter_inner=100, n_iter_outer=15)
+                                       initializer="EM", n_iter_inner=100, n_iter_outer=15)
     model_smart.fit(X, y, columns_labels=columns_labels)
     all_betas["weighted_sparse_prediction"] = model_smart.predict(X, columns_labels=columns_labels,
                                                                   use_sparse_coefficients=True)

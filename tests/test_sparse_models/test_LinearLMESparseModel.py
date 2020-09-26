@@ -11,6 +11,9 @@ from skmixed.helpers import random_effects_to_matrix
 
 class TestLinearLMESparseModel(unittest.TestCase):
 
+    solvers_to_test = ["pgd",
+                       "ip"]
+
     def test_solving_dense_problem(self):
         trials = 20
         problem_parameters = {
@@ -25,17 +28,15 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "obs_std": 0.1,
         }
         model_parameters = {
-            "nnz_tbeta": 2,
-            "nnz_tgamma": 2,
+            "nnz_tbeta": 4,
+            "nnz_tgamma": 4,
             "lb": 0,        # We expect the coefficient vectors to be dense so we turn regularization off.
             "lg": 0,        # Same.
             "initializer": 'EM',
-            "solver": "pgd",
             "logger_keys": ('converged', 'loss',),
-            "tol": 1e-6,
-            "n_iter": 1000,
             "tol_inner": 1e-6,
-            "n_iter_inner": 1,
+            "tol_outer": 1e-6,
+            "n_iter_inner": 1000,
             "n_iter_outer": 1  # we don't care about tbeta and tgamma, so we don't increase regularization iteratively
         }
 
@@ -43,49 +44,36 @@ class TestLinearLMESparseModel(unittest.TestCase):
         min_explained_variance = 0.9
 
         for i in range(trials):
-            problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=i)
-            model = LinearLMESparseModel(**model_parameters)
+            with self.subTest(i=i):
+                problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=i)
+                x, y = problem.to_x_y()
+                for solver in self.solvers_to_test:
+                    with self.subTest(solver=solver):
+                        model = LinearLMESparseModel(solver=solver, **model_parameters)
+                        model.fit_problem(problem)
+                        logger = model.logger_
+                        loss = np.array(logger.get("loss"))
+                        if solver != "ip":
+                            self.assertTrue(np.all(loss[1:-1] - loss[:-2] <= 0) and loss[-1] - loss[-2] <= 1e-13,  # sometimes the very last step goes up to machine precision and then stops
+                                            msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
-            x, y = problem.to_x_y()
-            # model.fit(x, y)
-            model.fit_problem(problem)
+                        y_pred = model.predict_problem(problem)
+                        explained_variance = explained_variance_score(y, y_pred)
+                        mse = mean_squared_error(y, y_pred)
 
-            logger = model.logger_
-            loss = np.array(logger.get("loss"))
-            self.assertTrue(np.all(loss[1:-1] - loss[:-2] <= 0) and loss[-1] - loss[-2] <= 1e-13,  # sometimes the very last step goes up to machine precision and then stops
-                            msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
-            y_pred = model.predict_problem(problem)
-            explained_variance = explained_variance_score(y, y_pred)
-            mse = mean_squared_error(y, y_pred)
-
-            # coefficients = model.coef_
-            # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
-
-            self.assertGreater(explained_variance, min_explained_variance,
-                               msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
-                                   % (i,
-                                      explained_variance,
-                                      min_explained_variance,
-                                      i))
-            self.assertGreater(max_mse, mse,
-                               msg="%d) MSE is too big: %.3f > %.2f  (seed=%d)"
-                                   % (i,
-                                      mse,
-                                      max_mse,
-                                      i))
-
-            # coefficients = model.coef_
-            # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
-            # maybe_beta = coefficients["beta"]
-            # maybe_us = coefficients["random_effects"]
-            # maybe_gamma = coefficients["gamma"]
-            # maybe_tbeta = coefficients["tbeta"]
-            # maybe_tgamma = coefficients["tgamma"]
-            # maybe_cluster_coefficients = coefficients["per_cluster_coefficients"]
-            # maybe_sparse_cluster_coefficients = coefficients["sparse_per_cluster_coefficients"]
-        # cluster_coefficients = beta + us
-        # maybe_cluster_coefficients = maybe_beta + maybe_us
+                        self.assertGreater(explained_variance, min_explained_variance,
+                                           msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
+                                               % (i,
+                                                  explained_variance,
+                                                  min_explained_variance,
+                                                  i))
+                        self.assertGreater(max_mse, mse,
+                                           msg="%d) MSE is too big: %.3f > %.2f  (seed=%d)"
+                                               % (i,
+                                                  mse,
+                                                  max_mse,
+                                                  i))
         return None
 
     def test_solving_sparse_problem(self):
@@ -98,88 +86,87 @@ class TestLinearLMESparseModel(unittest.TestCase):
         }
 
         model_parameters = {
-            # "nnz_tbeta": 4,  # we define them later in trial iterations
-            # "nnz_tgamma": 3,
-            "lb": 20,
-            "lg": 2,
-            "solver": "pgd",
-            "initializer": None,
+            "lb": 0,
+            "lg": 0,
+            "initializer": "None",
             "logger_keys": ('converged', 'loss',),
-            "tol": 1e-6,
-            "n_iter": 1000,
-            "tol_inner": 1e-4,
-            "n_iter_inner": 1,
+            "tol_inner": 1e-5,
+            "tol_outer": 1e-5,
+            "n_iter_inner": 1000,
             "n_iter_outer": 20
         }
 
-        max_mse = 0.1
+        max_mse = 0.12
         min_explained_variance = 0.9
-        fixed_effects_min_accuracy = 0.7
-        random_effects_min_accuracy = 0.7
+        fixed_effects_min_accuracy = 0.8
+        random_effects_min_accuracy = 0.8
 
         for i in range(trials):
-            np.random.seed(i)
-            true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
-            if sum(true_beta) == 0:
-                true_beta[0] = 1
-            true_gamma = np.random.choice(2, size=11, p=np.array([0.3, 0.7]))*true_beta
+            with self.subTest(i=i):
+                np.random.seed(i)
+                true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
+                if sum(true_beta) == 0:
+                    true_beta[0] = 1
+                true_gamma = np.random.choice(2, size=11, p=np.array([0.3, 0.7])) * true_beta
 
-            problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
-                                                                       beta=true_beta,
-                                                                       gamma=true_gamma,
-                                                                       seed=i)
-            model = LinearLMESparseModel(**model_parameters,
-                                         nnz_tbeta=sum(true_beta),
-                                         nnz_tgamma=sum(true_gamma))
+                problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
+                                                                           beta=true_beta,
+                                                                           gamma=true_gamma,
+                                                                           seed=i)
+                x, y = problem.to_x_y()
 
-            x, y = problem.to_x_y()
-            # model.fit(x, y)
-            model.fit_problem(problem)
+                for solver in self.solvers_to_test:
+                    with self.subTest(solver=solver):
+                        model = LinearLMESparseModel(**model_parameters,
+                                                     solver=solver,
+                                                     nnz_tbeta=sum(true_beta),
+                                                     nnz_tgamma=sum(true_gamma))
+                        model.fit_problem(problem)
 
-            logger = model.logger_
-            loss = np.array(logger.get("loss"))
-            # TODO: It won't decrease monotonically because it may jump when we increase regularization.
-            # self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
-            #                 msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
+                        logger = model.logger_
+                        loss = np.array(logger.get("loss"))
+                        # TODO: It won't decrease monotonically because it may jump when we increase regularization.
+                        # self.assertTrue(np.all(loss[1:] - loss[:-1] <= 0),
+                        #                 msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
-            y_pred = model.predict_problem(problem)
-            explained_variance = explained_variance_score(y, y_pred)
-            mse = mean_squared_error(y, y_pred)
+                        y_pred = model.predict_problem(problem)
+                        explained_variance = explained_variance_score(y, y_pred)
+                        mse = mean_squared_error(y, y_pred)
 
-            coefficients = model.coef_
-            maybe_tbeta = coefficients["tbeta"]
-            maybe_tgamma = coefficients["tgamma"]
-            fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta != 0)
-            random_effects_accuracy = accuracy_score(true_gamma, maybe_tgamma != 0)
+                        coefficients = model.coef_
+                        maybe_tbeta = coefficients["tbeta"]
+                        maybe_tgamma = coefficients["tgamma"]
+                        fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta != 0)
+                        random_effects_accuracy = accuracy_score(true_gamma, maybe_tgamma != 0)
 
-            # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
+                        # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
 
-            self.assertGreater(explained_variance, min_explained_variance,
-                               msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
-                                   % (i,
-                                      explained_variance,
-                                      min_explained_variance,
-                                      i))
-            self.assertGreater(max_mse, mse,
-                               msg="%d) MSE is too big: %.3f > %.2f  (seed=%d)"
-                                   % (i,
-                                      mse,
-                                      max_mse,
-                                      i))
-            self.assertGreater(fixed_effects_accuracy, fixed_effects_min_accuracy,
-                               msg="%d) Fixed Effects Selection Accuracy is too small: %.3f < %.2f  (seed=%d)"
-                                   % (i,
-                                      fixed_effects_accuracy,
-                                      fixed_effects_min_accuracy,
-                                      i)
-                               )
-            self.assertGreater(random_effects_accuracy, random_effects_min_accuracy,
-                               msg="%d) Random Effects Selection Accuracy is too small: %.3f < %.2f  (seed=%d)"
-                                   % (i,
-                                      random_effects_accuracy,
-                                      random_effects_min_accuracy,
-                                      i)
-                               )
+                        self.assertGreater(explained_variance, min_explained_variance,
+                                           msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
+                                               % (i,
+                                                  explained_variance,
+                                                  min_explained_variance,
+                                                  i))
+                        self.assertGreater(max_mse, mse,
+                                           msg="%d) MSE is too big: %.3f > %.2f  (seed=%d)"
+                                               % (i,
+                                                  mse,
+                                                  max_mse,
+                                                  i))
+                        self.assertGreater(fixed_effects_accuracy, fixed_effects_min_accuracy,
+                                           msg="%d) Fixed Effects Selection Accuracy is too small: %.3f < %.2f  (seed=%d)"
+                                               % (i,
+                                                  fixed_effects_accuracy,
+                                                  fixed_effects_min_accuracy,
+                                                  i)
+                                           )
+                        self.assertGreater(random_effects_accuracy, random_effects_min_accuracy,
+                                           msg="%d) Random Effects Selection Accuracy is too small: %.3f < %.2f  (seed=%d)"
+                                               % (i,
+                                                  random_effects_accuracy,
+                                                  random_effects_min_accuracy,
+                                                  i)
+                                           )
         return None
 
     def test_get_set_params(self):
@@ -201,8 +188,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "lg": 0,  # Same.
             "initializer": 'EM',
             "logger_keys": ('converged', 'loss',),
-            "tol": 1e-6,
-            "n_iter": 1000,
             "tol_inner": 1e-4,
             "n_iter_inner": 1,
         }
@@ -214,8 +199,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "lg": 20,
             "initializer": None,
             "logger_keys": ('converged',),
-            "tol": 1e-6,
-            "n_iter": 1000,
             "tol_inner": 1e-4,
             "n_iter_inner": 1,
         }
@@ -267,8 +250,6 @@ class TestLinearLMESparseModel(unittest.TestCase):
             "lg": 0,  # Same.
             "initializer": 'EM',
             "logger_keys": ('converged', 'loss',),
-            "tol": 1e-6,
-            "n_iter": 1000,
             "tol_inner": 1e-4,
             "n_iter_inner": 1,
         }

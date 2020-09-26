@@ -268,7 +268,7 @@ class LinearLMEOracle:
                                        x0=np.array([max_step_len]),
                                        method="TNC",
                                        jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-                                            dF(x + alpha * direction).dot(direction)),
+                                           dF(x + alpha * direction).dot(direction)),
                                        bounds=[(0, max_step_len)])
             step_len = res.x
             x = x + step_len * direction
@@ -281,7 +281,7 @@ class LinearLMEOracle:
                 self.logger.append(x[n:])
         return x[n:]
 
-    def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, method="pgd", **kwargs):
+    def optimal_gamma(self, beta: np.ndarray, gamma: np.ndarray, method="pgd", **kwargs) -> np.ndarray:
         if method == "pgd":
             return self.optimal_gamma_pgd(beta, gamma, **kwargs)
         elif method == "ip":
@@ -289,13 +289,32 @@ class LinearLMEOracle:
         else:
             raise ValueError(f"Unknown method: {method}")
 
-    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)
-        gradient = 0
+        gradient = np.zeros(self.problem.num_fixed_effects)
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             gradient += - (L_inv.dot(x)).T.dot(L_inv.dot(xi))
         return gradient
+
+    def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+        self._recalculate_cholesky(gamma)
+        hessian = np.zeros((self.problem.num_fixed_effects, self.problem.num_fixed_effects))
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            Lx = L_inv.dot(x)
+            hessian += Lx.T.dot(Lx)
+        return hessian
+
+    def hessian_beta_gamma(self,  beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+        self._recalculate_cholesky(gamma)
+        hessian = np.zeros((self.problem.num_random_effects, self.problem.num_fixed_effects))
+        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+            xi = y - x.dot(beta)
+            Lx = L_inv.dot(x)
+            Lz = L_inv.dot(z)
+            Lxi = L_inv.dot(xi)
+            hessian += np.diag(Lz.T.dot(Lxi)).dot(Lz.T.dot(Lx))
+        return hessian.T
 
     def x_to_beta_gamma(self, x):
         beta = x[:self.problem.num_fixed_effects]
@@ -706,6 +725,12 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
 
         return super().hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_effects)
 
+    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, **kwargs) -> np.ndarray:
+        return super().gradient_beta(beta, gamma, **kwargs) + self.lb * (beta - tbeta)
+
+    def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        return super().hessian_beta(beta, gamma, **kwargs) + self.lb * np.eye(self.problem.num_fixed_effects)
+
     def optimal_tgamma(self, tbeta, gamma, **kwargs):
         """
         Returns tgamma which minimizes the loss function with all other variables fixed.
@@ -746,107 +771,148 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         else:
             return self._take_only_k_max(tgamma, self.j)
 
-    def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
-                              **kwargs):
+    def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
+                                   log_progress=False,
+                                   **kwargs):
         n = len(gamma)
         I = np.eye(n)
+        Zb = np.zeros((len(gamma), len(beta)))
         v = np.ones(n)
-        g = gamma
-        x = np.concatenate([v, g])
+        # The packing of variables is x = [v (dual for gamma), beta, gamma]
+        # All Lagrange gradients (F) and hessians (dF) have the same order of blocks.
+        x = np.concatenate([v, beta, gamma])
         mu = 0.1 * v.dot(gamma) / n
         step_len = 1
         iteration = 0
         if log_progress:
             self.logger = [gamma]
-        losses = []
         losses_kkt = []
-        F_coord = lambda v, g, mu: np.concatenate([
+        F_coord = lambda v, b, g, mu: np.concatenate([
             v * g - mu,
-            self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+            self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+            self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
         ])
-        F = lambda x, mu: F_coord(x[:n], x[n:], mu)
-        while step_len != 0 and iteration < self.n_iter_inner and np.linalg.norm(F(x, mu)) > self.tol_inner:
-            # v = x[:n], g = x[n:]
-            F_coord = lambda v, g, mu: np.concatenate([
+        F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
+
+        prev_tbeta = np.infty
+        prev_tgamma = np.infty
+        prev_beta = np.infty
+        prev_gamma = np.infty
+
+        while step_len != 0 \
+                and iteration < self.n_iter_inner \
+                and np.linalg.norm(F(x, mu)) > self.tol_inner \
+                and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                     or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
+                     or np.linalg.norm(beta - prev_beta) > self.tol_inner
+                     or np.linalg.norm(gamma - prev_gamma) > self.tol_inner):
+            prev_beta = beta
+            prev_gamma = gamma
+            prev_tbeta = tbeta
+            prev_tgamma = tgamma
+
+            F_coord = lambda v, b, g, mu: np.concatenate([
                 v * g - mu,
-                self.gradient_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+                self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
             ])
-            F = lambda x, mu: F_coord(x[:n], x[n:], mu)
-            dF_coord = lambda v, g: np.block([
-                [np.diag(g), np.diag(v)],
-                [-I, self.hessian_gamma(beta, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+            F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
+            dF_coord = lambda v, b, g: np.block([
+                [np.diag(g), Zb, np.diag(v)],
+                [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs), self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
+                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T, self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
             ])
-            dF = lambda x: dF_coord(x[:n], x[n:])
+            dF = lambda x: dF_coord(x[:n], x[n:-n], x[-n:])
             F_current = F(x, mu)
             dF_current = dF(x)
             direction = np.linalg.solve(dF_current, -F_current)
-            direction[(x == 0.0) & (direction < 0.0)] = 0
+            # Determining maximal step size (such that gamma >= 0 and v >= 0)
             ind_neg_dir = np.where(direction < 0.0)[0]
+            ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n)) ]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
-            res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-                                       x0=np.array([max_step_len]),
-                                       method="TNC",
-                                       jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-                                           dF(x + alpha * direction).dot(direction)),
-                                       bounds=[(0, max_step_len)])
-            step_len = res.x
+            # res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+            #                            x0=np.array([max_step_len]),
+            #                            method="TNC",
+            #                            jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+            #                                dF(x + alpha * direction).dot(direction)),
+            #                            bounds=[(0, max_step_len)])
+            # step_len = res.x
+            step_len = 0.99*max_step_len
             x = x + step_len * direction
-            x[x <= 1e-18] = 0  # killing effective zeros
-            gamma = x[n:]
+            # x[x <= 1e-18] = 0  # killing effective zeros
+            v = x[:n]
+            beta = x[n:-n]
+            gamma = x[-n:]
             # optimize other components
-            beta = self.optimal_beta(gamma, tbeta, beta=beta)
             tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
             tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
             # adjust barrier relaxation
-            mu = 0.1 * x[:n].dot(x[n:]) / n
+            mu = 0.1 * v.dot(gamma) / n
             iteration += 1
-            losses.append(self.loss(beta, gamma, tbeta, tgamma, **kwargs))
+            # losses.append(np.linalg.norm(F(x, mu)))
             losses_kkt.append(np.linalg.norm(F(x, mu)))
             if log_progress:
                 self.logger.append(x[n:])
-        return beta, gamma, tbeta, tgamma, losses
+        return beta, gamma, tbeta, tgamma, losses_kkt
 
-    def find_optimal_parameters_pgd(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None, log_progress=False,
-                              **kwargs):
+    def find_optimal_parameters_pgd(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
+                                    log_progress=False,
+                                    **kwargs):
         step_len = 1
         iteration = 0
+
+        prev_tbeta = np.infty
+        prev_tgamma = np.infty
+        prev_beta = np.infty
+        prev_gamma = np.infty
+
+        direction = np.infty
+        proj_direction = np.infty
 
         if log_progress:
             self.logger = [gamma]
         losses = []
 
-        beta = self.optimal_beta(gamma, tbeta, beta=beta)
-        direction = -self.gradient_gamma(beta, gamma,tbeta=tbeta, tgamma=tgamma, **kwargs)
-        # projecting the direction onto the constraints (positive box for gamma)
-        direction[(direction < 0) & (gamma == 0.0)] = 0
+        while step_len > 0 \
+                and iteration < self.n_iter_inner \
+                and np.linalg.norm(proj_direction) > self.tol_inner \
+                and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                     or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
+                     or np.linalg.norm(beta - prev_beta) > self.tol_inner
+                     or np.linalg.norm(gamma - prev_gamma) > self.tol_inner):
 
-        while step_len > 0 and iteration < self.n_iter_inner and np.linalg.norm(direction) > self.tol_inner:
-            ind_neg_dir = np.where(direction < 0.0)[0]
-            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-gamma[ind_neg_dir] / direction[ind_neg_dir]))
+            prev_beta = beta
+            prev_gamma = gamma
+            prev_tbeta = tbeta
+            prev_tgamma = tgamma
+
+            beta = self.optimal_beta(gamma, tbeta, beta=beta)
+            direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
+            # projecting the direction onto the constraints (positive box for gamma)
+            proj_direction = direction.copy()
+            proj_direction[(direction < 0) & (gamma == 0.0)] = 0
+
             res = sp.optimize.minimize(
-                fun=lambda a: self.loss(beta, gamma + a * direction, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                fun=lambda a: self.loss(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma,
+                                        **kwargs),
                 x0=np.array([0]),
-                method="TNC",
-                jac=lambda a: direction.dot(self.gradient_gamma(beta, gamma + a * direction, tbeta=tbeta, tgamma=tgamma, **kwargs)),
-                bounds=[(0, max_step_len)]
+                # TODO: figure out how to get gradients back (projecting directions?)
+                # method="TNC",
+                # jac=lambda a: direction.dot(self.gradient_gamma(beta, np.clip(gamma + a * direction, 0, None), tbeta=tbeta, tgamma=tgamma, **kwargs)),
+                bounds=[(0, 1)]
             )
             step_len = res.x
-            gamma = gamma + step_len * direction
+            gamma = np.clip(gamma + step_len * direction, 0, None)
             gamma[gamma <= 1e-18] = 0  # killing effective zeros
             # optimize other components
             tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
             tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
             losses.append(self.loss(beta, gamma, tbeta, tgamma, **kwargs))
             iteration += 1
-            beta = self.optimal_beta(gamma, tbeta, beta=beta)
-            direction = -self.gradient_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
-            # projecting the direction onto the constraints (positive box for gamma)
-            direction[(direction < 0) & (gamma == 0.0)] = 0
             if log_progress:
                 self.logger.append(gamma)
 
         return beta, gamma, tbeta, tgamma, losses
-
 
 
 class LinearLMEOracleW(LinearLMEOracleRegularized):

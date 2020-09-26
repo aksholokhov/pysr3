@@ -60,17 +60,15 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
     """
 
     def __init__(self,
-                 tol: float = 1e-4,
-                 tol_inner: float = 1e-4,
-                 tol_outer: float = 1e-2,
+                 tol_inner: float = 1e-5,
+                 tol_outer: float = 1e-5,
                  solver: str = "pgd",
-                 initializer=None,
-                 n_iter: int = 1000,
-                 n_iter_inner: int = 1,
-                 n_iter_outer: int = 1,
+                 initializer: str = "None",
+                 n_iter_inner: int = 1000,
+                 n_iter_outer: int = 20,
                  use_line_search: bool = True,
-                 lb: float = 1,
-                 lg: float = 1,
+                 lb: float = 0,
+                 lg: float = 0,
                  regularization_type: str = "l2",
                  nnz_tbeta: int = 3,
                  nnz_tgamma: int = 3,
@@ -81,16 +79,11 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        tol : float
-            Tolerance for stopping criterion: ||tβ_{k+1} - tβ_k|| <= tol and ||t𝛄_{k+1} - t𝛄_k|| <= tol.
-
-        tol_inner : float
-            Tolerance for inner optimization subroutine (min ℋ w.r.t. 𝛄) stopping criterion:
-            ||projected ∇ℋ|| <= tol_inner
 
         solver : {'pgd'} Solver to use in computational routines:
 
                 - 'pgd' : Projected Gradient Descent
+                - 'ip'  : Interior Point method
 
         initializer : {None, 'EM'}, Optional
             Whether to use an initializer before starting the main optimization routine:
@@ -98,8 +91,17 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 - None : Does not do any special initialization, starts with the given initial point.
                 - 'EM' : Performs one step of a naive EM-algorithm in order to improve the initial point.
 
-        n_iter : int
+
+        tol_outer : float
+            Tolerance for outer optimization subroutine. Stops when ||beta - tbeta|| <= tol_outer
+            and ||gamma - tgamma|| <= tol_outer
+
+        n_iter_outer : int
             Number of iterations for the outer optimization cycle.
+
+        tol_inner : float
+            Tolerance for inner optimization subroutine (min ℋ w.r.t. 𝛄) stopping criterion:
+            ||projected ∇ℋ|| <= tol_inner
 
         n_iter_inner : int
             Number of iterations for the inner optimization cycle.
@@ -131,12 +133,10 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
             selection process
         """
 
-        self.tol = tol
         self.tol_inner = tol_inner
         self.tol_outer = tol_outer
         self.solver = solver
         self.initializer = initializer
-        self.n_iter = n_iter
         self.n_iter_inner = n_iter_inner
         self.n_iter_outer = n_iter_outer
         self.use_line_search = use_line_search
@@ -280,7 +280,9 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                                       lb=self.lb,
                                       lg=self.lg,
                                       nnz_tbeta=self.nnz_tbeta,
-                                      nnz_tgamma=self.nnz_tgamma
+                                      nnz_tgamma=self.nnz_tgamma,
+                                      n_iter_inner=self.n_iter_inner,
+                                      tol_inner=self.tol_inner
                                       )
         else:
             raise ValueError("regularization_type is not understood.")
@@ -343,54 +345,14 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                     or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
 
             if self.solver == "pgd":
-                prev_tbeta = np.infty
-                prev_tgamma = np.infty
-                prev_beta = np.infty
-                prev_gamma = np.infty
-
-                iteration = 0
-                while ((np.linalg.norm(tbeta - prev_tbeta) > self.tol
-                        or np.linalg.norm(tgamma - prev_tgamma) > self.tol
-                        or np.linalg.norm(beta - prev_beta) > self.tol
-                        or np.linalg.norm(gamma - prev_gamma) > self.tol)
-                       and iteration < self.n_iter):
-
-                    if iteration >= self.n_iter:
-                        us = oracle.optimal_random_effects(beta, gamma)
-                        if len(self.logger_keys) > 0:
-                            loss = oracle.loss(beta, gamma, tbeta, tgamma)
-                            self.logger_.log(**locals())
-                        self.coef_ = {"beta": beta,
-                                      "gamma": gamma,
-                                      "tbeta": tbeta,
-                                      "tgamma": tgamma,
-                                      "random_effects": us
-                                      }
-                        self.logger_.add("converged", 0)
-                        return self
-
-                    prev_beta = beta
-                    prev_gamma = gamma
-                    prev_tbeta = tbeta
-                    prev_tgamma = tgamma
-
-                    beta = oracle.optimal_beta(gamma, tbeta, beta=beta)
-                    gamma = oracle.optimal_gamma(beta, gamma, tbeta=tbeta, tgamma=tgamma, method=self.solver)
-                    tbeta = oracle.optimal_tbeta(beta=beta, gamma=gamma)
-                    tgamma = oracle.optimal_tgamma(tbeta, gamma, beta=beta)
-
-                    iteration += 1
-
-                    if len(self.logger_keys) > 0:
-                        loss = oracle.loss(beta, gamma, tbeta, tgamma)
-                        self.logger_.log(locals())
-
+                beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
             elif self.solver == "ip":
                 beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma)
-                if "loss" in self.logger_keys:
-                    self.logger_.append("loss", losses)
             else:
                 raise ValueError(f"Unknown solver: {self.solver}")
+
+            if "loss" in self.logger_keys:
+                self.logger_.append("loss", losses)
 
             outer_iteration += 1
             oracle.lb = 2 * (1 + oracle.lb)
@@ -711,7 +673,7 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
                     # line search method
                     fun = lambda alpha: oracle.joint_loss(x + alpha * direction)
                     res = minimize(fun, np.array([0]), bounds=[(0, max_step)])
-                    step_len = res.x*0.99
+                    step_len = res.x * 0.99
                 else:
                     # fixed step size
                     step_len = 1 / iteration
@@ -825,8 +787,8 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
         model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
         model.fit_problem(problem)
         while (sum(beta != 0) > self.nnz_tbeta or sum(gamma != 0) > self.nnz_tgamma) and iteration < self.n_iter_outer:
-            lb = 2*(0.1+lb)
-            lg = 2*(0.1+lg)
+            lb = 2 * (0.1 + lb)
+            lg = 2 * (0.1 + lg)
             model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
             model.fit_problem(problem)
             loss = np.array(model.logger_.get("loss"))
