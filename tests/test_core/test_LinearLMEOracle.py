@@ -3,7 +3,6 @@ from unittest import TestCase
 
 import numpy as np
 from numpy import allclose
-from scipy.misc import derivative
 
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized
 from skmixed.legacy.oracles import LinearLMEOracle as OldOracle
