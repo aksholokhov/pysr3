@@ -1056,4 +1056,6 @@ class LinearLMELassoOracle(LinearLMEOracle):
         x : np.ndarray
             vector to apply the proximal operator on
         """
-        return np.sign(x) * np.maximum(0.0, np.abs(x) - self.lambdas * step_len)
+        y = np.clip(x - step_len*self.lambdas, 0, None) - np.clip(-x - step_len*self.lambdas, 0, None)
+        y[self.problem.num_fixed_effects:] = np.clip(y[self.problem.num_fixed_effects:], 0, None)
+        return y
