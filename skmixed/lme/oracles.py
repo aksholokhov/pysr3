@@ -753,11 +753,11 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         tgamma : np.ndarray, shape = [k]
             Minimizer of the loss function w.r.t tgamma with other arguments fixed.
         """
-        tgamma = np.zeros(len(gamma))
-        idx = tbeta != 0
+        tgamma = np.copy(gamma)
+        idx = tbeta == 0
         idx_gamma = self.beta_to_gamma_map[idx]
         idx_gamma = (idx_gamma[idx_gamma >= 0]).astype(int)
-        tgamma[idx_gamma] = gamma[idx_gamma]
+        tgamma[idx_gamma] = 0
         if self.participation_in_selection is not None:
             participation_idx = self.beta_to_gamma_map[self.participation_in_selection]
             participation_idx = (participation_idx[participation_idx >= 0]).astype(int)
