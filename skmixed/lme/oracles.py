@@ -534,7 +534,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
     """
 
     def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3,
-                 participation_in_selection=None, **kwargs):
+                 participation_in_selection=None, independent_beta_and_gamma=False, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -561,6 +561,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         self.k = nnz_tbeta
         self.j = nnz_tgamma
         self.participation_in_selection = participation_in_selection
+        self.independent_beta_and_gamma = independent_beta_and_gamma
 
     def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, _dont_solve_wrt_beta=False, **kwargs):
         """
@@ -754,6 +755,11 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             Minimizer of the loss function w.r.t tgamma with other arguments fixed.
         """
         tgamma = np.copy(gamma)
+        if self.independent_beta_and_gamma:
+            # If we don't need to set gammas to 0 whenever
+            # their respective betas are zero
+            return self._take_only_k_max(tgamma, self.j)
+
         idx = tbeta == 0
         idx_gamma = self.beta_to_gamma_map[idx]
         idx_gamma = (idx_gamma[idx_gamma >= 0]).astype(int)
