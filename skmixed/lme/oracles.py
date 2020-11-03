@@ -1059,3 +1059,9 @@ class LinearLMELassoOracle(LinearLMEOracle):
         y = np.clip(x - step_len*self.lambdas, 0, None) - np.clip(-x - step_len*self.lambdas, 0, None)
         y[self.problem.num_fixed_effects:] = np.clip(y[self.problem.num_fixed_effects:], 0, None)
         return y
+
+    def prox_l1_beta(self, beta, step_len):
+        return np.clip(beta - step_len*self.lb, 0, None) - np.clip(-beta - step_len*self.lb, 0, None)
+
+    def prox_l1_gamma(self, gamma, step_len):
+        return np.clip(np.clip(gamma - step_len * self.lambdas, 0, None) - np.clip(-gamma - step_len * self.lambdas, 0, None), 0, None)

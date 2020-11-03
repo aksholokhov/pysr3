@@ -365,7 +365,6 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         sparse_per_group_coefficients = get_per_group_coefficients(tbeta, sparse_us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
-        # self.logger_.add('iterations', iteration)
 
         self.coef_ = {
             "beta": beta,
@@ -654,7 +653,7 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
                     step_len = res.x
                 else:
                     # fixed step size
-                    step_len = 1 / iteration
+                    step_len = 1 / (iteration+1)
                 if step_len <= 1e-15:
                     break
                 x = oracle.prox_l1(x - step_len * gradient, step_len)
@@ -673,6 +672,7 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
         per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
+        self.logger_.add('iterations', iteration)
         # self.logger_.add('iterations', iteration)
 
         self.coef_ = {
@@ -749,7 +749,7 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
             "solver": solver,
             "n_iter": n_iter,
             "use_line_search": use_line_search,
-            "logger_keys": logger_keys
+            "logger_keys": logger_keys,
         }
 
     def fit_problem(self, problem):
@@ -767,16 +767,22 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
 
         model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
         model.fit_problem(problem)
+        losses = []
         while (sum(beta != 0) > self.nnz_tbeta or sum(gamma != 0) > self.nnz_tgamma) and iteration < self.n_iter_outer:
-            lb = 1.3 * (0.1 + lb)
-            lg = 1.3 * (0.1 + lg)
+
             model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
-            model.fit_problem(problem)
+            model.fit_problem(problem, initial_parameters={"beta": beta, "gamma": gamma})
             loss = np.array(model.logger_.get("loss"))
-            assert np.all(
-                loss[1:] - loss[:-1] <= 0), "%d) Loss does not decrease monotonically with iterations. " % iteration
+            losses += model.logger_.get("loss")
+            # assert np.all(
+            #     loss[1:] - loss[:-1] <= 0), "%d) Loss does not decrease monotonically with iterations. " % iteration
             beta = model.coef_["beta"]
             gamma = model.coef_["gamma"]
+            if sum(beta != 0) > self.nnz_tbeta:
+                lb = 1.3 * (0.1 + lb)
+            if sum(gamma != 0) > self.nnz_tgamma:
+                lg = 1.3 * (0.1 + lg)
+
             iteration += 1
 
         if sum(beta != 0) > self.nnz_tbeta or sum(gamma != 0) > self.nnz_tgamma:
@@ -785,6 +791,7 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
         self.model_parameters["lg"] = lg
         self.coef_ = model.coef_
         self.logger_ = model.logger_
+        self.logger_.add("loss", losses)
         return self
 
     def predict_problem(self, problem):

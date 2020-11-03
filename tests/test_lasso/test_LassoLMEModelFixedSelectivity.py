@@ -23,8 +23,9 @@ class TestLassoLMEModelFixedSelectivity(unittest.TestCase):
             # nnz_tgamma = 3    # same
             "logger_keys": ('converged', 'loss',),
             "tol": 1e-3,
-            "n_iter": 1000,
-            "n_iter_outer": 40
+            "n_iter": 3000,
+            "n_iter_outer": 50,
+            "use_line_search": True,
         }
 
         # LASSO often perform worse than RS in this kind of setting so the "passing" scores are worse.
