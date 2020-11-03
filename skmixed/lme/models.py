@@ -337,26 +337,31 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         self.logger_ = Logger(self.logger_keys)
 
-        # ========= OUTER ITERATION ============
-        # TODO: rethink where to use relative tolerance and where to use absolute tolerance
-        outer_iteration = 0
-        while (outer_iteration < self.n_iter_outer
-               and (np.linalg.norm(beta - tbeta) > self.tol_outer
-                    or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
+        if self.solver == "pgd":
+            # ========= OUTER ITERATION ============
+            # TODO: rethink where to use relative tolerance and where to use absolute tolerance
+            outer_iteration = 0
+            while (outer_iteration < self.n_iter_outer
+                   and (np.linalg.norm(beta - tbeta) > self.tol_outer
+                        or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
 
-            if self.solver == "pgd":
                 beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
-            elif self.solver == "ip":
-                beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma)
-            else:
-                raise ValueError(f"Unknown solver: {self.solver}")
+                if "loss" in self.logger_keys:
+                    self.logger_.append("loss", losses)
 
+                outer_iteration += 1
+                oracle.lb = 2 * (1 + oracle.lb)
+                oracle.lg = 2 * (1 + oracle.lg)
+
+        elif self.solver == "ip":
+            beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma)
             if "loss" in self.logger_keys:
                 self.logger_.append("loss", losses)
 
-            outer_iteration += 1
-            oracle.lb = 2 * (1 + oracle.lb)
-            oracle.lg = 2 * (1 + oracle.lg)
+        else:
+            raise ValueError(f"Unknown solver: {self.solver}")
+
+
 
         us = oracle.optimal_random_effects(beta, gamma)
         sparse_us = oracle.optimal_random_effects(tbeta, tgamma)
