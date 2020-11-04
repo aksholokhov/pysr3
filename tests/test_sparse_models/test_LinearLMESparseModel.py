@@ -12,7 +12,8 @@ from skmixed.helpers import random_effects_to_matrix
 class TestLinearLMESparseModel(unittest.TestCase):
 
     solvers_to_test = ["pgd",
-                       "ip"]
+                       "ip",
+                       "ip_combined"]
 
     def test_solving_dense_problem(self):
         trials = 20
@@ -53,7 +54,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
                         model.fit_problem(problem)
                         logger = model.logger_
                         loss = np.array(logger.get("loss"))
-                        if solver != "ip":
+                        if solver == "ip":
                             self.assertTrue(np.all(loss[1:-1] - loss[:-2] <= 0) and loss[-1] - loss[-2] <= 1e-13,  # sometimes the very last step goes up to machine precision and then stops
                                             msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 

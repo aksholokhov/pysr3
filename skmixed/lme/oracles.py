@@ -786,7 +786,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             return self._take_only_k_max(tgamma, self.j)
 
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
-                                   log_progress=False,
+                                   log_progress=False, increase_lanbdas=False,
                                    **kwargs):
         n = len(gamma)
         I = np.eye(n)
@@ -813,6 +813,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         prev_beta = np.infty
         prev_gamma = np.infty
 
+        tbeta_tgamma_convergence=False
+
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
                 and np.linalg.norm(F(x, mu)) > self.tol_inner \
@@ -820,8 +822,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                      or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
                      or np.linalg.norm(beta - prev_beta) > self.tol_inner
                      or np.linalg.norm(gamma - prev_gamma) > self.tol_inner
-                     or np.linalg.norm(beta - tbeta) > self.tol_inner
-                     or np.linalg.norm(gamma - tgamma) > self.tol_inner):
+                     or tbeta_tgamma_convergence):
             prev_beta = beta
             prev_gamma = gamma
             prev_tbeta = tbeta
@@ -866,8 +867,11 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
             # adjust barrier relaxation
             mu = 0.1 * v.dot(gamma) / n
-            self.lb = 2 * (1 + self.lb)
-            self.lg = 2 * (1 + self.lg)
+            if increase_lanbdas:
+                self.lb = 1.2 * (1 + self.lb)
+                self.lg = 1.2 * (1 + self.lg)
+                tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
+                     or np.linalg.norm(gamma - tgamma) > self.tol_inner)
 
             iteration += 1
             # losses.append(np.linalg.norm(F(x, mu)))

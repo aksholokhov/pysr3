@@ -337,15 +337,19 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         self.logger_ = Logger(self.logger_keys)
 
-        if self.solver == "pgd":
+        if self.solver == "pgd" or self.solver == "ip":
             # ========= OUTER ITERATION ============
             # TODO: rethink where to use relative tolerance and where to use absolute tolerance
             outer_iteration = 0
             while (outer_iteration < self.n_iter_outer
                    and (np.linalg.norm(beta - tbeta) > self.tol_outer
                         or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
-
-                beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
+                if self.solver == "pgd":
+                    beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
+                elif self.solver == "ip":
+                    beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma, increase_lambdas=False)
+                else:
+                    raise ValueError(f"Unknown solver: {self.solver}")
                 if "loss" in self.logger_keys:
                     self.logger_.append("loss", losses)
 
@@ -353,8 +357,8 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
                 oracle.lb = 2 * (1 + oracle.lb)
                 oracle.lg = 2 * (1 + oracle.lg)
 
-        elif self.solver == "ip":
-            beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma)
+        elif self.solver == "ip_combined":
+            beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma, increase_lambdas = True)
             if "loss" in self.logger_keys:
                 self.logger_.append("loss", losses)
 
@@ -784,9 +788,9 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
             beta = model.coef_["beta"]
             gamma = model.coef_["gamma"]
             if sum(beta != 0) > self.nnz_tbeta:
-                lb = 1.3 * (0.1 + lb)
+                lb = 1.1 * (0.1 + lb)
             if sum(gamma != 0) > self.nnz_tgamma:
-                lg = 1.3 * (0.1 + lg)
+                lg = 1.1 * (0.1 + lg)
 
             iteration += 1
 
