@@ -54,7 +54,7 @@ class TestLinearLMESparseModel(unittest.TestCase):
                         model.fit_problem(problem)
                         logger = model.logger_
                         loss = np.array(logger.get("loss"))
-                        if solver == "ip":
+                        if solver == "pgd":
                             self.assertTrue(np.all(loss[1:-1] - loss[:-2] <= 0) and loss[-1] - loss[-2] <= 1e-13,  # sometimes the very last step goes up to machine precision and then stops
                                             msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
