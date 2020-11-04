@@ -337,26 +337,35 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
 
         self.logger_ = Logger(self.logger_keys)
 
-        # ========= OUTER ITERATION ============
-        # TODO: rethink where to use relative tolerance and where to use absolute tolerance
-        outer_iteration = 0
-        while (outer_iteration < self.n_iter_outer
-               and (np.linalg.norm(beta - tbeta) > self.tol_outer
-                    or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
+        if self.solver == "pgd" or self.solver == "ip":
+            # ========= OUTER ITERATION ============
+            # TODO: rethink where to use relative tolerance and where to use absolute tolerance
+            outer_iteration = 0
+            while (outer_iteration < self.n_iter_outer
+                   and (np.linalg.norm(beta - tbeta) > self.tol_outer
+                        or np.linalg.norm(gamma - tgamma) > self.tol_outer)):
+                if self.solver == "pgd":
+                    beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
+                elif self.solver == "ip":
+                    beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma, increase_lambdas=False)
+                else:
+                    raise ValueError(f"Unknown solver: {self.solver}")
+                if "loss" in self.logger_keys:
+                    self.logger_.append("loss", losses)
 
-            if self.solver == "pgd":
-                beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_pgd(beta, gamma, tbeta, tgamma)
-            elif self.solver == "ip":
-                beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma)
-            else:
-                raise ValueError(f"Unknown solver: {self.solver}")
+                outer_iteration += 1
+                oracle.lb = 2 * (1 + oracle.lb)
+                oracle.lg = 2 * (1 + oracle.lg)
 
+        elif self.solver == "ip_combined":
+            beta, gamma, tbeta, tgamma, losses = oracle.find_optimal_parameters_ip(beta, gamma, tbeta, tgamma, increase_lambdas = True)
             if "loss" in self.logger_keys:
                 self.logger_.append("loss", losses)
 
-            outer_iteration += 1
-            oracle.lb = 2 * (1 + oracle.lb)
-            oracle.lg = 2 * (1 + oracle.lg)
+        else:
+            raise ValueError(f"Unknown solver: {self.solver}")
+
+
 
         us = oracle.optimal_random_effects(beta, gamma)
         sparse_us = oracle.optimal_random_effects(tbeta, tgamma)
@@ -365,7 +374,6 @@ class LinearLMESparseModel(BaseEstimator, RegressorMixin):
         sparse_per_group_coefficients = get_per_group_coefficients(tbeta, sparse_us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
-        # self.logger_.add('iterations', iteration)
 
         self.coef_ = {
             "beta": beta,
@@ -563,16 +571,6 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
         problem : LinearLMEProblem
             Problem to fit the model in. Must contain answers.
 
-        columns_labels : np.ndarray
-            List of column labels. There shall be only one column of group labels and answers STDs,
-            and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
-
-                - 1 : fixed effect
-                - 2 : random effect
-                - 3 : both fixed and random,
-                - 0 : groups labels
-                - 4 : answers standard deviations
-
         initial_parameters : np.ndarray
             Dict with possible fields:
 
@@ -627,18 +625,6 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
             else:
                 gamma = np.ones(num_random_effects)
 
-        def projected_direction(x, current_direction):
-            _, current_gamma = oracle.x_to_beta_gamma(x)
-            proj_direction = current_direction.copy()
-            for j, _ in enumerate(current_gamma):
-                if current_gamma[j] <= 1e-15 and current_direction[num_fixed_effects + j] <= 0:
-                    proj_direction[num_fixed_effects + j] = 0
-            step_len = 0.1
-            for i, _ in enumerate(current_gamma):
-                if proj_direction[num_fixed_effects + i] < 0:
-                    step_len = min(-current_gamma[i] / proj_direction[num_fixed_effects + i], step_len)
-            return proj_direction, step_len
-
         self.logger_ = Logger(self.logger_keys)
 
         x = np.concatenate([beta, gamma])
@@ -667,19 +653,19 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
                 x_prev = x
                 gradient = oracle.joint_gradient(x)
                 # projecting the gradient to the set of constraints
-                direction, max_step = projected_direction(x, -gradient)
+
+                fun = lambda alpha: oracle.full_loss(oracle.prox_l1(x - alpha * gradient, alpha))
 
                 if self.use_line_search:
                     # line search method
-                    fun = lambda alpha: oracle.joint_loss(x + alpha * direction)
-                    res = minimize(fun, np.array([0]), bounds=[(0, max_step)])
-                    step_len = res.x * 0.99
+                    res = minimize(fun, np.array([0]), bounds=[(0, 1)])
+                    step_len = res.x
                 else:
                     # fixed step size
-                    step_len = 1 / iteration
+                    step_len = 1 / (iteration+1)
                 if step_len <= 1e-15:
                     break
-                x = oracle.prox_l1(x + step_len * direction, step_len)
+                x = oracle.prox_l1(x - step_len * gradient, step_len)
                 assert all(x[problem.num_fixed_effects:] >= 0)
                 assert oracle.full_loss(x) <= loss
                 loss = oracle.full_loss(x)
@@ -695,6 +681,7 @@ class LassoLMEModel(BaseEstimator, RegressorMixin):
         per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
 
         self.logger_.add('converged', 1)
+        self.logger_.add('iterations', iteration)
         # self.logger_.add('iterations', iteration)
 
         self.coef_ = {
@@ -771,7 +758,7 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
             "solver": solver,
             "n_iter": n_iter,
             "use_line_search": use_line_search,
-            "logger_keys": logger_keys
+            "logger_keys": logger_keys,
         }
 
     def fit_problem(self, problem):
@@ -781,21 +768,30 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
             self.model_parameters.pop("lb")
         if self.model_parameters.get("lg", None) is not None:
             self.model_parameters.pop("lg")
+
         beta = np.ones(problem.num_fixed_effects)
         gamma = np.ones(problem.num_random_effects)
+
         iteration = 0
+
         model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
         model.fit_problem(problem)
+        losses = []
         while (sum(beta != 0) > self.nnz_tbeta or sum(gamma != 0) > self.nnz_tgamma) and iteration < self.n_iter_outer:
-            lb = 2 * (0.1 + lb)
-            lg = 2 * (0.1 + lg)
+
             model = LassoLMEModel(lb=lb, lg=lg, **self.model_parameters)
-            model.fit_problem(problem)
+            model.fit_problem(problem, initial_parameters={"beta": beta, "gamma": gamma})
             loss = np.array(model.logger_.get("loss"))
-            assert np.all(
-                loss[1:] - loss[:-1] <= 0), "%d) Loss does not decrease monotonically with iterations. " % iteration
+            losses += model.logger_.get("loss")
+            # assert np.all(
+            #     loss[1:] - loss[:-1] <= 0), "%d) Loss does not decrease monotonically with iterations. " % iteration
             beta = model.coef_["beta"]
             gamma = model.coef_["gamma"]
+            if sum(beta != 0) > self.nnz_tbeta:
+                lb = 1.1 * (0.1 + lb)
+            if sum(gamma != 0) > self.nnz_tgamma:
+                lg = 1.1 * (0.1 + lg)
+
             iteration += 1
 
         if sum(beta != 0) > self.nnz_tbeta or sum(gamma != 0) > self.nnz_tgamma:
@@ -804,6 +800,7 @@ class LassoLMEModelFixedSelectivity(BaseEstimator, RegressorMixin):
         self.model_parameters["lg"] = lg
         self.coef_ = model.coef_
         self.logger_ = model.logger_
+        self.logger_.add("loss", losses)
         return self
 
     def predict_problem(self, problem):

@@ -305,7 +305,7 @@ class LinearLMEOracle:
             hessian += Lx.T.dot(Lx)
         return hessian
 
-    def hessian_beta_gamma(self,  beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+    def hessian_beta_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)
         hessian = np.zeros((self.problem.num_random_effects, self.problem.num_fixed_effects))
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
@@ -438,6 +438,14 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         return self.loss(beta, gamma, **kwargs) + (len(beta) + len(gamma)) * np.log(self._jones2010n_eff())
 
+    def muller2018ic(self, beta, gamma, **kwargs):
+        self._recalculate_cholesky(gamma)
+        N = self.problem.num_obs
+        n_eff = self._jones2010n_eff()
+        return 2 / N * self.loss(beta, gamma, **kwargs) \
+               + 1 / N * np.log(n_eff) * sum(beta != 0) \
+               + 2 / N * sum(gamma != 0)
+
     def _hat_matrix(self, gamma):
         self._recalculate_cholesky(gamma)
 
@@ -534,7 +542,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
     """
 
     def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, nnz_tbeta=3, nnz_tgamma=3,
-                 participation_in_selection=None, **kwargs):
+                 participation_in_selection=None, independent_beta_and_gamma=False, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -561,6 +569,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         self.k = nnz_tbeta
         self.j = nnz_tgamma
         self.participation_in_selection = participation_in_selection
+        self.independent_beta_and_gamma = independent_beta_and_gamma
 
     def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, _dont_solve_wrt_beta=False, **kwargs):
         """
@@ -753,11 +762,16 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         tgamma : np.ndarray, shape = [k]
             Minimizer of the loss function w.r.t tgamma with other arguments fixed.
         """
-        tgamma = np.zeros(len(gamma))
-        idx = tbeta != 0
+        tgamma = np.copy(gamma)
+        if self.independent_beta_and_gamma:
+            # If we don't need to set gammas to 0 whenever
+            # their respective betas are zero
+            return self._take_only_k_max(tgamma, self.j)
+
+        idx = tbeta == 0
         idx_gamma = self.beta_to_gamma_map[idx]
         idx_gamma = (idx_gamma[idx_gamma >= 0]).astype(int)
-        tgamma[idx_gamma] = gamma[idx_gamma]
+        tgamma[idx_gamma] = 0
         if self.participation_in_selection is not None:
             participation_idx = self.beta_to_gamma_map[self.participation_in_selection]
             participation_idx = (participation_idx[participation_idx >= 0]).astype(int)
@@ -772,7 +786,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             return self._take_only_k_max(tgamma, self.j)
 
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
-                                   log_progress=False,
+                                   log_progress=False, increase_lanbdas=False,
                                    **kwargs):
         n = len(gamma)
         I = np.eye(n)
@@ -799,13 +813,16 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         prev_beta = np.infty
         prev_gamma = np.infty
 
+        tbeta_tgamma_convergence=False
+
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
                 and np.linalg.norm(F(x, mu)) > self.tol_inner \
                 and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
                      or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
                      or np.linalg.norm(beta - prev_beta) > self.tol_inner
-                     or np.linalg.norm(gamma - prev_gamma) > self.tol_inner):
+                     or np.linalg.norm(gamma - prev_gamma) > self.tol_inner
+                     or tbeta_tgamma_convergence):
             prev_beta = beta
             prev_gamma = gamma
             prev_tbeta = tbeta
@@ -819,8 +836,10 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
             dF_coord = lambda v, b, g: np.block([
                 [np.diag(g), Zb, np.diag(v)],
-                [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs), self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
-                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T, self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+                [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                 self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
+                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T,
+                 self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
             ])
             dF = lambda x: dF_coord(x[:n], x[n:-n], x[-n:])
             F_current = F(x, mu)
@@ -828,7 +847,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             direction = np.linalg.solve(dF_current, -F_current)
             # Determining maximal step size (such that gamma >= 0 and v >= 0)
             ind_neg_dir = np.where(direction < 0.0)[0]
-            ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n)) ]
+            ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n))]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
             # res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
             #                            x0=np.array([max_step_len]),
@@ -837,7 +856,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             #                                dF(x + alpha * direction).dot(direction)),
             #                            bounds=[(0, max_step_len)])
             # step_len = res.x
-            step_len = 0.99*max_step_len
+            step_len = 0.99 * max_step_len
             x = x + step_len * direction
             # x[x <= 1e-18] = 0  # killing effective zeros
             v = x[:n]
@@ -848,9 +867,16 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
             tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
             # adjust barrier relaxation
             mu = 0.1 * v.dot(gamma) / n
+            if increase_lanbdas:
+                self.lb = 1.2 * (1 + self.lb)
+                self.lg = 1.2 * (1 + self.lg)
+                tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
+                     or np.linalg.norm(gamma - tgamma) > self.tol_inner)
+
             iteration += 1
             # losses.append(np.linalg.norm(F(x, mu)))
             losses_kkt.append(np.linalg.norm(F(x, mu)))
+
             if log_progress:
                 self.logger.append(x[n:])
         return beta, gamma, tbeta, tgamma, losses_kkt
@@ -1056,4 +1082,14 @@ class LinearLMELassoOracle(LinearLMEOracle):
         x : np.ndarray
             vector to apply the proximal operator on
         """
-        return np.sign(x) * np.maximum(0.0, np.abs(x) - self.lambdas * step_len)
+        y = np.clip(x - step_len * self.lambdas, 0, None) - np.clip(-x - step_len * self.lambdas, 0, None)
+        y[self.problem.num_fixed_effects:] = np.clip(y[self.problem.num_fixed_effects:], 0, None)
+        return y
+
+    def prox_l1_beta(self, beta, step_len):
+        return np.clip(beta - step_len * self.lb, 0, None) - np.clip(-beta - step_len * self.lb, 0, None)
+
+    def prox_l1_gamma(self, gamma, step_len):
+        return np.clip(
+            np.clip(gamma - step_len * self.lambdas, 0, None) - np.clip(-gamma - step_len * self.lambdas, 0, None), 0,
+            None)

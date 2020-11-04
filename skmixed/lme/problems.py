@@ -441,6 +441,8 @@ class LinearLMEProblem(LMEProblem):
                  y: Optional[np.ndarray] = None,
                  columns_labels: List[int] = None,
                  random_intercept: bool = True,
+                 fixed_intercept: bool = True,
+                 only_random_intercept: bool = False,
                  add_group_as_categorical_feature=False,
                  **kwargs):
         """
@@ -459,6 +461,9 @@ class LinearLMEProblem(LMEProblem):
             3 (both fixed and random), 4 (observation standard deviance), or 5 (categorical features).
             There should be only one 0 in the list. If columns_labels is None then it's assumed that
             it is the first row of x.
+
+        fixed_intercept: bool, default = True
+            Whether to treat the intercept as a fixed featue
 
         random_intercept: bool, default = True
             Whether to treat the intercept as a random feature.
@@ -498,6 +503,15 @@ class LinearLMEProblem(LMEProblem):
         num_categorical_features = len(categorical_features_idx)
         groups_labels = unique_labels(x[:, group_labels_idx])
 
+        if fixed_intercept & random_intercept:
+            intercept_label = [3]
+        elif random_intercept and not fixed_intercept:
+            intercept_label = [2]
+        elif fixed_intercept and not random_intercept:
+            intercept_label = [1]
+        else:
+            intercept_label = []
+
         data = {
             'fixed_features': [],
             'random_features': [],
@@ -505,7 +519,7 @@ class LinearLMEProblem(LMEProblem):
             'answers': None if y is None else [],
             'obs_stds': [],
             'group_labels': groups_labels,
-            'column_labels': np.array([3 if random_intercept else 1] + columns_labels),
+            'column_labels': np.array(intercept_label + columns_labels),
         }
 
         order_of_objects = []
@@ -515,8 +529,11 @@ class LinearLMEProblem(LMEProblem):
             fixed_features = x[np.ix_(objects_idx, fixed_features_idx)]
             # add an intercept column plus real features
             # noinspection PyTypeChecker
-            data['fixed_features'].append(
-                np.concatenate((np.ones((fixed_features.shape[0], 1)), fixed_features), axis=1))
+            if fixed_intercept:
+                data['fixed_features'].append(
+                    np.concatenate((np.ones((fixed_features.shape[0], 1)), fixed_features), axis=1))
+            else:
+                data['fixed_features'].append(fixed_features)
             # same for random effects
             random_features = x[np.ix_(objects_idx, random_features_idx)]
             if random_intercept:
@@ -558,12 +575,18 @@ class LinearLMEProblem(LMEProblem):
         all_stds = np.concatenate(self.obs_stds, axis=0)
         untitled_data = np.zeros((all_fixed_features.shape[0], len(self.column_labels) - 1))
 
-        fixed_effects_counter = 1
-        random_intercept = self.column_labels[0] == 3
+        fixed_intercept = (self.column_labels[0] == 1) or (self.column_labels[0] == 3)
+        if fixed_intercept:
+            fixed_effects_counter = 1
+        else:
+            fixed_effects_counter = 0
+
+        random_intercept = (self.column_labels[0] == 2) or (self.column_labels[0] == 3)
         if random_intercept:
             random_effects_counter = 1
         else:
             random_effects_counter = 0
+
         categorical_features_counter = 0
 
         for i, label in enumerate(self.column_labels[1:]):
