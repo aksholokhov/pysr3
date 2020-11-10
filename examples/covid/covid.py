@@ -99,6 +99,8 @@ def launch_covid_experiment(num_groups=60):
 
     ihme_scores = []
     me_scores = []
+    groups_description_columns = ["Location", "Observations", "Start", "End"]
+    groups_description = pd.DataFrame(columns=groups_description_columns)
     for i, group in enumerate(groups):
         fig = plt.figure(figsize=(12, 7))
         grid = plt.GridSpec(1, 2)
@@ -125,6 +127,12 @@ def launch_covid_experiment(num_groups=60):
         dense_error = np.linalg.norm(cur_betas["beta"] - cur_betas["prediction"])
         sparse_error = np.linalg.norm(cur_betas["beta"] - cur_betas["sparse_prediction"])
 #        weighted_sparse_error = np.linalg.norm(cur_betas["beta"] - cur_betas["weighted_sparse_prediction"])
+        groups_description = groups_description.append({
+            "Location": id2loc[group],
+            "Observations": len(cur_betas["beta"]),
+            "Start": start_date,
+            "End": end_date,
+        }, ignore_index=True)
 
         ihme_scores.append(ihme_error)
         me_scores.append(dense_error)
@@ -146,13 +154,15 @@ def launch_covid_experiment(num_groups=60):
 
         # if ihme_error > weighted_sparse_error:
         #    counter += 1
+        diff_dense = dense_error/ihme_error - 1
+        diff_sparse = sparse_error/ihme_error - 1
         statistics = [
                          "RMSE:",
                          # "%-12s: %.2e" % ("  IHME", ihme_error),
                          # "%-12s: %.2e" % ("  Dense MM", dense_error),
-                         ("%-12s: %.2e" % ("  IHME", ihme_error), colors_for_errors[0]),
-                         ("%-12s: %.2e" % ("  Dense MM", dense_error), colors_for_errors[1]),
-                         ("%-12s: %.2e" % ("  R&S", sparse_error), colors_for_errors[2]),
+                         ("%-12s: %.2e" % ("  IHME", ihme_error)),
+                         ("%-12s: %.2e %s" % ("  Dense MM", dense_error, f"  {'+' if diff_dense > 0 else ''}{diff_dense:.0%}")),
+                         ("%-12s: %.2e %s" % ("  R&S Mixed", sparse_error, f"  {'+' if diff_sparse > 0 else ''}{diff_sparse:.0%}")),
                          #("%-12s: %.2e" % ("  R&S + W", weighted_sparse_error), colors_for_errors[3]),
                          "",
                      ] + \
@@ -183,12 +193,26 @@ def launch_covid_experiment(num_groups=60):
                                           model_sparse.coef_["tgamma"][j]),
                           coef_to_color(model_sparse.coef_["tbeta"][j], model_sparse.coef_["tgamma"][j]))
                          for j, covariate in enumerate(["intercept"] + covariates)
+                     ] + \
+                     [
+                        "\n",
+                        "Legend:",
+                         "  Both Fixed and Random",
+                         ("  Fixed Only", "Blue"),
+                         ("  Excluded", "Red")
                      ]
 
         print_on_plot(statistics, ax2, x0=-1, y0=12)
         ax2.axis('off')
         plt.savefig(figures_output_path / f"fit_{id2loc[group]}.png")
         plt.close(fig)
+    groups_description[groups_description_columns].to_latex(figures_output_path/"covid_groups_description.tex",
+                                                            longtable=True,
+                                                            label="table:covid_data_description",
+                                                            caption="List of locations, number of observations, "
+                                                                    "start and end date for each location "
+                                                                    "for COVID-19 Contact Rate Focecasting data")
+    groups_description[groups_description_columns].to_csv(figures_output_path / "covid_groups_description.csv")
 
     # plt.figure(figsize=(8, 8))
     # plt.scatter(ihme_scores, me_scores)
