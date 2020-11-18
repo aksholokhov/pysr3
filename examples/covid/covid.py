@@ -19,7 +19,11 @@ reg_settings_path = data_path / 'regression' / regression_version / "settings.js
 covariates_path = data_path / 'covariate' / covariates_version / "cached_covariates.csv"
 cov_metadata_path = data_path / 'covariate' / covariates_version / "metadata.yaml"
 location_metadata_path = data_path / 'metadata-inputs' / 'location_metadata_664.csv'
-figures_output_path = Path("figures") / "for_general"
+thesis_repo_path = Path("/Users/aksh/Storage/repos/general_phd_proposal")
+figures_output_path = thesis_repo_path / "Images"
+tables_output_path = thesis_repo_path / "tables"
+
+locations_to_get = ("Alaska", "Slovenia", "Turkey", "Switzerland")
 
 
 def format_xaxis(ax, start_date, end_date, major_tick_interval_days=14, margins_days=5):
@@ -39,6 +43,7 @@ def format_xaxis(ax, start_date, end_date, major_tick_interval_days=14, margins_
 
     # format the coords message box
     ax.format_xdata = mdates.DateFormatter('%Y-%m-%d')
+
 
 def launch_covid_experiment(num_groups=60):
     from matplotlib import rcParams
@@ -96,11 +101,12 @@ def launch_covid_experiment(num_groups=60):
             else:
                 raise ValueError("wrong type: %s" % type(s))
 
-
     ihme_scores = []
     me_scores = []
-    groups_description_columns = ["Location", "Observations", "Start", "End"]
+    groups_description_columns = ["Location", "Obs", "Start", "End"]
     groups_description = pd.DataFrame(columns=groups_description_columns)
+    groups_fit_columns = ["Location", "Intercept", "Mobility", "RMSE_IHME", "RMSE_Dense", "RMSE_Sparse"]
+    groups_fit = pd.DataFrame(columns=groups_fit_columns)
     for i, group in enumerate(groups):
         fig = plt.figure(figsize=(12, 7))
         grid = plt.GridSpec(1, 2)
@@ -109,9 +115,9 @@ def launch_covid_experiment(num_groups=60):
         time = pd.to_datetime(cur_betas['date'])
         ax.plot(time, cur_betas["beta"], label='Data')
         ax.plot(time, cur_betas["beta_pred"], label='IHME')
-        ax.plot(time, cur_betas["sparse_prediction"], label="R&S Sparse")
+        ax.plot(time, cur_betas["sparse_prediction"], label="R&S Mixed")
         ax.plot(time, cur_betas["prediction"], label="Dense MM")
-#        ax.plot(time, cur_betas["weighted_sparse_prediction"], label="R&S + W Sparse")
+        #        ax.plot(time, cur_betas["weighted_sparse_prediction"], label="R&S + W Sparse")
         ax.legend()
         start_date = time.to_list()[0]
         end_date = time.to_list()[-1]
@@ -126,12 +132,23 @@ def launch_covid_experiment(num_groups=60):
         ihme_error = np.linalg.norm(cur_betas["beta"] - cur_betas["beta_pred"])
         dense_error = np.linalg.norm(cur_betas["beta"] - cur_betas["prediction"])
         sparse_error = np.linalg.norm(cur_betas["beta"] - cur_betas["sparse_prediction"])
-#        weighted_sparse_error = np.linalg.norm(cur_betas["beta"] - cur_betas["weighted_sparse_prediction"])
+        #        weighted_sparse_error = np.linalg.norm(cur_betas["beta"] - cur_betas["weighted_sparse_prediction"])
         groups_description = groups_description.append({
             "Location": id2loc[group],
-            "Observations": len(cur_betas["beta"]),
+            "Obs": len(cur_betas["beta"]),
             "Start": start_date,
             "End": end_date,
+            "Intercept": model.coef_["random_effects"][i, 0],
+            "Mobility": model.coef_["random_effects"][i, 2]
+        }, ignore_index=True)
+
+        groups_fit = groups_fit.append({
+            "Location": id2loc[group],
+            "Intercept": model_sparse.coef_["sparse_per_group_coefficients"][i, 0],
+            "Mobility": model_sparse.coef_["sparse_per_group_coefficients"][i, 3],
+            "RMSE_IHME": ihme_error,
+            "RMSE_Dense": dense_error,
+            "RMSE_Sparse": sparse_error
         }, ignore_index=True)
 
         ihme_scores.append(ihme_error)
@@ -154,16 +171,18 @@ def launch_covid_experiment(num_groups=60):
 
         # if ihme_error > weighted_sparse_error:
         #    counter += 1
-        diff_dense = dense_error/ihme_error - 1
-        diff_sparse = sparse_error/ihme_error - 1
+        diff_dense = dense_error / ihme_error - 1
+        diff_sparse = sparse_error / ihme_error - 1
         statistics = [
                          "RMSE:",
                          # "%-12s: %.2e" % ("  IHME", ihme_error),
                          # "%-12s: %.2e" % ("  Dense MM", dense_error),
                          ("%-12s: %.2e" % ("  IHME", ihme_error)),
-                         ("%-12s: %.2e %s" % ("  Dense MM", dense_error, f"  {'+' if diff_dense > 0 else ''}{diff_dense:.0%}")),
-                         ("%-12s: %.2e %s" % ("  R&S Mixed", sparse_error, f"  {'+' if diff_sparse > 0 else ''}{diff_sparse:.0%}")),
-                         #("%-12s: %.2e" % ("  R&S + W", weighted_sparse_error), colors_for_errors[3]),
+                         ("%-12s: %.2e %s" % (
+                         "  Dense MM", dense_error, f"  {'+' if diff_dense > 0 else ''}{diff_dense:.0%}")),
+                         ("%-12s: %.2e %s" % (
+                         "  R&S Mixed", sparse_error, f"  {'+' if diff_sparse > 0 else ''}{diff_sparse:.0%}")),
+                         # ("%-12s: %.2e" % ("  R&S + W", weighted_sparse_error), colors_for_errors[3]),
                          "",
                      ] + \
                      [
@@ -181,7 +200,7 @@ def launch_covid_experiment(num_groups=60):
                      ] + \
                      [
                          "\n",
-                         "Sparse Relax-and-Split Coefficients:",
+                         "R&S Mixed Coefficients:",
                          "%-21s%10s%10s%10s%10s" % ("name", "local", "mean", "RE", "Var"),
                      ] + \
                      [
@@ -195,8 +214,8 @@ def launch_covid_experiment(num_groups=60):
                          for j, covariate in enumerate(["intercept"] + covariates)
                      ] + \
                      [
-                        "\n",
-                        "Legend:",
+                         "\n",
+                         "Legend:",
                          "  Both Fixed and Random",
                          ("  Fixed Only", "Blue"),
                          ("  Excluded", "Red")
@@ -204,15 +223,33 @@ def launch_covid_experiment(num_groups=60):
 
         print_on_plot(statistics, ax2, x0=-1, y0=12)
         ax2.axis('off')
-        plt.savefig(figures_output_path / f"fit_{id2loc[group]}.png")
+        if id2loc[group] in locations_to_get:
+            plt.savefig(figures_output_path / f"fit_{id2loc[group]}.pdf")
+            plt.savefig(thesis_repo_path / "presentation" / "Figures" / f"fit_{id2loc[group]}.pdf")
         plt.close(fig)
-    groups_description[groups_description_columns].to_latex(figures_output_path/"covid_groups_description.tex",
+    groups_description[groups_description_columns].to_latex(tables_output_path / "covid_groups_description.tex",
                                                             longtable=True,
                                                             label="table:covid_data_description",
+                                                            index=False,
                                                             caption="List of locations, number of observations, "
                                                                     "start and end date for each location "
                                                                     "for COVID-19 Contact Rate Focecasting data")
-    groups_description[groups_description_columns].to_csv(figures_output_path / "covid_groups_description.csv")
+    groups_fit[groups_fit_columns].to_latex(tables_output_path / "covid_coefficients.tex",
+                                            longtable=True,
+                                            label="table:covid_coefficients",
+                                            index=False,
+                                            float_format="%.2f",
+                                            caption=("List of location-specific coefficients" +
+                                                     " for the R\\&S-Mixed model fit, " +
+                                                     " as well as RMSEs for three models" +
+                                                     " discussed in the respective chapter" +
+                                                     "Coefficient for \\texttt{temperature} was set to " +
+                                                     f"{model_sparse.coef_['sparse_per_group_coefficients'][0, 2]:.2f}. " +
+                                                     "Coefficients for \\texttt{proportion\\_over\\_1k}" +
+                                                     " and \\texttt{testing\\_reference}" +
+                                                     " were set to 0."))
+    groups_description[groups_description_columns].to_csv(tables_output_path / "covid_groups_description.csv")
+    groups_fit[groups_fit_columns].to_csv(tables_output_path / "covid_coefficients.csv")
 
     # plt.figure(figsize=(8, 8))
     # plt.scatter(ihme_scores, me_scores)
@@ -222,7 +259,8 @@ def launch_covid_experiment(num_groups=60):
     # plt.plot([0, max_err], [0, max_err], '--b')
     # plt.savefig("comparison_0.pdf")
 
+
 if __name__ == "__main__":
     launch_covid_experiment()
 
-    #pass
+    # pass
