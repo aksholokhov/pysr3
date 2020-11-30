@@ -3,8 +3,6 @@ import time
 from datetime import datetime
 import pickle
 
-from pathlib import Path
-
 import numpy as np
 from scipy.linalg import block_diag
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
@@ -15,7 +13,8 @@ import pandas as pd
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.models import LinearLMESparseModel
 
-thesis_repo_path = Path("/Users/aksh/Storage/repos/general_phd_proposal")
+from examples.general.settings import thesis_repo_path
+
 
 config = {
     "trials_per_p": 200,

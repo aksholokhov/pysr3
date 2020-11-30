@@ -6,6 +6,8 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from matplotlib.colors import to_hex
 
+from examples.general.settings import thesis_presentation_figures
+
 if __name__ == "__main__":
 
     trials = 20
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlim((-3, 3))
     plt.ylim((-1, 4))
-    plt.savefig("lme_example_data_only.png")
+    plt.savefig(thesis_presentation_figures / "lme_example_data_only.pdf")
     plt.show()
 
     # data with mean prediction
@@ -60,7 +62,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlim((-3, 3))
     plt.ylim((-1, 4))
-    plt.savefig("lme_example_mean_prediction.png")
+    plt.savefig(thesis_presentation_figures / "lme_example_mean_prediction.pdf")
     plt.show()
 
     # data with mixed model prediction
@@ -72,6 +74,6 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlim((-3, 3))
     plt.ylim((-1, 4))
-    plt.savefig("lme_example_random_prediction.png")
+    plt.savefig(thesis_presentation_figures / "lme_example_random_prediction.pdf")
     plt.show()
     pass
