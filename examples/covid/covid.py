@@ -10,6 +10,9 @@ from sklearn.preprocessing import normalize
 from skmixed.lme.models import LinearLMESparseModel
 from skmixed.lme.problems import LinearLMEProblem
 
+from examples.general.settings import thesis_presentation_figures, thesis_proposal_figures,\
+    thesis_proposal_tables, presentation_background_color
+
 data_path = Path("/Users/aksh/Storage/repos/IHME_data/covid-19/seir-pipeline-outputs/")
 covariates_version = "2020_05_09.01.10"
 regression_version = "vis_test_3"
@@ -19,9 +22,6 @@ reg_settings_path = data_path / 'regression' / regression_version / "settings.js
 covariates_path = data_path / 'covariate' / covariates_version / "cached_covariates.csv"
 cov_metadata_path = data_path / 'covariate' / covariates_version / "metadata.yaml"
 location_metadata_path = data_path / 'metadata-inputs' / 'location_metadata_664.csv'
-thesis_repo_path = Path("/Users/aksh/Storage/repos/general_phd_proposal")
-figures_output_path = thesis_repo_path / "Images"
-tables_output_path = thesis_repo_path / "tables"
 
 locations_to_get = ("Alaska", "Slovenia", "Turkey", "Switzerland")
 
@@ -45,7 +45,7 @@ def format_xaxis(ax, start_date, end_date, major_tick_interval_days=14, margins_
     ax.format_xdata = mdates.DateFormatter('%Y-%m-%d')
 
 
-def launch_covid_experiment(num_groups=60):
+def launch_covid_experiment(num_groups=60, presentation = True):
     from matplotlib import rcParams
 
     rcParams['font.family'] = 'monospace'
@@ -224,17 +224,18 @@ def launch_covid_experiment(num_groups=60):
         print_on_plot(statistics, ax2, x0=-1, y0=12)
         ax2.axis('off')
         if id2loc[group] in locations_to_get:
-            plt.savefig(figures_output_path / f"fit_{id2loc[group]}.pdf")
-            plt.savefig(thesis_repo_path / "presentation" / "Figures" / f"fit_{id2loc[group]}.pdf")
+            plt.savefig(thesis_proposal_figures / f"fit_{id2loc[group]}.pdf")
+            plt.savefig(thesis_presentation_figures / f"fit_{id2loc[group]}.pdf", facecolor=presentation_background_color)
+
         plt.close(fig)
-    groups_description[groups_description_columns].to_latex(tables_output_path / "covid_groups_description.tex",
+    groups_description[groups_description_columns].to_latex(thesis_proposal_tables / "covid_groups_description.tex",
                                                             longtable=True,
                                                             label="table:covid_data_description",
                                                             index=False,
                                                             caption="List of locations, number of observations, "
                                                                     "start and end date for each location "
                                                                     "for COVID-19 Contact Rate Focecasting data")
-    groups_fit[groups_fit_columns].to_latex(tables_output_path / "covid_coefficients.tex",
+    groups_fit[groups_fit_columns].to_latex(thesis_proposal_tables / "covid_coefficients.tex",
                                             longtable=True,
                                             label="table:covid_coefficients",
                                             index=False,
@@ -248,8 +249,8 @@ def launch_covid_experiment(num_groups=60):
                                                      "Coefficients for \\texttt{proportion\\_over\\_1k}" +
                                                      " and \\texttt{testing\\_reference}" +
                                                      " were set to 0."))
-    groups_description[groups_description_columns].to_csv(tables_output_path / "covid_groups_description.csv")
-    groups_fit[groups_fit_columns].to_csv(tables_output_path / "covid_coefficients.csv")
+    groups_description[groups_description_columns].to_csv(thesis_proposal_tables / "covid_groups_description.csv")
+    groups_fit[groups_fit_columns].to_csv(thesis_proposal_tables / "covid_coefficients.csv")
 
     # plt.figure(figsize=(8, 8))
     # plt.scatter(ihme_scores, me_scores)

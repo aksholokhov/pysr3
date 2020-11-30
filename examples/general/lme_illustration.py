@@ -8,7 +8,12 @@ from matplotlib.colors import to_hex
 
 from examples.general.settings import thesis_presentation_figures
 
+from examples.general.settings import presentation_background_color as background_color
+
 if __name__ == "__main__":
+
+
+    # plt.rcParams['figure.facecolor'] = background_color
 
     trials = 20
     problem_parameters = {
@@ -50,8 +55,9 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlim((-3, 3))
     plt.ylim((-1, 4))
-    plt.savefig(thesis_presentation_figures / "lme_example_data_only.pdf")
-    plt.show()
+    plt.xlabel("X, feature")
+    plt.ylabel("Y, target")
+    plt.savefig(thesis_presentation_figures / "lme_example_data_only.pdf", facecolor=background_color)
 
     # data with mean prediction
     plt.figure(figsize=(6, 6))
@@ -62,8 +68,10 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlim((-3, 3))
     plt.ylim((-1, 4))
-    plt.savefig(thesis_presentation_figures / "lme_example_mean_prediction.pdf")
-    plt.show()
+    plt.xlabel("X, feature")
+    plt.ylabel("Y, target")
+    plt.savefig(thesis_presentation_figures / "lme_example_mean_prediction.pdf", facecolor=background_color)
+    plt.close()
 
     # data with mixed model prediction
     plt.figure(figsize=(6, 6))
@@ -74,6 +82,8 @@ if __name__ == "__main__":
     plt.legend()
     plt.xlim((-3, 3))
     plt.ylim((-1, 4))
-    plt.savefig(thesis_presentation_figures / "lme_example_random_prediction.pdf")
-    plt.show()
+    plt.xlabel("X, feature")
+    plt.ylabel("Y, target")
+    plt.savefig(thesis_presentation_figures / "lme_example_random_prediction.pdf", facecolor=background_color)
+    plt.close()
     pass

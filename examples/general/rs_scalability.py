@@ -13,7 +13,8 @@ import pandas as pd
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.models import LinearLMESparseModel
 
-from examples.general.settings import thesis_repo_path
+from examples.general.settings import thesis_proposal_figures,\
+    thesis_presentation_figures, thesis_proposal_tables, presentation_background_color
 
 
 config = {
@@ -201,6 +202,12 @@ if __name__ == "__main__":
         iterations_plot_2 = fig2.add_subplot(grid2[0, 1])
         fe_re_acc_plot = fig1.add_subplot(grid1[1, :])
         mse_plot = fig2.add_subplot(grid2[1, :])
+        # time_plot.set_facecolor(presentation_background_color)
+        # iterations_plot.set_facecolor(presentation_background_color)
+        # time_plot_2.set_facecolor(presentation_background_color)
+        # iterations_plot_2.set_facecolor(presentation_background_color)
+        # fe_re_acc_plot.set_facecolor(presentation_background_color)
+        # mse_plot.set_facecolor(presentation_background_color)
     else:
         fig = plt.figure(figsize=(12, 18))
         grid = plt.GridSpec(nrows=3, ncols=2)
@@ -317,8 +324,8 @@ if __name__ == "__main__":
         mse_plot.text(first_line + (second_line - first_line) / 2, ylim[0], "2", c='orange')
         mse_plot.text(second_line + (mse_plot.get_xlim()[1] - second_line) / 2, ylim[0], "3", c='orange')
     if presentation:
-        fig1.savefig(thesis_repo_path / "presentation" / "Figures" / "scalability_accuracy.pdf")
-        fig2.savefig(thesis_repo_path / "presentation" / "Figures" / "scalability_mse.pdf")
+        fig1.savefig(thesis_presentation_figures / "scalability_accuracy.pdf", facecolor = presentation_background_color)
+        fig2.savefig(thesis_presentation_figures / "scalability_mse.pdf", facecolor = presentation_background_color)
     else:
-        plt.savefig(thesis_repo_path / "Images" / "scalability_experiments.pdf")
+        plt.savefig(thesis_proposal_figures / "scalability_experiments.pdf")
     print("done")
