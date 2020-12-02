@@ -13,9 +13,8 @@ import pandas as pd
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.models import LinearLMESparseModel
 
-from examples.general.settings import thesis_proposal_figures,\
+from examples.general.settings import thesis_proposal_figures, \
     thesis_presentation_figures, thesis_proposal_tables, presentation_background_color
-
 
 config = {
     "trials_per_p": 200,
@@ -174,7 +173,8 @@ if __name__ == "__main__":
     percentiles = True
     vertical_lines = True
     presentation = True
-    ps = [4, 7, 10, 16, 19, 25, 31, 37, 40, 46, 55, 61, 67, 76, 91]#, 106, 121]
+    pres_one_slide = True
+    ps = [4, 7, 10, 16, 19, 25, 31, 37, 40, 46, 55, 61, 67, 76, 91]  # , 106, 121]
     # ps = [22]
     if regenerate_data:
         rs_data = generate_data(ps=ps)
@@ -190,18 +190,30 @@ if __name__ == "__main__":
     rs_data_high = rs_data.groupby("m").agg(
         func=lambda x: np.percentile(x, 95)
     )
-    #ps = np.array(rs_data_mean.index, dtype=int)
+    # ps = np.array(rs_data_mean.index, dtype=int)
     if presentation:
-        fig1 = plt.figure(figsize=(12, 12))
-        grid1 = plt.GridSpec(nrows=2, ncols=2)
-        fig2 = plt.figure(figsize=(12, 12))
-        grid2 = plt.GridSpec(nrows=2, ncols=2)
-        time_plot = fig1.add_subplot(grid1[0, 0])
-        iterations_plot = fig1.add_subplot(grid1[0, 1])
-        time_plot_2 = fig2.add_subplot(grid2[0, 0])
-        iterations_plot_2 = fig2.add_subplot(grid2[0, 1])
-        fe_re_acc_plot = fig1.add_subplot(grid1[1, :])
-        mse_plot = fig2.add_subplot(grid2[1, :])
+        if pres_one_slide:
+            fig1 = plt.figure(figsize=(12, 12))
+            grid1 = plt.GridSpec(nrows=2, ncols=2)
+            fig2 = plt.figure(figsize=(12, 12))
+            grid2 = plt.GridSpec(nrows=2, ncols=2)
+            time_plot = fig2.add_subplot(grid1[0, 0])
+            iterations_plot = fig2.add_subplot(grid1[0, 1])
+            time_plot_2 = fig2.add_subplot(grid2[1, 0])
+            iterations_plot_2 = fig2.add_subplot(grid2[1, 1])
+            fe_re_acc_plot = fig1.add_subplot(grid1[0, :])
+            mse_plot = fig1.add_subplot(grid2[1, :])
+        else:
+            fig1 = plt.figure(figsize=(12, 12))
+            grid1 = plt.GridSpec(nrows=2, ncols=2)
+            fig2 = plt.figure(figsize=(12, 12))
+            grid2 = plt.GridSpec(nrows=2, ncols=2)
+            time_plot = fig1.add_subplot(grid1[0, 0])
+            iterations_plot = fig1.add_subplot(grid1[0, 1])
+            time_plot_2 = fig2.add_subplot(grid2[0, 0])
+            iterations_plot_2 = fig2.add_subplot(grid2[0, 1])
+            fe_re_acc_plot = fig1.add_subplot(grid1[1, :])
+            mse_plot = fig2.add_subplot(grid2[1, :])
         # time_plot.set_facecolor(presentation_background_color)
         # iterations_plot.set_facecolor(presentation_background_color)
         # time_plot_2.set_facecolor(presentation_background_color)
@@ -274,8 +286,10 @@ if __name__ == "__main__":
         if presentation:
             time_plot_2.fill_between(ps, rs_data_low['TIME'], rs_data_high['TIME'], facecolor='b', alpha=alpha)
             iterations_plot_2.fill_between(ps, rs_data_low["ITER"], rs_data_high["ITER"], facecolor='b', alpha=alpha)
-        fe_re_acc_plot.fill_between(ps, rs_data_low["FE_ACC"], rs_data_high["FE_ACC"], label="95\% Interval", facecolor='b', alpha=alpha)
-        fe_re_acc_plot.fill_between(ps, rs_data_low["RE_ACC"], rs_data_high["RE_ACC"], label="95\% Interval", facecolor='m', alpha=alpha)
+        fe_re_acc_plot.fill_between(ps, rs_data_low["FE_ACC"], rs_data_high["FE_ACC"], label="95\% Interval",
+                                    facecolor='b', alpha=alpha)
+        fe_re_acc_plot.fill_between(ps, rs_data_low["RE_ACC"], rs_data_high["RE_ACC"], label="95\% Interval",
+                                    facecolor='m', alpha=alpha)
         mse_plot.fill_between(ps, rs_data_low["MSE"], rs_data_high["MSE"], facecolor='b', alpha=alpha)
         mse_plot.fill_between(ps, rs_data_low["MSE_TEST"], rs_data_high["MSE_TEST"], facecolor='m', alpha=alpha)
         # var_plot.fill_between(ps, rs_data_low["VAR"], rs_data_high["VAR"], facecolor='b', alpha=alpha)
@@ -285,10 +299,10 @@ if __name__ == "__main__":
         first_line = 10
         second_line = 60
         ylim = time_plot.get_ylim()
-        time_plot.plot([first_line]*2, ylim, '--', c='black')
-        time_plot.plot([second_line]*2, ylim, '--', c='black')
+        time_plot.plot([first_line] * 2, ylim, '--', c='black')
+        time_plot.plot([second_line] * 2, ylim, '--', c='black')
         time_plot.text(first_line / 2, ylim[0], "1", c='orange')
-        time_plot.text(first_line + (second_line - first_line)/2, ylim[0], "2", c='orange')
+        time_plot.text(first_line + (second_line - first_line) / 2, ylim[0], "2", c='orange')
         time_plot.text(second_line + (time_plot.get_xlim()[1] - second_line) / 2, ylim[0], "3", c='orange')
         if presentation:
             time_plot_2.plot([first_line] * 2, ylim, '--', c='black')
@@ -298,8 +312,8 @@ if __name__ == "__main__":
             time_plot_2.text(second_line + (time_plot.get_xlim()[1] - second_line) / 2, ylim[0], "3", c='orange')
 
         ylim = iterations_plot.get_ylim()
-        iterations_plot.plot([first_line]*2, ylim, '--', c='black')
-        iterations_plot.plot([second_line]*2, ylim, '--', c='black')
+        iterations_plot.plot([first_line] * 2, ylim, '--', c='black')
+        iterations_plot.plot([second_line] * 2, ylim, '--', c='black')
         iterations_plot.text(first_line / 2, ylim[0], "1", c='orange')
         iterations_plot.text(first_line + (second_line - first_line) / 2, ylim[0], "2", c='orange')
         iterations_plot.text(second_line + (iterations_plot.get_xlim()[1] - second_line) / 2, ylim[0], "3", c='orange')
@@ -309,23 +323,23 @@ if __name__ == "__main__":
             iterations_plot_2.text(first_line / 2, ylim[0], "1", c='orange')
             iterations_plot_2.text(first_line + (second_line - first_line) / 2, ylim[0], "2", c='orange')
             iterations_plot_2.text(second_line + (iterations_plot.get_xlim()[1] - second_line) / 2, ylim[0], "3",
-                                 c='orange')
+                                   c='orange')
 
         ylim = fe_re_acc_plot.get_ylim()
-        fe_re_acc_plot.plot([first_line]*2, ylim, '--', c='black')
-        fe_re_acc_plot.plot([second_line]*2, ylim, '--', c='black')
+        fe_re_acc_plot.plot([first_line] * 2, ylim, '--', c='black')
+        fe_re_acc_plot.plot([second_line] * 2, ylim, '--', c='black')
         fe_re_acc_plot.text(first_line / 2, ylim[0], "1", c='orange')
         fe_re_acc_plot.text(first_line + (second_line - first_line) / 2, ylim[0], "2", c='orange')
         fe_re_acc_plot.text(second_line + (fe_re_acc_plot.get_xlim()[1] - second_line) / 2, ylim[0], "3", c='orange')
         ylim = mse_plot.get_ylim()
-        mse_plot.plot([first_line]*2, ylim, '--', c='black')
-        mse_plot.semilogy([second_line]*2, ylim, '--', c='black')
+        mse_plot.plot([first_line] * 2, ylim, '--', c='black')
+        mse_plot.semilogy([second_line] * 2, ylim, '--', c='black')
         mse_plot.text(first_line / 2, ylim[0], "1", c='orange')
         mse_plot.text(first_line + (second_line - first_line) / 2, ylim[0], "2", c='orange')
         mse_plot.text(second_line + (mse_plot.get_xlim()[1] - second_line) / 2, ylim[0], "3", c='orange')
     if presentation:
-        fig1.savefig(thesis_presentation_figures / "scalability_accuracy.pdf", facecolor = presentation_background_color)
-        fig2.savefig(thesis_presentation_figures / "scalability_mse.pdf", facecolor = presentation_background_color)
+        fig1.savefig(thesis_presentation_figures / "scalability_accuracy.pdf", facecolor=presentation_background_color)
+        fig2.savefig(thesis_presentation_figures / "scalability_mse.pdf", facecolor=presentation_background_color)
     else:
         plt.savefig(thesis_proposal_figures / "scalability_experiments.pdf")
     print("done")

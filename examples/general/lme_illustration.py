@@ -50,7 +50,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(6, 6))
     x_bounds = (-2, 2)
     for i, (x, y, z, l) in enumerate(problem):
-        plt.scatter(x[:, 1], y, label=f"Group {i}", color=to_hex(colors[i]))
+        plt.scatter(x[:, 1], y, label=f"Group {i+1}", color=to_hex(colors[i]))
     # plt.plot(x_bounds, [beta[0] + x_bounds[0]*beta[1], beta[0] + x_bounds[1]*beta[1]], label="Mean prediction")
     plt.legend()
     plt.xlim((-3, 3))
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(6, 6))
     x_bounds = (-2, 2)
     for i, (x, y, z, l) in enumerate(problem):
-        plt.scatter(x[:, 1], y, label=f"Group {i}", color=to_hex(colors[i]))
+        plt.scatter(x[:, 1], y, label=f"Group {i+1}", color=to_hex(colors[i]))
     plt.plot(x_bounds, [beta[0] + x_bounds[0]*beta[1], beta[0] + x_bounds[1]*beta[1]], label="Mean prediction")
     plt.legend()
     plt.xlim((-3, 3))
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(6, 6))
     x_bounds = (-2, 2)
     for i, ((x, y, z, l), coefs) in enumerate(zip(problem, per_group_coefs)):
-        plt.scatter(x[:, 1], y, label=f"Group {i}", color=to_hex(colors[i]))
+        plt.scatter(x[:, 1], y, label=f"Group {i+1}", color=to_hex(colors[i]))
         plt.plot(x_bounds, [coefs[0] + x_bounds[0] * coefs[3], beta[0] + x_bounds[1] * coefs[3]], color=to_hex(colors[i]))
     plt.legend()
     plt.xlim((-3, 3))
