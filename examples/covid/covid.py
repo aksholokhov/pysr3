@@ -113,8 +113,8 @@ def launch_covid_experiment(num_groups=60, presentation = True):
         ax = fig.add_subplot(grid[0, 0])
         cur_betas = all_betas[all_betas["location_id"] == group]
         time = pd.to_datetime(cur_betas['date'])
-        ax.plot(time, cur_betas["beta"], label='Data')
-        ax.plot(time, cur_betas["beta_pred"], label='IHME')
+        ax.plot(time, cur_betas["beta"], label='Input')
+        ax.plot(time, cur_betas["beta_pred"], label='IHME Model')
         ax.plot(time, cur_betas["sparse_prediction"], label="R&S Mixed")
         ax.plot(time, cur_betas["prediction"], label="Dense MM")
         #        ax.plot(time, cur_betas["weighted_sparse_prediction"], label="R&S + W Sparse")

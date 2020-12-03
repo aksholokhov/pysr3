@@ -252,8 +252,8 @@ if __name__ == "__main__":
     if presentation:
         fe_re_acc_plot.set_xlabel(r"$p$, Number of Covariates in Dataset")
 
-    mse_plot.semilogy(ps, rs_data_mean["MSE"], label="Train", c='b')
-    mse_plot.semilogy(ps, rs_data_mean["MSE_TEST"], label="Test", c='m')
+    mse_plot.semilogy(ps, rs_data_mean["MSE"], label="Train", c='green')
+    mse_plot.semilogy(ps, rs_data_mean["MSE_TEST"], label="Test", c='orange')
     mse_plot.set_ylabel("Mean Squared Error")
     mse_plot.set_xlabel(r"$p$, Number of Covariates in Dataset")
     mse_plot.legend()
@@ -275,8 +275,8 @@ if __name__ == "__main__":
             iterations_plot.semilogy(ps, rs_data_draw["ITER"], c='b', alpha=alpha)
             fe_re_acc_plot.plot(ps, rs_data_draw["FE_ACC"], c='b', alpha=alpha)
             fe_re_acc_plot.plot(ps, rs_data_draw["RE_ACC"], c='m', alpha=alpha)
-            mse_plot.semilogy(ps, rs_data_draw["MSE"], c='b', alpha=alpha)
-            mse_plot.semilogy(ps, rs_data_draw["MSE_TEST"], c='m', alpha=alpha)
+            mse_plot.semilogy(ps, rs_data_draw["MSE"], c='g', alpha=alpha)
+            mse_plot.semilogy(ps, rs_data_draw["MSE_TEST"], c='orange', alpha=alpha)
             # var_plot.semilogy(ps, rs_data_draw["VAR"], c='b', alpha=alpha)
             # var_plot.semilogy(ps, rs_data_draw["VAR_TEST"], c='r', alpha=alpha)
     if percentiles:
@@ -290,8 +290,8 @@ if __name__ == "__main__":
                                     facecolor='b', alpha=alpha)
         fe_re_acc_plot.fill_between(ps, rs_data_low["RE_ACC"], rs_data_high["RE_ACC"], label="95\% Interval",
                                     facecolor='m', alpha=alpha)
-        mse_plot.fill_between(ps, rs_data_low["MSE"], rs_data_high["MSE"], facecolor='b', alpha=alpha)
-        mse_plot.fill_between(ps, rs_data_low["MSE_TEST"], rs_data_high["MSE_TEST"], facecolor='m', alpha=alpha)
+        mse_plot.fill_between(ps, rs_data_low["MSE"], rs_data_high["MSE"], facecolor='g', alpha=alpha)
+        mse_plot.fill_between(ps, rs_data_low["MSE_TEST"], rs_data_high["MSE_TEST"], facecolor='orange', alpha=alpha)
         # var_plot.fill_between(ps, rs_data_low["VAR"], rs_data_high["VAR"], facecolor='b', alpha=alpha)
         # var_plot.fill_between(ps, rs_data_low["VAR_TEST"], rs_data_high["VAR_TEST"], facecolor='r', alpha=alpha)
 
