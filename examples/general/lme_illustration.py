@@ -17,10 +17,10 @@ if __name__ == "__main__":
 
     trials = 20
     problem_parameters = {
-        "groups_sizes": [20, 5, 10, 50],
+        "groups_sizes": [20, 10, 50],
         "features_labels": [3],
         "random_intercept": True,
-        "seed": 41,
+        "seed": 45,
         "gamma": np.array([0.7, 0.6]),
         "obs_std": 0.3
     }
@@ -45,12 +45,13 @@ if __name__ == "__main__":
     per_group_coefs = model.coef_["per_group_coefficients"]
 
     colors = sns.color_palette("Set2", problem.num_groups)
+    markers = ('o', '*', 's')
 
     # just data
     plt.figure(figsize=(6, 6))
     x_bounds = (-2, 2)
     for i, (x, y, z, l) in enumerate(problem):
-        plt.scatter(x[:, 1], y, label=f"Cluster {i+1}", color=to_hex(colors[i]))
+        plt.scatter(x[:, 1], y, label=f"Group {i+1}", color=to_hex(colors[i]), marker=markers[i])
     # plt.plot(x_bounds, [beta[0] + x_bounds[0]*beta[1], beta[0] + x_bounds[1]*beta[1]], label="Mean prediction")
     plt.legend()
     plt.xlim((-3, 3))
@@ -63,7 +64,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(6, 6))
     x_bounds = (-2, 2)
     for i, (x, y, z, l) in enumerate(problem):
-        plt.scatter(x[:, 1], y, label=f"Cluster {i+1}", color=to_hex(colors[i]))
+        plt.scatter(x[:, 1], y, label=f"Group {i+1}", color=to_hex(colors[i]), marker=markers[i])
     plt.plot(x_bounds, [beta[0] + x_bounds[0]*beta[1], beta[0] + x_bounds[1]*beta[1]], label="Mean prediction")
     plt.legend()
     plt.xlim((-3, 3))
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(6, 6))
     x_bounds = (-2, 2)
     for i, ((x, y, z, l), coefs) in enumerate(zip(problem, per_group_coefs)):
-        plt.scatter(x[:, 1], y, label=f"Cluster {i+1}", color=to_hex(colors[i]))
+        plt.scatter(x[:, 1], y, label=f"Group {i+1}", color=to_hex(colors[i]), marker=markers[i])
         plt.plot(x_bounds, [coefs[0] + x_bounds[0] * coefs[3], beta[0] + x_bounds[1] * coefs[3]], color=to_hex(colors[i]))
     plt.legend()
     plt.xlim((-3, 3))
