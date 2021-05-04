@@ -119,3 +119,20 @@ class L0Regularizer:
         tbeta = self.optimal_tbeta(beta)
         tgamma = self.optimal_tgamma(tbeta, gamma)
         return self.oracle.beta_gamma_to_x(tbeta, tgamma)
+
+    def value(self, x):
+        k = sum(x != 0)
+        if k > self.nnz_tbeta + self.nnz_tgamma:
+            return np.infty
+        return 0
+
+
+class L1Regularizer:
+    def __init__(self, lam):
+        self.lam = lam
+
+    def value(self, x):
+        return self.lam*np.linalg.norm(x, 1)
+
+    def prox(self, x, alpha):
+        return (x - alpha * self.lam).clip(0, None) - (- x - alpha * self.lam).clip(0, None)

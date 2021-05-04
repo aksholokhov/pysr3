@@ -114,6 +114,9 @@ class LinearLMEProblem(LMEProblem):
                  return_true_model_coefficients: bool = True,
                  seed: int = None,
                  generator_params: dict = None,
+                 chance_missing: float = 0.0,
+                 chance_outlier: float = 0.0,
+                 outlier_multiplier: float = 5.0
                  ):
         """
 
@@ -380,6 +383,19 @@ class LinearLMEProblem(LMEProblem):
             group_errors = np.random.randn(group_size) * std
             group_answers = group_fixed_features.dot(beta) + group_random_features.dot(random_effects) + group_errors
 
+            # generate outliers and missing values after the answers are generated
+            missing_and_outliers_mask = np.random.choice([0, 1, outlier_multiplier],
+                                                         size=group_continuous_features.shape,
+                                                         p=[
+                                                            chance_missing,
+                                                            1 - chance_missing - chance_outlier,
+                                                            chance_outlier
+                                                         ])
+            group_continuous_features *= missing_and_outliers_mask
+            group_fixed_features = group_continuous_features[:, fixed_features_idx]
+            # TODO: this one fails if there are no random effects. Fix it.
+            group_random_features = group_continuous_features[:, random_features_idx]
+
             true_group_labels[start: start + group_size] = i
 
             random_effects_list.append((group_label, random_effects))
@@ -413,7 +429,7 @@ class LinearLMEProblem(LMEProblem):
         data['column_labels'] = all_columns_labels
 
         # We pivot the groups back to the original group division
-        generated_problem = LinearLMEProblem(**data).pivot(categorical_features_set=(0, ))
+        generated_problem = LinearLMEProblem(**data).pivot(categorical_features_set=(0,))
         generated_problem = generated_problem.to_x_y() if as_x_y else generated_problem
 
         if return_true_model_coefficients:

@@ -533,6 +533,18 @@ class LinearLMEOracle:
         else:
             raise ValueError(f"Unknown information criterion: {ic}")
 
+    def get_condition_numbers(self):
+        singv_x = []
+        singv_z = []
+        for x, y, z, l in self.problem:
+            U, Sx, V = np.linalg.svd(x.T.dot(x))
+            U, Sz, V = np.linalg.svd(z.T.dot(z))
+            singv_x += list(Sx)
+            singv_z += list(Sz)
+
+        return (np.infty if min(singv_x) == 0 else max(singv_x) / min(singv_x),
+                np.infty if min(singv_z) == 0 else max(singv_z) / min(singv_z))
+
 
 class LinearLMEOracleSR3(LinearLMEOracle):
     """
@@ -562,7 +574,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
        """
 
-    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, **kwargs):
+    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, warm_start=True, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -579,6 +591,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         super().__init__(problem, **kwargs)
         self.lb = lb
         self.lg = lg
+        self.warm_start = warm_start
+        self.warm_start_ip = {}
 
     def loss(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
         """
@@ -671,23 +685,33 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
     def value_function(self, w):
         tbeta, tgamma = self.x_to_beta_gamma(w)
-        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2*tbeta, 2*tgamma, tbeta=tbeta, tgamma=tgamma, beta_gamma_only=True)
+        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
+                                                                          tgamma=tgamma, beta_gamma_only=True)
         return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma)
 
     def gradient_value_function(self, w):
         tbeta, tgamma = self.x_to_beta_gamma(w)
-        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2*tbeta, 2*tgamma, tbeta=tbeta, tgamma=tgamma, beta_gamma_only=True)
+        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
+                                                                          tgamma=tgamma, beta_gamma_only=True)
         x = self.beta_gamma_to_x(beta, gamma)
-        lambdas = np.array([self.lb]*self.problem.num_fixed_effects + [self.lg]*self.problem.num_random_effects)
-        return -lambdas*(x - w)
+        lambdas = np.array([self.lb] * self.problem.num_fixed_effects + [self.lg] * self.problem.num_random_effects)
+        return -lambdas * (x - w)
 
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
                                    log_progress=False, beta_gamma_only=False, increase_lambdas=False,
+                                   warm_start=False,
                                    **kwargs):
         n = len(gamma)
         I = np.eye(n)
         Zb = np.zeros((len(gamma), len(beta)))
         v = np.ones(n)
+
+        beta = 2*tbeta
+        gamma = 2*tgamma
+        if self.warm_start:
+            beta = self.warm_start_ip.get("beta", beta)
+            gamma = self.warm_start_ip.get("gamma", gamma)
+
         # The packing of variables is x = [v (dual for gamma), beta, gamma]
         # All Lagrange gradients (F) and hessians (dF) have the same order of blocks.
         x = np.concatenate([v, beta, gamma])
@@ -709,7 +733,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         prev_beta = np.infty
         prev_gamma = np.infty
 
-        tbeta_tgamma_convergence=False
+        tbeta_tgamma_convergence = False
 
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
@@ -770,7 +794,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 self.lb = 1.2 * (1 + self.lb)
                 self.lg = 1.2 * (1 + self.lg)
                 tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
-                     or np.linalg.norm(gamma - tgamma) > self.tol_inner)
+                                            or np.linalg.norm(gamma - tgamma) > self.tol_inner)
 
             iteration += 1
             # losses.append(np.linalg.norm(F(x, mu)))
@@ -778,6 +802,9 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
             if log_progress:
                 self.logger.append(x[n:])
+        if self.warm_start:
+            self.warm_start_ip["beta"] = beta
+            self.warm_start_ip["gamma"] = gamma
         return beta, gamma, tbeta, tgamma, losses_kkt
 
 
@@ -1083,7 +1110,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         prev_beta = np.infty
         prev_gamma = np.infty
 
-        tbeta_tgamma_convergence=False
+        tbeta_tgamma_convergence = False
 
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
@@ -1141,7 +1168,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 self.lb = 1.2 * (1 + self.lb)
                 self.lg = 1.2 * (1 + self.lg)
                 tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
-                     or np.linalg.norm(gamma - tgamma) > self.tol_inner)
+                                            or np.linalg.norm(gamma - tgamma) > self.tol_inner)
 
             iteration += 1
             # losses.append(np.linalg.norm(F(x, mu)))
