@@ -128,7 +128,7 @@ class L0Regularizer:
 
 
 class L1Regularizer:
-    def __init__(self, lam):
+    def __init__(self, lam, **kwargs):
         self.lam = lam
 
     def value(self, x):

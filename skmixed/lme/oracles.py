@@ -24,6 +24,7 @@ from scipy.optimize import minimize
 from scipy.optimize import LinearConstraint
 
 from skmixed.lme.problems import LinearLMEProblem
+from typing import Optional
 
 
 class LinearLMEOracle:
@@ -44,7 +45,7 @@ class LinearLMEOracle:
 
     """
 
-    def __init__(self, problem: LinearLMEProblem, n_iter_inner=1, tol_inner=1e-4, warm_start_duals=False):
+    def __init__(self, problem: Optional[LinearLMEProblem], n_iter_inner=1, tol_inner=1e-4, warm_start_duals=False):
         """
         Creates an oracle on top of the given problem
 
@@ -574,7 +575,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
        """
 
-    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1, warm_start=True, **kwargs):
+    def __init__(self, problem: Optional[LinearLMEProblem], lb=0.1, lg=0.1, warm_start=True, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 

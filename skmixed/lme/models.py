@@ -25,7 +25,7 @@ from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized, LinearLMEOracleW, LinearLMELassoOracle, \
     LinearLMEOracleSR3
 from skmixed.solvers import PGDSolver
-from skmixed.regularizers import L0Regularizer
+from skmixed.regularizers import L0Regularizer, L1Regularizer
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
 
@@ -780,8 +780,8 @@ class Sr3L0LmeModel(LMEModel):
                  logger_keys: Set = ('converged',),
                  warm_start=True,
                  **kwargs):
-
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1/max(lb, lg))
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=1 if max(lb, lg) == 0 else 1 / max(lb, lg))
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start)
         regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
@@ -800,7 +800,7 @@ class L0LmeModel(LMEModel):
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
                  max_iter_solver: int = 1000,
-                 stepping: str = "fixed",
+                 stepping: str = "line-search",
                  nnz_tbeta: int = 1,
                  nnz_tgamma: int = 1,
                  participation_in_selection=None,
@@ -812,6 +812,51 @@ class L0LmeModel(LMEModel):
                                     nnz_tgamma=nnz_tgamma,
                                     participation_in_selection=participation_in_selection,
                                     oracle=oracle)
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         initializer=initializer,
+                         logger_keys=logger_keys)
+
+
+class L1LmeModel(LMEModel):
+    def __init__(self,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 lam: float = 1,
+                 logger_keys: Set = ('converged',),
+                 **kwargs):
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping)
+        oracle = LinearLMEOracle(None)
+        regularizer = L1Regularizer(lam=lam)
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         initializer=initializer,
+                         logger_keys=logger_keys)
+
+
+class SR3L1LmeModel(LMEModel):
+    def __init__(self,
+                 tol_oracle: float = 1e-5,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_oracle: int = 1000,
+                 max_iter_solver: int = 20,
+                 stepping: str = "fixed",
+                 lb: float = 1,
+                 lg: float = 1,
+                 lam: float = 1,
+                 logger_keys: Set = ('converged',),
+                 warm_start=True,
+                 **kwargs):
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=1 if max(lb, lg) == 0 else 1 / max(lb, lg))
+        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
+                                    warm_start=warm_start)
+        regularizer = L1Regularizer(lam=lam)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
