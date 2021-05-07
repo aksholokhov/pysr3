@@ -22,6 +22,10 @@ class PGDSolver:
 
             direction = -oracle.gradient_value_function(x)
             # make sure gamma >= 0
+            ind_zero_x = np.where((x <= 0) & ( direction < 0))[0]
+            ind_zero_x = ind_zero_x[(ind_zero_x >= oracle.problem.num_fixed_effects)]
+            direction[ind_zero_x] = 0
+
             ind_neg_dir = np.where(direction < 0.0)[0]
             ind_neg_dir = ind_neg_dir[(ind_neg_dir >= oracle.problem.num_fixed_effects)]
             max_step_len = 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir])
