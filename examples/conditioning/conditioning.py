@@ -31,7 +31,7 @@ if __name__ == "__main__":
         "logger_keys": ('converged', 'loss',),
         "tol_oracle": 1e-3,
         "tol_solver": 1e-5,
-        "max_iter_oracle": 10000,
+        "max_iter_oracle": 10,
         "max_iter_solver": 10000,
         "warm_start": True,
     }
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         "groups_sizes": [20, 12, 14, 50, 11]*2,
         "features_labels": [3]*num_covariates,
         "random_intercept": True,
-        "obs_std": 0.3,
+        "obs_std": 0.1,
         "chance_missing": 0,
         "chance_outlier": 0.0,
         "outlier_multiplier": 10
@@ -281,7 +281,7 @@ if __name__ == "__main__":
                 np.random.seed(seed)
 
                 true_beta = np.array([1] + [1, 0]*int(num_covariates/2))
-                true_gamma = np.array([1] + [1, 0, 0, 0]*int(num_covariates/4))
+                true_gamma = np.array([1] + [1, 0]*int(num_covariates/2))
                 problem_parameters["features_covariance_matrix"] = sp.linalg.block_diag(*([np.array([[1, chance], [chance, 1]])]*int(num_covariates/2)))
 
 
@@ -310,7 +310,7 @@ if __name__ == "__main__":
                 try:
                     l0_model.fit_problem(problem)
                     toc = time.perf_counter()
-                    print(f"L0 done: {toc - tic}")
+                    print(f"{chance}, {i} L0 done: {toc - tic}")
                 except np.linalg.LinAlgError:
                     toc = time.perf_counter()
                     l0_converged = 0
@@ -343,7 +343,7 @@ if __name__ == "__main__":
                 try:
                     l0_SR3_model.fit_problem(problem)
                     toc = time.perf_counter()
-                    print(f"SR3 done: {toc - tic}")
+                    print(f"{chance}, {i} SR3 done: {toc - tic}")
                 except np.linalg.LinAlgError:
                     toc = time.perf_counter()
                     l0_SR3_converged = 0

@@ -18,8 +18,8 @@ if __name__ == "__main__":
     num_covariates = 40
 
     model_parameters = {
-        "lb": 1,
-        "lg": 20,
+        "lb": 40,
+        "lg": 40,
         "initializer": "None",
         "logger_keys": ('converged', 'loss',),
         "tol_oracle": 1e-3,
@@ -28,12 +28,12 @@ if __name__ == "__main__":
         "max_iter_solver": 10000,
     }
 
-    cov = 0.9
+    cov = 0.0
     problem_parameters = {
         "groups_sizes": [20, 12, 14, 50, 11] * 2,
         "features_labels": [3] * num_covariates,
         "random_intercept": True,
-        "obs_std": 0.3,
+        "obs_std": 0.1,
         "chance_missing": 0,
         "chance_outlier": 0.0,
         "outlier_multiplier": 5,
@@ -68,7 +68,7 @@ if __name__ == "__main__":
             #     true_beta[0] = 1
             # true_gamma = np.random.choice(2, size=num_covariates+1, p=np.array([0.3, 0.7])) * true_beta
             true_beta = np.array([1] + [1, 0] * int(num_covariates / 2))
-            true_gamma = np.array([1] + [1, 0, 0, 0] * int(num_covariates / 4))
+            true_gamma = np.array([1] + [1, 0] * int(num_covariates / 2))
 
             problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
                                                                        beta=true_beta,
