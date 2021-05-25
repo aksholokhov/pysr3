@@ -136,3 +136,25 @@ class L1Regularizer:
 
     def prox(self, x, alpha):
         return (x - alpha * self.lam).clip(0, None) - (- x - alpha * self.lam).clip(0, None)
+
+
+class CADRegularizer:
+    def __init__(self, rho, **kwargs):
+        self.rho = rho
+
+    def value(self, x):
+        return np.minimum(np.abs(x), self.rho)
+
+    def prox(self, x, alpha):
+        # TODO: ask Sahsa about relationship between alpha and rho for CAD
+        assert alpha <= self.rho
+
+        def prox_element_wise(z, alpha):
+            if z > self.rho:
+                return x
+            elif alpha < z <= self.rho:
+                return np.sign(z)*(np.abs(z) - alpha)
+            else:
+                return 0
+
+        return np.fromiter((prox_element_wise(z, alpha) for z in x), x.dtype)
