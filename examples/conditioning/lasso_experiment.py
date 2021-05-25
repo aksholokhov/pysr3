@@ -55,7 +55,7 @@ if __name__ == "__main__":
             #     true_beta[0] = 1
             # true_gamma = np.random.choice(2, size=num_covariates+1, p=np.array([0.3, 0.7])) * true_beta
             true_beta = np.array([1] + [1, 0] * int(num_covariates / 2))
-            true_gamma = np.array([1] + [1, 0, 0, 0]*int(num_covariates/4))
+            true_gamma = np.array([1] + [1, 0] * int(num_covariates / 2))
 
             problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
                                                                        beta=true_beta,
