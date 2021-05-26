@@ -8,10 +8,10 @@ import pickle
 
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
 
-from skmixed.lme.models import SR3L1LmeModel, L1LmeModel
+from skmixed.lme.models import SR3L1LmeModel, L1LmeModel, CADLmeModel, SR3CADLmeModel
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
-from skmixed.regularizers import L1Regularizer
+from skmixed.regularizers import L1Regularizer, CADRegularizer
 
 from tqdm import tqdm
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     logger_keys = {"loss", "x"}
 
-    generate_data = True
+    generate_data = False
 
     np.random.seed(seed)
     true_beta = np.array([1] + [2, 0] * int(num_covariates / 2))
@@ -129,6 +129,7 @@ if __name__ == "__main__":
                          l1_sr3_steps), file=f)
         print(f"Matrices saved as log_intuition_{now}.pickle")
     else:
+        #with open(f"log_intuition_2021-05-25 17:47:06.818664.pickle", 'rb') as f: # CAD
         with open(f"log_intuition_2021-05-25 17:35:01.519969.pickle", 'rb') as f:
             beta_grid_normal, gamma_grid_normal, beta_grid_sr3, gamma_grid_sr3, l1_steps, l1_sr3_steps = pickle.load(f)
 
