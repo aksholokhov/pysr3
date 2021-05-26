@@ -45,7 +45,7 @@ class LinearLMEOracle:
 
     """
 
-    def __init__(self, problem: Optional[LinearLMEProblem], n_iter_inner=1, tol_inner=1e-4, warm_start_duals=False):
+    def __init__(self, problem: Optional[LinearLMEProblem], n_iter_inner=200, tol_inner=1e-6, warm_start_duals=False):
         """
         Creates an oracle on top of the given problem
 

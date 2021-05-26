@@ -17,6 +17,10 @@ class PGDSolver:
         x_prev = np.infty
         iteration = 0
 
+        if len(logger.keys) > 0:
+            loss = oracle.value_function(x) + regularizer.value(x)
+            logger.log(locals())
+
         while np.linalg.norm(x - x_prev) > self.tol and iteration < self.max_iter:
             x_prev = x
 

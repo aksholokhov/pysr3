@@ -143,18 +143,16 @@ class CADRegularizer:
         self.rho = rho
 
     def value(self, x):
-        return np.minimum(np.abs(x), self.rho)
+        return np.minimum(np.abs(x), self.rho).sum()
 
     def prox(self, x, alpha):
-        # TODO: ask Sahsa about relationship between alpha and rho for CAD
-        assert alpha <= self.rho
-
-        def prox_element_wise(z, alpha):
-            if z > self.rho:
-                return x
-            elif alpha < z <= self.rho:
-                return np.sign(z)*(np.abs(z) - alpha)
+        alpha = float(alpha)
+        def prox_element_wise(z):
+            if abs(z) > self.rho:
+                return z
+            elif alpha < abs(z) <= self.rho:
+                return np.sign(z)*(abs(z) - alpha)
             else:
                 return 0
 
-        return np.fromiter((prox_element_wise(z, alpha) for z in x), x.dtype)
+        return np.array([prox_element_wise(z) for z in x])
