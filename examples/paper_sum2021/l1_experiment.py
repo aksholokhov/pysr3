@@ -3,6 +3,10 @@ import scipy as sp
 import pandas as pd
 import time
 import datetime
+import pickle
+
+from pathlib import Path
+from matplotlib import pyplot as plt
 
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
 
@@ -12,35 +16,8 @@ from skmixed.lme.oracles import LinearLMEOracle
 
 from tqdm import tqdm
 
-if __name__ == "__main__":
-    num_trials = 1
-
-    num_covariates = 20
-
-    model_parameters = {
-        "lb": 40,
-        "lg": 40,
-        "initializer": "None",
-        "logger_keys": ('converged', 'loss',),
-        "tol_oracle": 1e-3,
-        "tol_solver": 1e-6,
-        "max_iter_oracle": 10000,
-        "max_iter_solver": 10000
-    }
-
-    cov = 0.0
-    problem_parameters = {
-        "groups_sizes": [20, 12, 14, 50, 11]*2,
-        "features_labels": [3]*num_covariates,
-        "random_intercept": True,
-        "obs_std": 0.1,
-        "chance_missing": 0,
-        "chance_outlier": 0.0,
-        "outlier_multiplier": 5,
-        # "features_covariance_matrix": np.eye(num_covariates)
-        "features_covariance_matrix": sp.linalg.block_diag(*([np.array([[1, cov], [cov, 1]])]*int(num_covariates/2)))
-    }
-
+def run_l1_comparison_experiment(num_trials, num_covariates, model_parameters, problem_parameters, l1_initials, sr3_initials,
+                                 logs_folder=".", figures_folder=".", tables_folder="."):
     log = pd.DataFrame(columns=("i", "lambda", "model", "time", "mse", "evar", "loss",
                                 "fe_tp", "fe_tn", "fe_fp", "fe_fn",
                                 "re_tp", "re_tn", "re_fp", "re_fn",
@@ -68,16 +45,6 @@ if __name__ == "__main__":
 
             lam = 0.0
             all_coefficients_are_dead = False
-
-            l1_initials = {
-                "beta": np.ones(num_covariates + 1),
-                "gamma": np.ones(num_covariates + 1)
-            }
-
-            SR3_initials = {
-                "beta": np.ones(num_covariates + 1),
-                "gamma": np.ones(num_covariates + 1)
-            }
 
             while not all_coefficients_are_dead:
                 l1_converged = 1
@@ -125,7 +92,7 @@ if __name__ == "__main__":
                 tic = time.perf_counter()
                 toc = tic
                 try:
-                    l1_SR3_model.fit_problem(problem, initial_parameters=SR3_initials)
+                    l1_SR3_model.fit_problem(problem, initial_parameters=sr3_initials)
                     toc = time.perf_counter()
                 except np.linalg.LinAlgError:
                     toc = time.perf_counter()
@@ -168,4 +135,105 @@ if __name__ == "__main__":
 
     finally:
         now = datetime.datetime.now()
-        log.to_csv(f"log_lasso_{now}.csv")
+        log_filename = Path(logs_folder) / f"log_l1_{now}.csv"
+        log.to_csv(log_filename)
+        print(f"L1 experiment: data saved as {log_filename}")
+        with open(Path(logs_folder) / f"params_l1_{now}.csv", 'wb') as f:
+            pickle.dump({
+                "num_trials": num_trials,
+                "num_covariates": num_covariates,
+                "model_parameters": model_parameters,
+                "problem_parameters": problem_parameters,
+                "l0_initials": l1_initials,
+                "sr3_initials": sr3_initials
+            }, f)
+    return log, now
+
+def plot_l1_comparison(data, suffix=None, figures_folder="."):
+    data["tp"] = data["fe_tp"] + data["re_tp"]
+    data["tn"] = data["fe_tn"] + data["re_tn"]
+    data["fp"] = data["fe_fp"] + data["re_fp"]
+    data["fn"] = data["fe_fn"] + data["re_fn"]
+
+    data["fe_sensitivity"] = data["fe_tp"] / (data["fe_tp"] + data["fe_fn"])
+    data["fe_specificity"] = data["fe_tn"] / (data["fe_tn"] + data["fe_fp"])
+    data["fe_fpr"] = data["fe_fp"] / (data["fe_fp"] + data["fe_tn"])
+    data["fe_f1"] = 2 * data["fe_tp"] / (2 * data["fe_tp"] + data["fe_fp"] + data["fe_fn"])
+    data["fe_acc"] = (data["fe_tp"] + data["fe_tn"]) / (data["fe_tp"] + data["fe_fn"] + data["fe_tn"] + data["fe_fp"])
+
+    data["re_sensitivity"] = data["re_tp"] / (data["re_tp"] + data["re_fn"])
+    data["re_specificity"] = data["re_tn"] / (data["re_tn"] + data["re_fp"])
+    data["re_fpr"] = data["re_fp"] / (data["re_fp"] + data["re_tn"])
+    data["re_f1"] = 2 * data["re_tp"] / (2 * data["re_tp"] + data["re_fp"] + data["re_fn"])
+    data["re_acc"] = (data["re_tp"] + data["re_tn"]) / (data["re_tp"] + data["re_fn"] + data["re_tn"] + data["re_fp"])
+
+    data["sensitivity"] = data["tp"] / (data["tp"] + data["fn"])
+    data["fpr"] = data["fp"] / (data["fp"] + data["tn"])
+    data["f1"] = 2 * data["tp"] / (2 * data["tp"] + data["fp"] + data["fn"])
+    data["acc"] = (data["tp"] + data["tn"]) / (data["tp"] + data["fn"] + data["tn"] + data["fp"])
+
+    l1_data = data[data["model"] == "L1"]
+    sr3_data = data[data["model"] == "SR3_L1"]
+
+    agg_data = sr3_data.copy()
+    agg_data = agg_data.merge(l1_data, on="lam", suffixes=("_sr3", "_l1"))
+
+    base_size = 5
+    fig = plt.figure(figsize=(2 * base_size, 2 * base_size))
+    grid = plt.GridSpec(nrows=2, ncols=2)
+
+    #     fe_plot = fig.add_subplot(grid[0, 2])
+    #     fe_plot.scatter(agg_data["fe_fpr_sr3"], agg_data["fe_sensitivity_sr3"], label="sr3")
+    #     fe_plot.scatter(agg_data["fe_fpr_l1"], agg_data["fe_sensitivity_l1"], label="l1")
+    #     fe_plot.set_xlabel("FPR FE")
+    #     fe_plot.set_ylabel("TPR FE")
+    #     fe_plot.legend()
+
+    #     re_plot = fig.add_subplot(grid[1, 2])
+    #     re_plot.scatter(agg_data["re_fpr_sr3"], agg_data["re_sensitivity_sr3"], label="sr3")
+    #     re_plot.scatter(agg_data["re_fpr_l1"], agg_data["re_sensitivity_l1"], label="l1")
+    #     re_plot.set_xlabel("FPR RE")
+    #     re_plot.set_ylabel("TPR RE")
+    #     re_plot.legend()
+
+    #     all_plot = fig.add_subplot(grid[0, 2])
+    #     all_plot.scatter(agg_data["fpr_sr3"], agg_data["sensitivity_sr3"], label="sr3")
+    #     all_plot.scatter(agg_data["fpr_l1"], agg_data["sensitivity_l1"], label="l1")
+    #     all_plot.set_xlabel("FPR")
+    #     all_plot.set_ylabel("TPR")
+    #     all_plot.legend()
+
+    fe_plot = fig.add_subplot(grid[0, :2])
+    # fe_plot.semilogx(agg_data["lam"], agg_data["f1_l1"], label="F1 L1")
+    fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1_l1"], label="L1")
+    fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1_sr3"], label="L1 SR3")
+    fe_plot.legend(loc="lower left")
+    fe_plot.set_xlabel(r"$\lambda$, strength of LASSO regularizer")
+    fe_plot.set_ylabel(r"F1, selection quality for fixed effects")
+    fe_plot.set_title("Fixed-effects selection quality along LASSO path")
+
+    re_plot = fig.add_subplot(grid[1, :2])
+    # re_plot.semilogx(agg_data["lam"], agg_data["f1_sr3"], label="F1 SR3")
+    re_plot.semilogx(agg_data["lam"], agg_data["re_f1_l1"], label="F1 for RE selection with L1")
+    re_plot.semilogx(agg_data["lam"], agg_data["re_f1_sr3"], label="F1 for RE selection with L1 SR3 ")
+    re_plot.legend(loc="lower left")
+    re_plot.set_xlabel(r"$\lambda$, strength of LASSO regularizer")
+    re_plot.set_ylabel(r"F1, selection quality for random effects")
+    re_plot.set_title("Random-effects selection quality along LASSO path")
+
+    #     lambda_l1_plot = fig.add_subplot(grid[3, :])
+    #     lambda_l1_plot.semilogx(agg_data["lam"], agg_data["acc_l1"], label="Acc L1")
+    #     lambda_l1_plot.semilogx(agg_data["lam"], agg_data["fe_acc_l1"], label="Acc FE L1")
+    #     lambda_l1_plot.semilogx(agg_data["lam"], agg_data["re_acc_l1"], label="Acc RE L1")
+    #     lambda_l1_plot.legend()
+
+    #     lambda_sr3_plot = fig.add_subplot(grid[4, :])
+    #     lambda_sr3_plot.semilogx(agg_data["lam"], agg_data["acc_sr3"], label="Acc SR3")
+    #     lambda_sr3_plot.semilogx(agg_data["lam"], agg_data["fe_acc_sr3"], label="Acc FE SR3")
+    #     lambda_sr3_plot.semilogx(agg_data["lam"], agg_data["re_acc_sr3"], label="Acc RE SR3")
+    #     lambda_sr3_plot.legend()
+
+    plt.subplots_adjust(wspace=0.2, hspace=0.3)
+    plot_filename = Path(figures_folder) / f"l1_comparison_{suffix if suffix else ''}.pdf"
+    plt.savefig(plot_filename)
+    print(f"L1 experiment: plot saved as {plot_filename}")
