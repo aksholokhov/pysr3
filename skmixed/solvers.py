@@ -1,4 +1,4 @@
-from skmixed.lme.oracles import LinearLMEOracle
+from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 import numpy as np
 import scipy as sp
 
@@ -26,7 +26,7 @@ class PGDSolver:
 
             direction = -oracle.gradient_value_function(x)
             # make sure gamma >= 0
-            ind_zero_x = np.where((x <= 0) & ( direction < 0))[0]
+            ind_zero_x = np.where((x <= 0) & (direction < 0))[0]
             ind_zero_x = ind_zero_x[(ind_zero_x >= oracle.problem.num_fixed_effects)]
             direction[ind_zero_x] = 0
 
@@ -36,13 +36,14 @@ class PGDSolver:
 
             if self.stepping == "line-search":
                 res = sp.optimize.minimize(
-                    fun=lambda t: oracle.value_function(regularizer.prox(x + t*direction, t)) + regularizer.value(regularizer.prox(x + t*direction, t)),
+                    fun=lambda t: oracle.value_function(regularizer.prox(x + t * direction, t)) + regularizer.value(
+                        regularizer.prox(x + t * direction, t)),
                     x0=0,
                     bounds=[(0, max_step_len)]
                 )
                 step_len = res.x
             elif self.stepping == "decreasing":
-                step_len = max_step_len/(iteration+1)
+                step_len = max_step_len / (iteration + 1)
             else:
                 step_len = self.fixed_step_len
 
@@ -56,5 +57,28 @@ class PGDSolver:
         if iteration == self.max_iter:
             pass
             # did not converge
-            #raise Exception(f"Did not converge, increase max_iter (current = {self.max_iter})")
+            # raise Exception(f"Did not converge, increase max_iter (current = {self.max_iter})")
+        return x
+
+
+class FakePGDSolver:
+
+    def __init__(self, fixed_step_len=1, update_prox_every=1):
+        self.fixed_step_len = fixed_step_len
+        self.update_prox_every = update_prox_every
+
+    def optimize(self, x0, oracle: LinearLMEOracleSR3 = None, regularizer=None, logger=None, **kwargs):
+        if not oracle:
+            raise ValueError("oracle can't be None")
+        if not regularizer:
+            raise ValueError("regularizer can't be None")
+
+        x = oracle.find_optimal_parameters(x0, regularizer=regularizer, prox_step_len=self.fixed_step_len,
+                                           update_prox_every=self.update_prox_every,
+                                           **kwargs)
+
+        if len(logger.keys) > 0:
+            loss = oracle.value_function(x) + regularizer.value(x)
+            logger.log(locals())
+
         return x

@@ -687,28 +687,43 @@ class LinearLMEOracleSR3(LinearLMEOracle):
     def value_function(self, w):
         tbeta, tgamma = self.x_to_beta_gamma(w)
         beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
-                                                                          tgamma=tgamma, beta_gamma_only=True)
+                                                                          tgamma=tgamma)
         return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma)
 
     def gradient_value_function(self, w):
         tbeta, tgamma = self.x_to_beta_gamma(w)
         beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
-                                                                          tgamma=tgamma, beta_gamma_only=True)
+                                                                          tgamma=tgamma)
         x = self.beta_gamma_to_x(beta, gamma)
         lambdas = np.array([self.lb] * self.problem.num_fixed_effects + [self.lg] * self.problem.num_random_effects)
         return -lambdas * (x - w)
 
+    def find_optimal_parameters(self, w, log_progress=False, regularizer=None, increase_lambdas=False,
+                                   line_search=False, prox_step_len=1.0, update_prox_every=1,
+                                   **kwargs):
+        tbeta, tgamma = self.x_to_beta_gamma(w)
+        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(beta=2 * tbeta,
+                                                                          gamma=2 * tgamma,
+                                                                          tbeta=tbeta,
+                                                                          tgamma=tgamma,
+                                                                          log_progress=log_progress,
+                                                                          regularizer=regularizer,
+                                                                          increase_lambdas=increase_lambdas,
+                                                                          line_search=line_search,
+                                                                          prox_step_len=prox_step_len,
+                                                                          update_prox_every=update_prox_every,
+                                                                          **kwargs)
+        return self.beta_gamma_to_x(tbeta, tgamma)
+
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
-                                   log_progress=False, beta_gamma_only=False, increase_lambdas=False,
-                                   warm_start=False,
+                                   log_progress=False, regularizer=None, increase_lambdas=False,
+                                   line_search=False, prox_step_len=1.0, update_prox_every=1,
                                    **kwargs):
         n = len(gamma)
         I = np.eye(n)
         Zb = np.zeros((len(gamma), len(beta)))
         v = np.ones(n)
 
-        beta = 2*tbeta
-        gamma = 2*tgamma
         if self.warm_start:
             beta = self.warm_start_ip.get("beta", beta)
             gamma = self.warm_start_ip.get("gamma", gamma)
@@ -770,39 +785,50 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             ind_neg_dir = np.where(direction < 0.0)[0]
             ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n))]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
-            # res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-            #                            x0=np.array([max_step_len]),
-            #                            method="TNC",
-            #                            jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-            #                                dF(x + alpha * direction).dot(direction)),
-            #                            bounds=[(0, max_step_len)])
-            # step_len = res.x
-            step_len = 0.99 * max_step_len
+
+            if line_search:
+                res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+                                           x0=np.array([max_step_len]),
+                                           method="TNC",
+                                           jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+                                               dF(x + alpha * direction).dot(direction)),
+                                           bounds=[(0, max_step_len)])
+                step_len = res.x
+            else:
+                step_len = 0.99 * max_step_len
             x = x + step_len * direction
             # x[x <= 1e-18] = 0  # killing effective zeros
             v = x[:n]
             beta = x[n:-n]
             gamma = x[-n:]
-            # optimize other components
-            if not beta_gamma_only:
-                raise NotImplemented("Beta gamma only should be false")
-                # tbeta = self.optimal_tbeta(beta=beta, gamma=gamma)
-                # tgamma = self.optimal_tgamma(tbeta, gamma, beta=beta)
-
-            # adjust barrier relaxation
-            mu = 0.1 * v.dot(gamma) / n
-            if increase_lambdas:
-                self.lb = 1.2 * (1 + self.lb)
-                self.lg = 1.2 * (1 + self.lg)
-                tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
-                                            or np.linalg.norm(gamma - tgamma) > self.tol_inner)
 
             iteration += 1
+
+
+            # optimize other components
+            if regularizer and update_prox_every > 0 and  iteration % update_prox_every == 0:
+                tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
+                tbeta, tgamma = self.x_to_beta_gamma(tx)
+
             # losses.append(np.linalg.norm(F(x, mu)))
             losses_kkt.append(np.linalg.norm(F(x, mu)))
 
             if log_progress:
                 self.logger.append(x[n:])
+
+            # adjust barrier relaxation
+            mu = 0.1 * v.dot(gamma) / n
+
+            if increase_lambdas:
+                self.lb = 1.2 * (1 + self.lb)
+                self.lg = 1.2 * (1 + self.lg)
+                tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
+                                            or np.linalg.norm(gamma - tgamma) > self.tol_inner)
+                # optimize other components
+        if regularizer and update_prox_every > 0 and iteration < update_prox_every:
+            tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
+            tbeta, tgamma = self.x_to_beta_gamma(tx)
+
         if self.warm_start:
             self.warm_start_ip["beta"] = beta
             self.warm_start_ip["gamma"] = gamma
