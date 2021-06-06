@@ -676,7 +676,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
         y : np.ndarray
             Models predictions.
         """
-        check_is_fitted(self, 'coef_')
+        self.check_is_fitted()
         problem = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
         return self.predict_problem(problem, **kwargs)
 
@@ -700,7 +700,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
         y : np.ndarray
             Models predictions.
         """
-        check_is_fitted(self, 'coef_')
+        self.check_is_fitted()
 
         beta = self.coef_['beta']
         us = self.coef_['random_effects']
@@ -762,6 +762,22 @@ class LMEModel(BaseEstimator, RegressorMixin):
         u = ((y - y_pred) ** 2).sum()
         v = ((y - y.mean()) ** 2).sum()
         return 1 - u / v
+
+    def check_is_fitted(self):
+        if not hasattr(self, "coef_"):
+            raise AssertionError("The model has not been fitted yet. Call .fit() first.")
+
+    def muller2018ic(self, **kwargs):
+        self.check_is_fitted()
+        return self.oracle.muller2018ic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
+
+    def vaida2005aic(self):
+        self.check_is_fitted()
+        return self.oracle.vaida2005aic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
+
+    def jones2010bic(self):
+        self.check_is_fitted()
+        return self.oracle.jones2010bic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
 
 
 class Sr3L0LmeModel(LMEModel):
@@ -877,12 +893,13 @@ class CADLmeModel(LMEModel):
                  initializer: str = "None",
                  max_iter_solver: int = 1000,
                  stepping: str = "line-search",
-                 rho: float = 1,
+                 rho: float = 1.0,
+                 lam: float = 1.0,
                  logger_keys: Set = ('converged',),
                  **kwargs):
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping)
         oracle = LinearLMEOracle(None)
-        regularizer = CADRegularizer(rho=rho)
+        regularizer = CADRegularizer(rho=rho, lam=lam)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -898,9 +915,10 @@ class SR3CADLmeModel(LMEModel):
                  max_iter_oracle: int = 1000,
                  max_iter_solver: int = 20,
                  stepping: str = "fixed",
-                 lb: float = 1,
-                 lg: float = 1,
-                 rho: float = 1,
+                 lb: float = 1.0,
+                 lg: float = 1.0,
+                 rho: float = 1.0,
+                 lam: float = 1.0,
                  logger_keys: Set = ('converged',),
                  warm_start=True,
                  practical=False,
@@ -912,7 +930,7 @@ class SR3CADLmeModel(LMEModel):
                            fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start)
-        regularizer = CADRegularizer(rho=rho)
+        regularizer = CADRegularizer(rho=rho, lam=lam)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,

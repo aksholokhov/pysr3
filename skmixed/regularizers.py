@@ -139,20 +139,15 @@ class L1Regularizer:
 
 
 class CADRegularizer:
-    def __init__(self, rho, **kwargs):
+    def __init__(self, rho, lam, **kwargs):
         self.rho = rho
+        self.lam = lam
 
     def value(self, x):
-        return np.minimum(np.abs(x), self.rho).sum()
+        return self.lam*np.minimum(np.abs(x), self.rho).sum()
 
     def prox(self, x, alpha):
-        alpha = float(alpha)
-        def prox_element_wise(z):
-            if abs(z) > self.rho:
-                return z
-            elif alpha < abs(z) <= self.rho:
-                return np.sign(z)*(abs(z) - alpha)
-            else:
-                return 0
-
-        return np.array([prox_element_wise(z) for z in x])
+        v = np.copy(x)
+        idx_small = np.where(np.abs(x) <= self.rho)
+        v[idx_small] = (x[idx_small] - alpha * self.lam).clip(0, None) - (- x[idx_small] - alpha * self.lam).clip(0, None)
+        return v
