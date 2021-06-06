@@ -142,14 +142,14 @@ def run_practical_comparison_experiment(num_trials, num_covariates, model_parame
         log_filename = Path(logs_folder) / f"log_practical_{now}.csv"
         log.to_csv(log_filename)
         print(f"Practical vs Full: data saved as {log_filename}")
-        with open(Path(logs_folder) / f"params_l1_{now}.csv", 'wb') as f:
+        with open(Path(logs_folder) / f"params_practical_vs_full_{now}.csv", 'wb') as f:
             pickle.dump({
                 "num_trials": num_trials,
                 "num_covariates": num_covariates,
                 "model_parameters": model_parameters,
                 "problem_parameters": problem_parameters,
-                "l0_initials": practical_initials,
-                "sr3_initials": sr3_initials
+                "practical_initials": practical_initials,
+                "full_initials": sr3_initials
             }, f)
     return log, now
 

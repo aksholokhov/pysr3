@@ -124,9 +124,9 @@ def run_l1_comparison_experiment(num_trials, num_covariates, model_parameters, p
                     # SR3_initials["gamma"] = l1_SR3_model.coef_["gamma"]
 
                 lam = 1.05 * (lam + 0.1)
-                print(f"lam={lam}, l1 fe = {sum(l1_model.coef_['beta'] != 0)}," +
+                print(f"lam={lam}, l1 ({l1_results['time']:.2f}) fe = {sum(l1_model.coef_['beta'] != 0)}," +
                       f" l1 re = {sum(l1_model.coef_['gamma'] != 0)}, "+
-                      f" sr3 fe = {sum(l1_SR3_model.coef_['beta'] != 0)}," +
+                      f" sr3 ({l1_sr3_results['time']:.2f}) fe = {sum(l1_SR3_model.coef_['beta'] != 0)}," +
                       f" sr3 re = {sum(l1_SR3_model.coef_['gamma'] != 0)}")
 
                 if all(l1_model.coef_["beta"] == 0) and all(l1_model.coef_["gamma"] == 0) and all(
@@ -144,7 +144,7 @@ def run_l1_comparison_experiment(num_trials, num_covariates, model_parameters, p
                 "num_covariates": num_covariates,
                 "model_parameters": model_parameters,
                 "problem_parameters": problem_parameters,
-                "l0_initials": l1_initials,
+                "l1_initials": l1_initials,
                 "sr3_initials": sr3_initials
             }, f)
     return log, now

@@ -7,6 +7,7 @@ from examples.paper_sum2021.intuition import run_intuition_experiment, plot_intu
 from examples.paper_sum2021.l0_experiment import run_l0_comparison_experiment, plot_l0_comparison
 from examples.paper_sum2021.l1_experiment import run_l1_comparison_experiment, plot_l1_comparison
 from examples.paper_sum2021.practical_vs_full import run_practical_comparison_experiment, plot_practical_comparison
+from examples.paper_sum2021.cad_experiment import run_cad_comparison_experiment, plot_cad_comparison
 
 base_folder = Path("/Users/aksh/Storage/repos/skmixed/examples/paper_sum2021")
 
@@ -18,8 +19,8 @@ experiments_to_launch = {
     "intuition": False,
     "practical_vs_full_l1": False,
     "l0_comparison": False,
-    "l1_comparison": True,
-    "CAD_comparison": False,
+    "l1_comparison": False,
+    "CAD_comparison": True,
     "krishna_setup_comparison": False
 }
 
@@ -196,3 +197,47 @@ if __name__ == "__main__":
             logs_folder=logs_folder
         )
         plot_practical_comparison(logs_practical, suffix="" if release else now, figures_folder=figures_folder)
+
+    if experiments_to_launch.get("CAD_comparison", False):
+        print("Run CAD comparison experiment")
+        num_covariates = 20
+        correlation_between_adjacent_covariates = 0.0
+        rho = 0.31 # ~sqrt(0.1)
+        logs_cad, now = run_cad_comparison_experiment(
+            num_covariates=num_covariates,
+            num_trials=1,
+            model_parameters={
+                "lb": 40,
+                "lg": 40,
+                "initializer": "None",
+                "logger_keys": ('converged', 'loss',),
+                "tol_oracle": 1e-3,
+                "tol_solver": 1e-6,
+                "max_iter_oracle": 10000,
+                "max_iter_solver": 10000
+            },
+            problem_parameters={
+                "groups_sizes": [20, 12, 14, 50, 11] * 2,
+                "features_labels": [3] * num_covariates,
+                "random_intercept": True,
+                "obs_std": 0.1,
+                "chance_missing": 0,
+                "chance_outlier": 0.0,
+                "outlier_multiplier": 5,
+                # "features_covariance_matrix": np.eye(num_covariates)
+                "features_covariance_matrix": sp.linalg.block_diag(
+                    *([np.array([[1, correlation_between_adjacent_covariates],
+                                 [correlation_between_adjacent_covariates, 1]])] * int(num_covariates / 2)))
+            },
+            cad_initials={
+                "beta": np.ones(num_covariates + 1),
+                "gamma": np.ones(num_covariates + 1)
+            },
+            sr3_initials={
+                "beta": np.ones(num_covariates + 1),
+                "gamma": np.ones(num_covariates + 1)
+            },
+            rho=rho,
+            logs_folder=logs_folder
+        )
+        plot_cad_comparison(logs_cad, rho=rho, suffix="" if release else now, figures_folder=figures_folder)
