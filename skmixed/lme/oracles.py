@@ -458,13 +458,15 @@ class LinearLMEOracle:
         # From here
         # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
         self._recalculate_cholesky(gamma)
-        return self.loss(beta, gamma, **kwargs) + (len(beta) + len(gamma)) * np.log(self._jones2010n_eff())
+        p = sum(beta != 0)
+        q = sum(gamma != 0)
+        return self.loss(beta=beta, gamma=gamma) + (p + q) * np.log(self._jones2010n_eff())
 
     def muller2018ic(self, beta, gamma, **kwargs):
         self._recalculate_cholesky(gamma)
         N = self.problem.num_obs
         n_eff = self._jones2010n_eff()
-        return 2 / N * self.loss(beta, gamma, **kwargs) \
+        return 2 / N * self.value_function(self.beta_gamma_to_x(beta, gamma)) \
                + 1 / N * np.log(n_eff) * sum(beta != 0) \
                + 2 / N * sum(gamma != 0)
 
@@ -524,7 +526,7 @@ class LinearLMEOracle:
         alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2 * self.loss(beta, gamma, **kwargs) + alpha * (p + q)
+        return 2 * self.value_function(self.beta_gamma_to_x(beta, gamma)) + alpha * (p + q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         if ic == "IC_vaida2005aic":
