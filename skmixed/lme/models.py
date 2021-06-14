@@ -652,7 +652,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
             "per_group_coefficients": per_group_coefficients,
         }
 
-        self.oracle.forget()
+        # TODO: uncomment it so the oracle does not keep the dataset linked to its memory
+        #self.oracle.forget()
 
         return self
 
@@ -795,8 +796,11 @@ class Sr3L0LmeModel(LMEModel):
                  participation_in_selection=None,
                  logger_keys: Set = ('converged',),
                  warm_start=True,
+                 practical=False,
+                 update_prox_every=1,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+        solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
+            else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 if max(lb, lg) == 0 else 1 / max(lb, lg))
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start)
@@ -821,11 +825,8 @@ class L0LmeModel(LMEModel):
                  nnz_tgamma: int = 1,
                  participation_in_selection=None,
                  logger_keys: Set = ('converged',),
-                 practical=False,
-                 update_prox_every=1,
                  **kwargs):
-        solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
-            else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping)
         oracle = LinearLMEOracle(None)
         regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
                                     nnz_tgamma=nnz_tgamma,
