@@ -3,23 +3,19 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-experiments_require=[
-    'pandas', 'matplotlib', 'jupyter', 'environment_kernels', 'seaborn'
-]
-
 docs_require=[
     'sphinx', 'sphinx_rtd_theme'
 ]
 
 setuptools.setup(
     name="skmixed",
-    version="0.1.0",
+    version="0.1.1",
     author="Aleksei Sholokhov",
     author_email="aksh@uw.edu",
-    description="Linear Mixed-Effects Models compatible with SciKit-Learn",
+    description="",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/aksholokhov/dismod_code",
+    url="https://github.com/aksholokhov/skmixed",
     license='GPLv3+',
     packages=setuptools.find_packages(),
     classifiers=[

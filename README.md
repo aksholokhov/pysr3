@@ -1,1 +1,1 @@
-SciKit-Learn compatible library for training mixed-effects models.
+Python library for selecting covariates in linear mixed-effect models.
