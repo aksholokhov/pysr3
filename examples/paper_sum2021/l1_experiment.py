@@ -55,7 +55,12 @@ def run_l1_comparison_experiment(num_trials, num_covariates, model_parameters, p
                                       lam=lam)
                 l1_SR3_model = SR3L1LmeModel(**model_parameters,
                                              stepping="fixed",
-                                             lam=lam)
+                                             lam=lam,
+                                             practical=False)
+                l1_SR3_model_practical = SR3L1LmeModel(**model_parameters,
+                                             stepping="fixed",
+                                             lam=lam,
+                                             practical=True)
                 tic = time.perf_counter()
                 toc = tic
                 try:
@@ -75,6 +80,9 @@ def run_l1_comparison_experiment(num_trials, num_covariates, model_parameters, p
                         "mse": mean_squared_error(y, l1_y_pred),
                         "evar": explained_variance_score(y, l1_y_pred),
                         "loss": l1_model.logger_.get("loss")[-1],
+                        "muller": l1_model.muller2018ic(),
+                        "jones": l1_model.jones2010bic(),
+                        "vaida": l1_model.vaida2005aic(),
                         "fe_tp": np.sum((true_beta != 0) & (l1_model.coef_["beta"] != 0)),
                         "fe_tn": np.sum((true_beta == 0) & (l1_model.coef_["beta"] == 0)),
                         "fe_fp": np.sum((true_beta == 0) & (l1_model.coef_["beta"] != 0)),
@@ -108,6 +116,9 @@ def run_l1_comparison_experiment(num_trials, num_covariates, model_parameters, p
                         "mse": mean_squared_error(y, l1_sr3_y_pred),
                         "evar": explained_variance_score(y, l1_sr3_y_pred),
                         "loss": l1_SR3_model.logger_.get("loss")[-1],
+                        "muller": l1_SR3_model.muller2018ic(),
+                        "jones": l1_SR3_model.jones2010bic(),
+                        "vaida": l1_SR3_model.vaida2005aic(),
                         "fe_tp": np.sum((true_beta != 0) & (l1_SR3_model.coef_["beta"] != 0)),
                         "fe_tn": np.sum((true_beta == 0) & (l1_SR3_model.coef_["beta"] == 0)),
                         "fe_fp": np.sum((true_beta == 0) & (l1_SR3_model.coef_["beta"] != 0)),
@@ -120,14 +131,50 @@ def run_l1_comparison_experiment(num_trials, num_covariates, model_parameters, p
                         "converged": l1_SR3_converged
                     }
                     log = log.append(l1_sr3_results, ignore_index=True)
-                    # SR3_initials["beta"] = l1_SR3_model.coef_["beta"]
-                    # SR3_initials["gamma"] = l1_SR3_model.coef_["gamma"]
 
-                lam = 1.05 * (lam + 0.1)
+                tic = time.perf_counter()
+                toc = tic
+                try:
+                    l1_SR3_model_practical.fit_problem(problem, initial_parameters=sr3_initials)
+                    toc = time.perf_counter()
+                except np.linalg.LinAlgError:
+                    toc = time.perf_counter()
+                    l1_SR3_converged = 0
+                finally:
+                    l1_sr3_y_pred = l1_SR3_model_practical.predict_problem(problem)
+
+                    l1_sr3_practical_results = {
+                        "i": i,
+                        "lam": lam,
+                        "model": "SR3_L1_P",
+                        "time": toc - tic,
+                        "mse": mean_squared_error(y, l1_sr3_y_pred),
+                        "evar": explained_variance_score(y, l1_sr3_y_pred),
+                        "loss": l1_SR3_model_practical.logger_.get("loss")[-1],
+                        "muller": l1_SR3_model_practical.muller2018ic(),
+                        "jones": l1_SR3_model_practical.jones2010bic(),
+                        "vaida": l1_SR3_model_practical.vaida2005aic(),
+                        "fe_tp": np.sum((true_beta != 0) & (l1_SR3_model_practical.coef_["beta"] != 0)),
+                        "fe_tn": np.sum((true_beta == 0) & (l1_SR3_model_practical.coef_["beta"] == 0)),
+                        "fe_fp": np.sum((true_beta == 0) & (l1_SR3_model_practical.coef_["beta"] != 0)),
+                        "fe_fn": np.sum((true_beta != 0) & (l1_SR3_model_practical.coef_["beta"] == 0)),
+                        "re_tp": np.sum((true_gamma != 0) & (l1_SR3_model_practical.coef_["gamma"] != 0)),
+                        "re_tn": np.sum((true_gamma == 0) & (l1_SR3_model_practical.coef_["gamma"] == 0)),
+                        "re_fp": np.sum((true_gamma == 0) & (l1_SR3_model_practical.coef_["gamma"] != 0)),
+                        "re_fn": np.sum((true_gamma != 0) & (l1_SR3_model_practical.coef_["gamma"] == 0)),
+                        "number_of_iterations": len(l1_SR3_model_practical.logger_.get("loss")),
+                        "converged": l1_SR3_converged
+                    }
+                    log = log.append(l1_sr3_practical_results, ignore_index=True)
+
+                lam = 1.05 * (lam + 1e-3)
                 print(f"lam={lam}, l1 ({l1_results['time']:.2f}) fe = {sum(l1_model.coef_['beta'] != 0)}," +
                       f" l1 re = {sum(l1_model.coef_['gamma'] != 0)}, "+
                       f" sr3 ({l1_sr3_results['time']:.2f}) fe = {sum(l1_SR3_model.coef_['beta'] != 0)}," +
-                      f" sr3 re = {sum(l1_SR3_model.coef_['gamma'] != 0)}")
+                      f" sr3 re = {sum(l1_SR3_model.coef_['gamma'] != 0)}" +
+                      f" sr3p ({l1_sr3_practical_results['time']:.2f}) fe = {sum(l1_SR3_model_practical.coef_['beta'] != 0)}," +
+                      f" sr3p re = {sum(l1_SR3_model_practical.coef_['gamma'] != 0)}"
+                      )
 
                 if all(l1_model.coef_["beta"] == 0) and all(l1_model.coef_["gamma"] == 0) and all(
                         l1_SR3_model.coef_["beta"] == 0) and all(l1_SR3_model.coef_["gamma"] == 0):
@@ -174,13 +221,15 @@ def plot_l1_comparison(data, suffix=None, figures_folder="."):
 
     l1_data = data[data["model"] == "L1"]
     sr3_data = data[data["model"] == "SR3_L1"]
+    sr3p_data = data[data["model"] == "SR3_L1_P"]
 
     agg_data = sr3_data.copy()
     agg_data = agg_data.merge(l1_data, on="lam", suffixes=("_sr3", "_l1"))
+    agg_data = agg_data.merge(sr3p_data, on="lam", suffixes=("", "_sr3p"))
 
     base_size = 5
-    fig = plt.figure(figsize=(2 * base_size, 2 * base_size))
-    grid = plt.GridSpec(nrows=2, ncols=2)
+    fig = plt.figure(figsize=(3 * base_size, 2 * base_size))
+    grid = plt.GridSpec(nrows=3, ncols=2)
 
     #     fe_plot = fig.add_subplot(grid[0, 2])
     #     fe_plot.scatter(agg_data["fe_fpr_sr3"], agg_data["fe_sensitivity_sr3"], label="sr3")
@@ -207,6 +256,7 @@ def plot_l1_comparison(data, suffix=None, figures_folder="."):
     # fe_plot.semilogx(agg_data["lam"], agg_data["f1_l1"], label="F1 L1")
     fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1_l1"], label="L1")
     fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1_sr3"], label="L1 SR3")
+    fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1"], label="L1 SR3-P")
     fe_plot.legend(loc="lower left")
     fe_plot.set_xlabel(r"$\lambda$, strength of LASSO regularizer")
     fe_plot.set_ylabel(r"F1, selection quality for fixed effects")
@@ -216,10 +266,26 @@ def plot_l1_comparison(data, suffix=None, figures_folder="."):
     # re_plot.semilogx(agg_data["lam"], agg_data["f1_sr3"], label="F1 SR3")
     re_plot.semilogx(agg_data["lam"], agg_data["re_f1_l1"], label="F1 for RE selection with L1")
     re_plot.semilogx(agg_data["lam"], agg_data["re_f1_sr3"], label="F1 for RE selection with L1 SR3 ")
+    re_plot.semilogx(agg_data["lam"], agg_data["re_f1"], label="F1 for RE selection with L1 SR3-P")
     re_plot.legend(loc="lower left")
     re_plot.set_xlabel(r"$\lambda$, strength of LASSO regularizer")
     re_plot.set_ylabel(r"F1, selection quality for random effects")
     re_plot.set_title("Random-effects selection quality along LASSO path")
+
+    ic_plot = fig.add_subplot(grid[2, :2])
+    ic_plot.loglog(agg_data["lam"], agg_data["muller_l1"], label="Mueller L1")
+    ic_plot.loglog(agg_data["lam"], agg_data["muller_sr3"], label="Mueller SR3")
+    ic_plot.loglog(agg_data["lam"], agg_data["muller"], label="Mueller SR3-P")
+    # ic_plot.loglog(agg_data["lam"], agg_data["vaida_l1"], label="Vaida L1")
+    # ic_plot.loglog(agg_data["lam"], agg_data["vaida_sr3"], label="Vaida SR3")
+    # ic_plot.loglog(agg_data["lam"], agg_data["vaida"], label="Vaida SR3-P")
+    # ic_plot.loglog(agg_data["lam"], agg_data["jones_l1"], label="Jones L1")
+    # ic_plot.loglog(agg_data["lam"], agg_data["jones_sr3"], label="Jones SR3")
+    # ic_plot.loglog(agg_data["lam"], agg_data["jones"], label="Jones SR3-P")
+    ic_plot.legend(loc="lower left")
+    ic_plot.set_xlabel(r"$\lambda$, strength of LASSO regularizer")
+    ic_plot.set_ylabel(r"Information criterion")
+    ic_plot.set_title("Random-effects selection quality along LASSO path")
 
     #     lambda_l1_plot = fig.add_subplot(grid[3, :])
     #     lambda_l1_plot.semilogx(agg_data["lam"], agg_data["acc_l1"], label="Acc L1")

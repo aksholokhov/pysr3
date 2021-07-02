@@ -92,7 +92,14 @@ def run_cad_comparison_experiment(num_trials, num_covariates, model_parameters, 
                 CAD_SR3_model = SR3CADLmeModel(**model_parameters,
                                                stepping="fixed",
                                                rho=rho,
-                                               lam=lam)
+                                               lam=lam,
+                                               practical=False)
+                CAD_SR3_model_practical = SR3CADLmeModel(**model_parameters,
+                                               stepping="fixed",
+                                               rho=rho,
+                                               lam=lam,
+                                               practical=True)
+
                 tic = time.perf_counter()
                 toc = tic
                 try:
@@ -107,11 +114,15 @@ def run_cad_comparison_experiment(num_trials, num_covariates, model_parameters, 
                     CAD_results = {
                         "i": i,
                         "lam": lam,
+                        "rho": rho,
                         "model": "CAD",
                         "time": toc - tic,
                         "mse": mean_squared_error(y, CAD_y_pred),
                         "evar": explained_variance_score(y, CAD_y_pred),
                         "loss": CAD_model.logger_.get("loss")[-1],
+                        "muller": CAD_model.muller2018ic(),
+                        "jones": CAD_model.jones2010bic(),
+                        "vaida": CAD_model.vaida2005aic(),
                         "fe_tp": np.sum((true_beta != 0) & (CAD_model.coef_["beta"] != 0)),
                         "fe_tn": np.sum((true_beta == 0) & (CAD_model.coef_["beta"] == 0)),
                         "fe_fp": np.sum((true_beta == 0) & (CAD_model.coef_["beta"] != 0)),
@@ -137,12 +148,16 @@ def run_cad_comparison_experiment(num_trials, num_covariates, model_parameters, 
 
                     CAD_sr3_results = {
                         "i": i,
-                        "lam": rho,
+                        "lam": lam,
+                        "rho": rho,
                         "model": "SR3_CAD",
                         "time": toc - tic,
                         "mse": mean_squared_error(y, CAD_sr3_y_pred),
                         "evar": explained_variance_score(y, CAD_sr3_y_pred),
                         "loss": CAD_SR3_model.logger_.get("loss")[-1],
+                        "muller": CAD_SR3_model.muller2018ic(),
+                        "jones": CAD_SR3_model.jones2010bic(),
+                        "vaida": CAD_SR3_model.vaida2005aic(),
                         "fe_tp": np.sum((true_beta != 0) & (CAD_SR3_model.coef_["beta"] != 0)),
                         "fe_tn": np.sum((true_beta == 0) & (CAD_SR3_model.coef_["beta"] == 0)),
                         "fe_fp": np.sum((true_beta == 0) & (CAD_SR3_model.coef_["beta"] != 0)),
@@ -155,13 +170,51 @@ def run_cad_comparison_experiment(num_trials, num_covariates, model_parameters, 
                         "converged": SR3_converged
                     }
                     log = log.append(CAD_sr3_results, ignore_index=True)
+                tic = time.perf_counter()
+                toc = tic
+                try:
+                    CAD_SR3_model_practical.fit_problem(problem, initial_parameters=sr3_initials)
+                    toc = time.perf_counter()
+                except np.linalg.LinAlgError:
+                    toc = time.perf_counter()
+                    SR3_converged = 0
+                finally:
+                    CAD_sr3_y_pred = CAD_SR3_model_practical.predict_problem(problem)
+
+                    CAD_sr3_results_practical = {
+                        "i": i,
+                        "lam": lam,
+                        "rho": rho,
+                        "model": "SR3_CAD_P",
+                        "time": toc - tic,
+                        "mse": mean_squared_error(y, CAD_sr3_y_pred),
+                        "evar": explained_variance_score(y, CAD_sr3_y_pred),
+                        "loss": CAD_SR3_model_practical.logger_.get("loss")[-1],
+                        "muller": CAD_SR3_model_practical.muller2018ic(),
+                        "jones": CAD_SR3_model_practical.jones2010bic(),
+                        "vaida": CAD_SR3_model_practical.vaida2005aic(),
+                        "fe_tp": np.sum((true_beta != 0) & (CAD_SR3_model_practical.coef_["beta"] != 0)),
+                        "fe_tn": np.sum((true_beta == 0) & (CAD_SR3_model_practical.coef_["beta"] == 0)),
+                        "fe_fp": np.sum((true_beta == 0) & (CAD_SR3_model_practical.coef_["beta"] != 0)),
+                        "fe_fn": np.sum((true_beta != 0) & (CAD_SR3_model_practical.coef_["beta"] == 0)),
+                        "re_tp": np.sum((true_gamma != 0) & (CAD_SR3_model_practical.coef_["gamma"] != 0)),
+                        "re_tn": np.sum((true_gamma == 0) & (CAD_SR3_model_practical.coef_["gamma"] == 0)),
+                        "re_fp": np.sum((true_gamma == 0) & (CAD_SR3_model_practical.coef_["gamma"] != 0)),
+                        "re_fn": np.sum((true_gamma != 0) & (CAD_SR3_model_practical.coef_["gamma"] == 0)),
+                        "number_of_iterations": len(CAD_SR3_model_practical.logger_.get("loss")),
+                        "converged": SR3_converged
+                    }
+                    log = log.append(CAD_sr3_results_practical, ignore_index=True)
 
                 print(f"lam={lam}, ({CAD_results['time']:.2f}) cad fe = {sum(CAD_model.coef_['beta'] != 0)}," +
                       f" cad re = {sum(CAD_model.coef_['gamma'] != 0)}, " +
                       f" sr3 ({CAD_sr3_results['time']:.2f})  fe = {sum(CAD_SR3_model.coef_['beta'] != 0)}," +
-                      f" sr3 re = {sum(CAD_SR3_model.coef_['gamma'] != 0)}")
+                      f" sr3 re = {sum(CAD_SR3_model.coef_['gamma'] != 0)}" +
+                      f" sr3p ({CAD_sr3_results_practical['time']:.2f})  fe = {sum(CAD_SR3_model_practical.coef_['beta'] != 0)}," +
+                      f" sr3p re = {sum(CAD_SR3_model_practical.coef_['gamma'] != 0)}"
+                      )
 
-                lam = 1.05 * (lam + 0.1)
+                lam = 1.05 * (lam + 1e-3)
 
                 if rho < 1e-8:
                     all_coefficients_are_dead = True
@@ -170,7 +223,7 @@ def run_cad_comparison_experiment(num_trials, num_covariates, model_parameters, 
         now = datetime.datetime.now()
         log_filename = Path(logs_folder) / f"log_cad_{now}.csv"
         log.to_csv(log_filename)
-        print(f"L1 experiment: data saved as {log_filename}")
+        print(f"CAD experiment: data saved as {log_filename}")
         with open(Path(logs_folder) / f"params_cad_{now}.csv", 'wb') as f:
             pickle.dump({
                 "num_trials": num_trials,
@@ -209,9 +262,11 @@ def plot_cad_comparison(data, rho, suffix=None, figures_folder="."):
 
     cad_data = data[data["model"] == "CAD"]
     sr3_cad_data = data[data["model"] == "SR3_CAD"]
+    sr3_cad_p_data = data[data["model"] == "SR3_CAD_P"]
 
     agg_data = sr3_cad_data.copy()
     agg_data = agg_data.merge(cad_data, on="lam", suffixes=("_sr3", "_cad"))
+    agg_data = agg_data.merge(sr3_cad_p_data, on="lam", suffixes=("", "_sr3p"))
 
     base_size = 5
     fig = plt.figure(figsize=(2 * base_size, 2 * base_size))
@@ -242,6 +297,7 @@ def plot_cad_comparison(data, rho, suffix=None, figures_folder="."):
     # fe_plot.semilogx(agg_data["lam"], agg_data["f1_l1"], label="F1 L1")
     fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1_cad"], label="CAD")
     fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1_sr3"], label="CAD SR3")
+    #fe_plot.semilogx(agg_data["lam"], agg_data["fe_f1"], label="CAD SR3-P")
     fe_plot.legend(loc="lower left")
     fe_plot.set_xlabel(r"$\lambda$, strength of CAD regularizer")
     fe_plot.set_ylabel(r"F1, selection quality for fixed effects")
@@ -249,12 +305,25 @@ def plot_cad_comparison(data, rho, suffix=None, figures_folder="."):
 
     re_plot = fig.add_subplot(grid[1, :2])
     # re_plot.semilogx(agg_data["lam"], agg_data["f1_sr3"], label="F1 SR3")
-    re_plot.semilogx(agg_data["lam"], agg_data["re_f1_cad"], label="F1 for RE selection with CAD")
-    re_plot.semilogx(agg_data["lam"], agg_data["re_f1_sr3"], label="F1 for RE selection with CAD SR3 ")
+    re_plot.semilogx(agg_data["lam"], agg_data["re_f1_cad"], label="CAD")
+    re_plot.semilogx(agg_data["lam"], agg_data["re_f1_sr3"], label="CAD SR3")
+    #re_plot.semilogx(agg_data["lam"], agg_data["re_f1"], label="CAD SR3-P")
     re_plot.legend(loc="lower left")
     re_plot.set_xlabel(r"$\lambda$, strength of CAD regularizer")
     re_plot.set_ylabel(r"F1, selection quality for random effects")
     re_plot.set_title(f"Random-effects selection quality along CAD path, rho={rho}")
+
+    # ic_plot = fig.add_subplot(grid[2, :2])
+    # ic_plot.semilogx(agg_data["lam"], agg_data["muller_cad"], label="Mueller CAD")
+    # ic_plot.semilogx(agg_data["lam"], agg_data["muller_sr3"], label="Mueller SR3 CAD")
+    # ic_plot.semilogx(agg_data["lam"], agg_data["muller"], label="Mueller SR3 CAD-P")
+    # # ic_plot.semilogx(agg_data["lam"], agg_data["vaida_cad"], label="Vaida CAD")
+    # # ic_plot.semilogx(agg_data["lam"], agg_data["vaida_sr3"], label="Vaida SR3 CAD")
+    # # ic_plot.semilogx(agg_data["lam"], agg_data["jones_cad"], label="Jones CAD")
+    # # ic_plot.semilogx(agg_data["lam"], agg_data["jones_sr3"], label="Jones SR3 CAD")
+    # ic_plot.legend(loc="lower left")
+    # ic_plot.set_xlabel(r"$\lambda$, strength of LASSO regularizer")
+    # ic_plot.set_ylabel(r"Information criterion")
 
     #     lambda_l1_plot = fig.add_subplot(grid[3, :])
     #     lambda_l1_plot.semilogx(agg_data["lam"], agg_data["acc_l1"], label="Acc L1")

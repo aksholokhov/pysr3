@@ -52,7 +52,15 @@ def run_l0_comparison_experiment(num_trials, num_covariates, model_parameters, p
                 l0_SR3_model = Sr3L0LmeModel(**model_parameters,
                                              stepping="fixed",
                                              nnz_tbeta=j,
-                                             nnz_tgamma=j)
+                                             nnz_tgamma=j,
+                                             practical=False,
+                                             )
+                l0_SR3_model_practical = Sr3L0LmeModel(**model_parameters,
+                                             stepping="fixed",
+                                             nnz_tbeta=j,
+                                             nnz_tgamma=j,
+                                             practical=True,
+                                             )
                 tic = time.perf_counter()
                 toc = tic
                 try:
@@ -72,6 +80,9 @@ def run_l0_comparison_experiment(num_trials, num_covariates, model_parameters, p
                         "mse": mean_squared_error(y, l0_y_pred),
                         "evar": explained_variance_score(y, l0_y_pred),
                         "loss": l0_model.logger_.get("loss")[-1],
+                        "muller": l0_model.muller2018ic(),
+                        "jones": l0_model.jones2010bic(),
+                        "vaida": l0_model.vaida2005aic(),
                         "fe_tp": np.sum((true_beta != 0) & (l0_model.coef_["beta"] != 0)),
                         "fe_tn": np.sum((true_beta == 0) & (l0_model.coef_["beta"] == 0)),
                         "fe_fp": np.sum((true_beta == 0) & (l0_model.coef_["beta"] != 0)),
@@ -103,6 +114,9 @@ def run_l0_comparison_experiment(num_trials, num_covariates, model_parameters, p
                         "mse": mean_squared_error(y, l0_sr3_y_pred),
                         "evar": explained_variance_score(y, l0_sr3_y_pred),
                         "loss": l0_SR3_model.logger_.get("loss")[-1],
+                        "muller": l0_SR3_model.muller2018ic(),
+                        "jones": l0_SR3_model.jones2010bic(),
+                        "vaida": l0_SR3_model.vaida2005aic(),
                         "fe_tp": np.sum((true_beta != 0) & (l0_SR3_model.coef_["beta"] != 0)),
                         "fe_tn": np.sum((true_beta == 0) & (l0_SR3_model.coef_["beta"] == 0)),
                         "fe_fp": np.sum((true_beta == 0) & (l0_SR3_model.coef_["beta"] != 0)),
@@ -116,10 +130,48 @@ def run_l0_comparison_experiment(num_trials, num_covariates, model_parameters, p
                     }
                     log = log.append(l0_sr3_results, ignore_index=True)
 
-                print(f"nnz={j}, l1 fe = {sum(l0_model.coef_['beta'] != 0)}," +
+                tic = time.perf_counter()
+                toc = tic
+                try:
+                    l0_SR3_model_practical.fit_problem(problem, initial_parameters=sr3_initials)
+                    toc = time.perf_counter()
+                except np.linalg.LinAlgError:
+                    toc = time.perf_counter()
+                    l0_SR3_converged = 0
+                finally:
+                    l0_sr3_y_pred = l0_SR3_model_practical.predict_problem(problem)
+
+                    l0_sr3_results_practical = {
+                        "i": i,
+                        "nnz": j,
+                        "model": "SR3_L0_P",
+                        "time": toc - tic,
+                        "mse": mean_squared_error(y, l0_sr3_y_pred),
+                        "evar": explained_variance_score(y, l0_sr3_y_pred),
+                        "loss": l0_SR3_model_practical.logger_.get("loss")[-1],
+                        "muller": l0_SR3_model_practical.muller2018ic(),
+                        "jones": l0_SR3_model_practical.jones2010bic(),
+                        "vaida": l0_SR3_model_practical.vaida2005aic(),
+                        "fe_tp": np.sum((true_beta != 0) & (l0_SR3_model_practical.coef_["beta"] != 0)),
+                        "fe_tn": np.sum((true_beta == 0) & (l0_SR3_model_practical.coef_["beta"] == 0)),
+                        "fe_fp": np.sum((true_beta == 0) & (l0_SR3_model_practical.coef_["beta"] != 0)),
+                        "fe_fn": np.sum((true_beta != 0) & (l0_SR3_model_practical.coef_["beta"] == 0)),
+                        "re_tp": np.sum((true_gamma != 0) & (l0_SR3_model_practical.coef_["gamma"] != 0)),
+                        "re_tn": np.sum((true_gamma == 0) & (l0_SR3_model_practical.coef_["gamma"] == 0)),
+                        "re_fp": np.sum((true_gamma == 0) & (l0_SR3_model_practical.coef_["gamma"] != 0)),
+                        "re_fn": np.sum((true_gamma != 0) & (l0_SR3_model_practical.coef_["gamma"] == 0)),
+                        "number_of_iterations": len(l0_SR3_model_practical.logger_.get("loss")),
+                        "converged": l0_SR3_converged
+                    }
+                    log = log.append(l0_sr3_results_practical, ignore_index=True)
+
+                print(f"nnz={j}, l1 ({l0_results['time']:.2f}) fe = {sum(l0_model.coef_['beta'] != 0)}," +
                       f" l1 re = {sum(l0_model.coef_['gamma'] != 0)}, " +
-                      f" sr3 fe = {sum(l0_SR3_model.coef_['beta'] != 0)}," +
-                      f" sr3 re = {sum(l0_SR3_model.coef_['gamma'] != 0)}")
+                      f" sr3 ({l0_sr3_results['time']:.2f}) fe = {sum(l0_SR3_model.coef_['beta'] != 0)}," +
+                      f" sr3 re = {sum(l0_SR3_model.coef_['gamma'] != 0)}" +
+                      f" sr3p ({l0_sr3_results_practical['time']:.2f}) fe = {sum(l0_SR3_model_practical.coef_['beta'] != 0)}," +
+                      f" sr3p re = {sum(l0_SR3_model_practical.coef_['gamma'] != 0)}"
+                      )
 
     finally:
         now = datetime.datetime.now()
@@ -165,13 +217,15 @@ def plot_l0_comparison(data, suffix=None, figures_folder="."):
 
     l1_data = data[data["model"] == "L0"]
     sr3_data = data[data["model"] == "SR3_L0"]
+    sr3_p_data = data[data["model"] == "SR3_L0_P"]
 
     agg_data = sr3_data.copy()
     agg_data = agg_data.merge(l1_data, on="nnz", suffixes=("_sr3", "_l1"))
+    agg_data = agg_data.merge(sr3_p_data, on="nnz", suffixes=("", "_sr3p"))
 
     base_size = 5
-    fig = plt.figure(figsize=(2 * base_size, 2 * base_size))
-    grid = plt.GridSpec(nrows=2, ncols=2)
+    fig = plt.figure(figsize=(3 * base_size, 2 * base_size))
+    grid = plt.GridSpec(nrows=3, ncols=2)
 
     #     fe_plot = fig.add_subplot(grid[0, 0])
     #     fe_plot.scatter(agg_data["fe_fpr_sr3"], agg_data["fe_sensitivity_sr3"], label="sr3")
@@ -198,8 +252,9 @@ def plot_l0_comparison(data, suffix=None, figures_folder="."):
     # fe_plot.plot(agg_data["nnz"], agg_data["f1_l1"], label="F1 L0")
     fe_plot.plot(agg_data["nnz"], agg_data["fe_f1_l1"], label="L0")
     fe_plot.plot(agg_data["nnz"], agg_data["fe_f1_sr3"], label="L0 SR3")
+    fe_plot.plot(agg_data["nnz"], agg_data["fe_f1"], label="L0 SR3-P")
     fe_plot.legend(loc="upper left")
-    fe_plot.set_xlabel(r"$k$, number of allowed NNZ coeffixients")
+    fe_plot.set_xlabel(r"$k$, number of allowed NNZ coefficients")
     fe_plot.set_ylabel(r"F1, selection quality for fixed effects")
     fe_plot.set_title("Fixed-effects selection quality along L0-path")
 
@@ -207,10 +262,25 @@ def plot_l0_comparison(data, suffix=None, figures_folder="."):
     # re_plot.plot(agg_data["nnz"], agg_data["f1_sr3"], label="F1 SR3")
     re_plot.plot(agg_data["nnz"], agg_data["re_f1_l1"], label="L0")
     re_plot.plot(agg_data["nnz"], agg_data["re_f1_sr3"], label="L0 SR3")
+    re_plot.plot(agg_data["nnz"], agg_data["re_f1"], label="L0 SR3-P")
     re_plot.legend(loc="upper left")
     re_plot.set_xlabel(r"$k$, number of allowed NNZ coeffixients")
     re_plot.set_ylabel(r"F1, selection quality for random effects")
     re_plot.set_title("Random-effects selection quality along L0-path")
+
+    ic_plot = fig.add_subplot(grid[2, :2])
+    ic_plot.loglog(agg_data["nnz"], agg_data["muller_l1"], label="Mueller L0")
+    ic_plot.loglog(agg_data["nnz"], agg_data["muller_sr3"], label="Mueller SR3")
+    ic_plot.loglog(agg_data["nnz"], agg_data["muller"], label="Mueller SR3-P")
+    ic_plot.loglog(agg_data["nnz"], agg_data["vaida_l1"], label="Vaida L0")
+    ic_plot.loglog(agg_data["nnz"], agg_data["vaida_sr3"], label="Vaida SR3")
+    ic_plot.loglog(agg_data["nnz"], agg_data["vaida"], label="Vaida SR3-P")
+    ic_plot.loglog(agg_data["nnz"], agg_data["jones_l1"], label="Jones L0")
+    ic_plot.loglog(agg_data["nnz"], agg_data["jones_sr3"], label="Jones SR3")
+    ic_plot.loglog(agg_data["nnz"], agg_data["jones"], label="Jones SR3-P")
+    ic_plot.legend(loc="lower left")
+    ic_plot.set_xlabel(r"$k$, number of allowed NNZ coefficients")
+    ic_plot.set_ylabel(r"Information criterion")
 
     #     lambda_l1_plot = fig.add_subplot(grid[3, :])
     #     lambda_l1_plot.plot(agg_data["nnz"], agg_data["tp_l1"], label="tp L0")
