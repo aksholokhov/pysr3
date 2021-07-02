@@ -24,7 +24,7 @@ from sklearn.utils.validation import check_consistent_length, check_is_fitted
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized, LinearLMEOracleW, LinearLMELassoOracle, \
     LinearLMEOracleSR3
-from skmixed.solvers import PGDSolver, FakePGDSolver
+from skmixed.solvers import PGDSolver, FakePGDSolver, Fista
 from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
@@ -798,10 +798,11 @@ class Sr3L0LmeModel(LMEModel):
                  warm_start=True,
                  practical=False,
                  update_prox_every=1,
+                 fixed_step_len = None,
                  **kwargs):
         solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=1 if max(lb, lg) == 0 else 1 / max(lb, lg))
+                           fixed_step_len=(1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start)
         regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
@@ -825,8 +826,9 @@ class L0LmeModel(LMEModel):
                  nnz_tgamma: int = 1,
                  participation_in_selection=None,
                  logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None)
         regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
                                     nnz_tgamma=nnz_tgamma,
@@ -847,10 +849,61 @@ class L1LmeModel(LMEModel):
                  stepping: str = "line-search",
                  lam: float = 1,
                  logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None)
         regularizer = L1Regularizer(lam=lam)
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         initializer=initializer,
+                         logger_keys=logger_keys)
+
+
+class L1FistaLMEModel(LMEModel):
+    def __init__(self,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 lam: float = 1,
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len = None,
+                 **kwargs):
+        solver = Fista(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
+        oracle = LinearLMEOracle(None)
+        regularizer = L1Regularizer(lam=lam)
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         initializer=initializer,
+                         logger_keys=logger_keys)
+
+
+class SR3L1FistaLmeModel(LMEModel):
+    def __init__(self,
+                 tol_oracle: float = 1e-5,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_oracle: int = 1000,
+                 max_iter_solver: int = 20,
+                 stepping: str = "fixed",
+                 lb: float = 1,
+                 lg: float = 1,
+                 lam: float = 1,
+                 logger_keys: Set = ('converged',),
+                 warm_start=True,
+                 practical=False,
+                 update_prox_every=1,
+                 fixed_step_len = None,
+                 **kwargs):
+        regularizer = L1Regularizer(lam=lam)
+        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
+        solver = Fista(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=fixed_step_len)
+        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
+                                    warm_start=warm_start)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -873,9 +926,10 @@ class SR3L1LmeModel(LMEModel):
                  warm_start=True,
                  practical=False,
                  update_prox_every=1,
+                 fixed_step_len = None,
                  **kwargs):
         regularizer = L1Regularizer(lam=lam)
-        fixed_step_len = 1 if max(lb, lg) == 0 else 1 / max(lb, lg)
+        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
         solver = FakePGDSolver(fixed_step_len=fixed_step_len, update_prox_every=update_prox_every) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=fixed_step_len)
@@ -897,8 +951,9 @@ class CADLmeModel(LMEModel):
                  rho: float = 1.0,
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
+                 fixed_step_len = None,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None)
         regularizer = CADRegularizer(rho=rho, lam=lam)
         super().__init__(oracle=oracle,
@@ -924,8 +979,9 @@ class SR3CADLmeModel(LMEModel):
                  warm_start=True,
                  practical=False,
                  update_prox_every=1,
+                 fixed_step_len=None,
                  **kwargs):
-        fixed_step_len = 1 if max(lb, lg) == 0 else 1 / max(lb, lg)
+        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
         solver = FakePGDSolver(update_prox_every=update_prox_every, fixed_step_len=fixed_step_len) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=fixed_step_len)
