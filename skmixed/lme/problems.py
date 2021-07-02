@@ -116,7 +116,8 @@ class LinearLMEProblem(LMEProblem):
                  generator_params: dict = None,
                  chance_missing: float = 0.0,
                  chance_outlier: float = 0.0,
-                 outlier_multiplier: float = 5.0
+                 outlier_multiplier: float = 5.0,
+                 distribution="normal",
                  ):
         """
 
@@ -306,9 +307,14 @@ class LinearLMEProblem(LMEProblem):
             # generate ALL the data iteratively and
             # try to find features which don't give too much granular subdivision
             if num_features_to_generate > 0:
-                all_data_in_one_matrix = np.random.multivariate_normal(np.zeros(num_features_to_generate),
-                                                                       features_covariance_matrix,
-                                                                       num_objects)
+                if distribution == "normal":
+                    all_data_in_one_matrix = np.random.multivariate_normal(np.zeros(num_features_to_generate),
+                                                                           features_covariance_matrix,
+                                                                           num_objects)
+                elif distribution == "uniform":
+                    all_data_in_one_matrix = np.random.uniform(-2, 2, (num_objects, num_features_to_generate))
+                else:
+                    raise ValueError("Unknown distribution")
                 # add intercept to the left
                 all_data_in_one_matrix = np.hstack([np.ones(num_objects).reshape((-1, 1)), all_data_in_one_matrix])
             else:
