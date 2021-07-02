@@ -24,6 +24,7 @@ from scipy.optimize import minimize
 from scipy.optimize import LinearConstraint
 
 from skmixed.lme.problems import LinearLMEProblem
+from typing import Optional
 
 
 class LinearLMEOracle:
@@ -44,7 +45,7 @@ class LinearLMEOracle:
 
     """
 
-    def __init__(self, problem: LinearLMEProblem, n_iter_inner=1, tol_inner=1e-4, warm_start_duals=False):
+    def __init__(self, problem: Optional[LinearLMEProblem], n_iter_inner=200, tol_inner=1e-6, warm_start_duals=False):
         """
         Creates an oracle on top of the given problem
 
@@ -53,11 +54,20 @@ class LinearLMEOracle:
         problem : LinearLMEProblem
             set of data and answers. See docs for LinearLMEProblem class for more details.
         """
-
         self.problem = problem
+        self.beta_to_gamma_map = None
         self.omega_cholesky_inv = []
         self.omega_cholesky = []
         self.gamma = None
+        self.n_iter_inner = n_iter_inner
+        self.tol_inner = tol_inner
+        if warm_start_duals:
+            self.v = None
+        if problem:
+            self.instantiate(problem)
+
+    def instantiate(self, problem):
+        self.problem = problem
         beta_to_gamma_map = np.zeros(self.problem.num_fixed_effects)
         beta_counter = 0
         gamma_counter = 0
@@ -74,10 +84,13 @@ class LinearLMEOracle:
             else:
                 continue
         self.beta_to_gamma_map = beta_to_gamma_map
-        self.n_iter_inner = n_iter_inner
-        self.tol_inner = tol_inner
-        if warm_start_duals:
-            self.v = None
+
+    def forget(self):
+        self.problem = None
+        self.beta_to_gamma_map = None
+        self.omega_cholesky_inv = []
+        self.omega_cholesky = []
+        self.gamma = None
 
     def _recalculate_cholesky(self, gamma: np.ndarray):
         """
@@ -321,17 +334,26 @@ class LinearLMEOracle:
         gamma = x[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects]
         return beta, gamma
 
-    def joint_loss(self, x):
+    def beta_gamma_to_x(self, beta, gamma):
+        return np.concatenate([beta, gamma])
+
+    def joint_loss(self, x, *args, **kwargs):
         beta, gamma = self.x_to_beta_gamma(x)
         return self.loss(beta, gamma)
 
-    def joint_gradient(self, x):
+    def joint_gradient(self, x, *args, **kwargs):
         beta, gamma = self.x_to_beta_gamma(x)
         gradient = np.zeros(len(x))
         gradient[:self.problem.num_fixed_effects] = self.gradient_beta(beta, gamma)
         gradient[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects] = \
             self.gradient_gamma(beta, gamma)
         return gradient
+
+    def value_function(self, w):
+        return self.joint_loss(w)
+
+    def gradient_value_function(self, w):
+        return self.joint_gradient(w)
 
     def optimal_beta(self, gamma: np.ndarray, _dont_solve_wrt_beta=False, **kwargs):
         """
@@ -436,13 +458,15 @@ class LinearLMEOracle:
         # From here
         # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
         self._recalculate_cholesky(gamma)
-        return self.loss(beta, gamma, **kwargs) + (len(beta) + len(gamma)) * np.log(self._jones2010n_eff())
+        p = sum(beta != 0)
+        q = sum(gamma != 0)
+        return self.value_function(self.beta_gamma_to_x(beta, gamma)) + (p + q) * np.log(self._jones2010n_eff())
 
     def muller2018ic(self, beta, gamma, **kwargs):
         self._recalculate_cholesky(gamma)
         N = self.problem.num_obs
         n_eff = self._jones2010n_eff()
-        return 2 / N * self.loss(beta, gamma, **kwargs) \
+        return 2 / N * self.value_function(self.beta_gamma_to_x(beta, gamma)) \
                + 1 / N * np.log(n_eff) * sum(beta != 0) \
                + 2 / N * sum(gamma != 0)
 
@@ -502,7 +526,7 @@ class LinearLMEOracle:
         alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2 * self.loss(beta, gamma, **kwargs) + alpha * (p + q)
+        return 2 * self.value_function(self.beta_gamma_to_x(beta, gamma)) + alpha * (p + q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         if ic == "IC_vaida2005aic":
@@ -511,6 +535,306 @@ class LinearLMEOracle:
             return self.jones2010bic(beta, gamma, **kwargs)
         else:
             raise ValueError(f"Unknown information criterion: {ic}")
+
+    def get_condition_numbers(self):
+        singv_x = []
+        singv_z = []
+        for x, y, z, l in self.problem:
+            U, Sx, V = np.linalg.svd(x.T.dot(x))
+            U, Sz, V = np.linalg.svd(z.T.dot(z))
+            singv_x += list(Sx)
+            singv_z += list(Sz)
+
+        return (np.infty if min(singv_x) == 0 else max(singv_x) / min(singv_x),
+                np.infty if min(singv_z) == 0 else max(singv_z) / min(singv_z))
+
+
+class LinearLMEOracleSR3(LinearLMEOracle):
+    """
+       Implements Regularized Linear Mixed-Effects Model functional for given problem::
+
+           Y_i = X_i*β + Z_i*u_i + 𝜺_i,
+
+           where
+
+           β ~ 𝒩(tb, 1/lb),
+
+           ||tβ||_0 = nnz(β) <= nnz_tbeta,
+
+           u_i ~ 𝒩(0, diag(𝛄)),
+
+           𝛄 ~ 𝒩(t𝛄, 1/lg),
+
+           ||t𝛄||_0 = nnz(t𝛄) <= nnz_tgamma,
+
+           𝜺_i ~ 𝒩(0, Λ)
+
+       Here tβ and t𝛄 are single variables, not multiplications (e.g. not t*β). This oracle is designed for
+       a solver (LinearLMESparseModel) which searches for a sparse solution (tβ, t𝛄) with at most k and j <= k non-zero
+       elements respectively. For more details, see the documentation for LinearLMESparseModel.
+
+       The problem should be provided as LinearLMEProblem.
+
+       """
+
+    def __init__(self, problem: Optional[LinearLMEProblem], lb=0.1, lg=0.1, warm_start=True, **kwargs):
+        """
+        Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
+
+        Parameters
+        ----------
+        problem: LinearLMEProblem
+            The set of data and answers. See the docs for LinearLMEProblem for more details.
+        lb : float
+            Regularization coefficient (inverse std) for ||β - tβ||^2
+        lg : float
+            Regularization coefficient (inverse std) for ||𝛄 - t𝛄||^2
+        """
+
+        super().__init__(problem, **kwargs)
+        self.lb = lb
+        self.lg = lg
+        self.warm_start = warm_start
+        self.warm_start_ip = {}
+
+    def loss(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
+        """
+        Returns the loss function value ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [n]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [k]
+            Vector of estimates of random effects.
+        tbeta : np.ndarray, shape = [n]
+            Vector of (nnz_tbeta)-sparse estimates of fixed effects.
+        tgamma : np.ndarray, shape = [k]
+            Vector of (nnz_tgamma)-sparse estimates of random effects.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters.
+
+        Returns
+        -------
+            result : float
+                The value of the loss function: ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2
+        """
+
+        return (super().loss(beta, gamma, **kwargs)
+                + self.lb / 2 * sum((beta - tbeta) ** 2)
+                + self.lg / 2 * sum((gamma - tgamma) ** 2))
+
+    def gradient_gamma(self, beta: np.ndarray, gamma: np.ndarray, tgamma: np.ndarray = None, **kwargs) -> np.ndarray:
+        """
+        Returns the gradient of the loss function with respect to gamma: grad_gamma =  ∇_𝛄[ℒ](β, 𝛄) + lg*(𝛄 - t𝛄)
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [n]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [k]
+            Vector of estimates of random effects.
+        tgamma : np.ndarray, shape = [k]
+            Vector of (nnz_tgamma)-sparse covariance estimates of random effects.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+            grad_gamma: np.ndarray, shape = [k]
+                The gradient of the loss function with respect to gamma: grad_gamma = ∇_𝛄[ℒ](β, 𝛄) + lg*(𝛄 - t𝛄)
+        """
+
+        return super().gradient_gamma(beta, gamma, **kwargs) + self.lg * (gamma - tgamma)
+
+    def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Returns the Hessian of the loss function with respect to gamma: ∇²_𝛄[ℒ](β, 𝛄) + lg*I.
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [n]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [k]
+            Vector of estimates of random effects.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+            hessian: np.ndarray, shape = [k, k]
+                Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄) + lg*I.
+        """
+
+        return super().hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_effects)
+
+    def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, **kwargs) -> np.ndarray:
+        return super().gradient_beta(beta, gamma, **kwargs) + self.lb * (beta - tbeta)
+
+    def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        return super().hessian_beta(beta, gamma, **kwargs) + self.lb * np.eye(self.problem.num_fixed_effects)
+
+    def joint_loss(self, x, w, *args, **kwargs):
+        beta, gamma = self.x_to_beta_gamma(x)
+        return self.loss(beta, gamma)
+
+    def joint_gradient(self, x, tbeta=None, tgamma=None):
+        beta, gamma = self.x_to_beta_gamma(x)
+        gradient = np.zeros(len(x))
+        gradient[:self.problem.num_fixed_effects] = self.gradient_beta(beta, gamma, tbeta=tbeta)
+        gradient[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects] = \
+            self.gradient_gamma(beta, gamma, tgamma=tgamma)
+        return gradient
+
+    def value_function(self, w):
+        tbeta, tgamma = self.x_to_beta_gamma(w)
+        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
+                                                                          tgamma=tgamma)
+        return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma)
+
+    def gradient_value_function(self, w):
+        tbeta, tgamma = self.x_to_beta_gamma(w)
+        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
+                                                                          tgamma=tgamma)
+        x = self.beta_gamma_to_x(beta, gamma)
+        lambdas = np.array([self.lb] * self.problem.num_fixed_effects + [self.lg] * self.problem.num_random_effects)
+        return -lambdas * (x - w)
+
+    def find_optimal_parameters(self, w, log_progress=False, regularizer=None, increase_lambdas=False,
+                                   line_search=False, prox_step_len=1.0, update_prox_every=1,
+                                   **kwargs):
+        tbeta, tgamma = self.x_to_beta_gamma(w)
+        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(beta=2 * tbeta,
+                                                                          gamma=2 * tgamma,
+                                                                          tbeta=tbeta,
+                                                                          tgamma=tgamma,
+                                                                          log_progress=log_progress,
+                                                                          regularizer=regularizer,
+                                                                          increase_lambdas=increase_lambdas,
+                                                                          line_search=line_search,
+                                                                          prox_step_len=prox_step_len,
+                                                                          update_prox_every=update_prox_every,
+                                                                          **kwargs)
+        return self.beta_gamma_to_x(tbeta, tgamma)
+
+    def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
+                                   log_progress=False, regularizer=None, increase_lambdas=False,
+                                   line_search=False, prox_step_len=1.0, update_prox_every=1,
+                                   **kwargs):
+        n = len(gamma)
+        I = np.eye(n)
+        Zb = np.zeros((len(gamma), len(beta)))
+        v = np.ones(n)
+
+        if self.warm_start:
+            beta = self.warm_start_ip.get("beta", beta)
+            gamma = self.warm_start_ip.get("gamma", gamma)
+
+        # The packing of variables is x = [v (dual for gamma), beta, gamma]
+        # All Lagrange gradients (F) and hessians (dF) have the same order of blocks.
+        x = np.concatenate([v, beta, gamma])
+        mu = 0.1 * v.dot(gamma) / n
+        step_len = 1
+        iteration = 0
+        if log_progress:
+            self.logger = [gamma]
+        losses_kkt = []
+        F_coord = lambda v, b, g, mu: np.concatenate([
+            v * g - mu,
+            self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+            self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+        ])
+        F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
+
+        prev_tbeta = np.infty
+        prev_tgamma = np.infty
+        prev_beta = np.infty
+        prev_gamma = np.infty
+
+        tbeta_tgamma_convergence = False
+
+        while step_len != 0 \
+                and iteration < self.n_iter_inner \
+                and np.linalg.norm(F(x, mu)) > self.tol_inner \
+                and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                     or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
+                     or np.linalg.norm(beta - prev_beta) > self.tol_inner
+                     or np.linalg.norm(gamma - prev_gamma) > self.tol_inner
+                     or tbeta_tgamma_convergence):
+            prev_beta = beta
+            prev_gamma = gamma
+            prev_tbeta = tbeta
+            prev_tgamma = tgamma
+
+            F_coord = lambda v, b, g, mu: np.concatenate([
+                v * g - mu,
+                self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+            ])
+            F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
+            dF_coord = lambda v, b, g: np.block([
+                [np.diag(g), Zb, np.diag(v)],
+                [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                 self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
+                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T,
+                 self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+            ])
+            dF = lambda x: dF_coord(x[:n], x[n:-n], x[-n:])
+            F_current = F(x, mu)
+            dF_current = dF(x)
+            direction = np.linalg.solve(dF_current, -F_current)
+            # Determining maximal step size (such that gamma >= 0 and v >= 0)
+            ind_neg_dir = np.where(direction < 0.0)[0]
+            ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n))]
+            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
+
+            if line_search:
+                res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+                                           x0=np.array([max_step_len]),
+                                           method="TNC",
+                                           jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
+                                               dF(x + alpha * direction).dot(direction)),
+                                           bounds=[(0, max_step_len)])
+                step_len = res.x
+            else:
+                step_len = 0.99 * max_step_len
+            x = x + step_len * direction
+            # x[x <= 1e-18] = 0  # killing effective zeros
+            v = x[:n]
+            beta = x[n:-n]
+            gamma = x[-n:]
+
+            iteration += 1
+
+
+            # optimize other components
+            if regularizer and update_prox_every > 0 and  iteration % update_prox_every == 0:
+                tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
+                tbeta, tgamma = self.x_to_beta_gamma(tx)
+
+            # losses.append(np.linalg.norm(F(x, mu)))
+            losses_kkt.append(np.linalg.norm(F(x, mu)))
+
+            if log_progress:
+                self.logger.append(x[n:])
+
+            # adjust barrier relaxation
+            mu = 0.1 * v.dot(gamma) / n
+
+            if increase_lambdas:
+                self.lb = 1.2 * (1 + self.lb)
+                self.lg = 1.2 * (1 + self.lg)
+                tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
+                                            or np.linalg.norm(gamma - tgamma) > self.tol_inner)
+                # optimize other components
+        if regularizer and update_prox_every > 0 and iteration < update_prox_every:
+            tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
+            tbeta, tgamma = self.x_to_beta_gamma(tx)
+
+        if self.warm_start:
+            self.warm_start_ip["beta"] = beta
+            self.warm_start_ip["gamma"] = gamma
+        return beta, gamma, tbeta, tgamma, losses_kkt
 
 
 class LinearLMEOracleRegularized(LinearLMEOracle):
@@ -561,6 +885,8 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         participation_in_selection : Tuple of Int, Optional, default = None
             Which features participate in selection. Defaults to None, which means all features participate in
             selection process
+        independent_beta_and_gamma: bool, Optional, default = False
+            True if we don't need to set gammas to 0 whenever their respective betas are zero
         """
 
         super().__init__(problem, **kwargs)
@@ -813,7 +1139,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
         prev_beta = np.infty
         prev_gamma = np.infty
 
-        tbeta_tgamma_convergence=False
+        tbeta_tgamma_convergence = False
 
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
@@ -871,7 +1197,7 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 self.lb = 1.2 * (1 + self.lb)
                 self.lg = 1.2 * (1 + self.lg)
                 tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
-                     or np.linalg.norm(gamma - tgamma) > self.tol_inner)
+                                            or np.linalg.norm(gamma - tgamma) > self.tol_inner)
 
             iteration += 1
             # losses.append(np.linalg.norm(F(x, mu)))
@@ -1045,51 +1371,3 @@ class LinearLMEOracleW(LinearLMEOracleRegularized):
     def jones2010bic(self, beta, gamma, tbeta=None, tgamma=None, **kwargs):
         self._recalculate_cholesky(gamma)
         return self.loss(beta, gamma, tbeta, tgamma) + (2 * len(beta) + 2 * len(gamma)) * np.log(self._jones2010n_eff())
-
-
-class LinearLMELassoOracle(LinearLMEOracle):
-    def __init__(self, problem: LinearLMEProblem, lb=0.1, lg=0.1):
-        """
-        Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
-
-        Parameters
-        ----------
-        problem: LinearLMEProblem
-            The set of data and answers. See the docs for LinearLMEProblem for more details.
-        lb : float
-            Regularization coefficient (inverse std) for ||β||_1
-        lg : float
-            Regularization coefficient (inverse std) for ||𝛄||_1
-        """
-
-        super().__init__(problem)
-        self.lb = lb
-        self.lg = lg
-        lambdas = np.zeros(problem.num_fixed_effects + problem.num_random_effects)
-        lambdas[:problem.num_fixed_effects] = lb
-        lambdas[problem.num_fixed_effects:problem.num_fixed_effects + problem.num_random_effects] = lg
-        self.lambdas = lambdas
-
-    def full_loss(self, x):
-        return self.joint_loss(x) + self.lambdas.dot(abs(x))
-
-    def prox_l1(self, x, step_len):
-        """
-        Applies proximal operator of l1 norm to x and returns result
-
-        Parameters
-        ----------
-        x : np.ndarray
-            vector to apply the proximal operator on
-        """
-        y = np.clip(x - step_len * self.lambdas, 0, None) - np.clip(-x - step_len * self.lambdas, 0, None)
-        y[self.problem.num_fixed_effects:] = np.clip(y[self.problem.num_fixed_effects:], 0, None)
-        return y
-
-    def prox_l1_beta(self, beta, step_len):
-        return np.clip(beta - step_len * self.lb, 0, None) - np.clip(-beta - step_len * self.lb, 0, None)
-
-    def prox_l1_gamma(self, gamma, step_len):
-        return np.clip(
-            np.clip(gamma - step_len * self.lambdas, 0, None) - np.clip(-gamma - step_len * self.lambdas, 0, None), 0,
-            None)

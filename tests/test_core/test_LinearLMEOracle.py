@@ -138,24 +138,25 @@ class TestLinearLMEOracle(TestCase):
         rtol = 1e-2
         atol = 1e-2
         for j in range(trials):
-            problem, true_parameters = LinearLMEProblem.generate(seed=j, random_intercept=True, features_labels=[3])
-            oracle = LinearLMEOracle(problem, n_iter_inner=1000)
-            beta = np.random.rand(problem.num_fixed_effects)
-            gamma = np.random.rand(problem.num_random_effects)
-            optimal_gamma_pgd = oracle.optimal_gamma(beta, gamma, method="pgd", log_progress=False)
-            # pgd_log = np.array(oracle.logger)
-            optimal_gamma_ip = oracle.optimal_gamma(beta, gamma, method="ip", log_progress=False)
-            # ip_log = np.array(oracle.logger)
-            # from matplotlib import pyplot as plt
-            # plt.scatter(ip_log[:, 0], ip_log[:, 1], label="ip")
-            # plt.scatter(pgd_log[:, 0], pgd_log[:, 1], label="pgd")
-            # plt.legend()
-            # plt.show()
-            self.assertTrue(allclose(optimal_gamma_pgd, optimal_gamma_ip, rtol=rtol, atol=atol),
-                            msg="PGD and IP do not match")
-            loss_pgd = oracle.loss(beta, optimal_gamma_pgd)
-            loss_ip = oracle.loss(beta, optimal_gamma_ip)
-            self.assertTrue(allclose(loss_pgd, loss_ip, rtol=rtol, atol=atol))
+            with self.subTest(j=j):
+                problem, true_parameters = LinearLMEProblem.generate(seed=j+42, random_intercept=True, features_labels=[3])
+                oracle = LinearLMEOracle(problem, n_iter_inner=1000)
+                beta = np.random.rand(problem.num_fixed_effects)
+                gamma = np.random.rand(problem.num_random_effects)
+                optimal_gamma_pgd = oracle.optimal_gamma(beta, gamma, method="pgd", log_progress=False)
+                # pgd_log = np.array(oracle.logger)
+                optimal_gamma_ip = oracle.optimal_gamma(beta, gamma, method="ip", log_progress=False)
+                # ip_log = np.array(oracle.logger)
+                # from matplotlib import pyplot as plt
+                # plt.scatter(ip_log[:, 0], ip_log[:, 1], label="ip")
+                # plt.scatter(pgd_log[:, 0], pgd_log[:, 1], label="pgd")
+                # plt.legend()
+                # plt.show()
+                self.assertTrue(allclose(optimal_gamma_pgd, optimal_gamma_ip, rtol=rtol, atol=atol),
+                                msg="PGD and IP do not match")
+                loss_pgd = oracle.loss(beta, optimal_gamma_pgd)
+                loss_ip = oracle.loss(beta, optimal_gamma_ip)
+                self.assertTrue(allclose(loss_pgd, loss_ip, rtol=rtol, atol=atol))
 
     def test_no_data_problem(self):
         random_seed = 43
