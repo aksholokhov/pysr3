@@ -18,6 +18,7 @@
 from typing import Union, Sized, List, Optional, Tuple
 
 import numpy as np
+import pandas as pd
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y
 
@@ -62,7 +63,9 @@ class LinearLMEProblem(LMEProblem):
                  order_of_objects: np.ndarray,
                  categorical_features: List[np.ndarray] = None,
                  answers=None,
-                 categorical_features_bootstrap_idx=None):
+                 categorical_features_bootstrap_idx=None,
+                 fe_regularization_weights=None,
+                 re_regularization_weights=None):
 
         super(LinearLMEProblem, self).__init__()
 
@@ -84,6 +87,8 @@ class LinearLMEProblem(LMEProblem):
         self.num_categorical_features = sum([label == 5 for label in column_labels])
 
         self.categorical_features_bootstrap_idx = categorical_features_bootstrap_idx
+        self.fe_regularization_weights = fe_regularization_weights
+        self.re_regularization_weights = re_regularization_weights
 
     def __iter__(self):
         self.__iteration_pos = 0
@@ -393,9 +398,9 @@ class LinearLMEProblem(LMEProblem):
             missing_and_outliers_mask = np.random.choice([0, 1, outlier_multiplier],
                                                          size=group_continuous_features.shape,
                                                          p=[
-                                                            chance_missing,
-                                                            1 - chance_missing - chance_outlier,
-                                                            chance_outlier
+                                                             chance_missing,
+                                                             1 - chance_missing - chance_outlier,
+                                                             chance_outlier
                                                          ])
             group_continuous_features *= missing_and_outliers_mask
             group_fixed_features = group_continuous_features[:, fixed_features_idx]
@@ -464,8 +469,9 @@ class LinearLMEProblem(LMEProblem):
                  columns_labels: List[int] = None,
                  random_intercept: bool = True,
                  fixed_intercept: bool = True,
-                 only_random_intercept: bool = False,
                  add_group_as_categorical_feature=False,
+                 must_include_fe: List[bool] = None,
+                 must_include_re: List[bool] = None,
                  **kwargs):
         """
         Transforms matrices x (data) and y(answers) into an instance of LinearLMEProblem
@@ -525,6 +531,11 @@ class LinearLMEProblem(LMEProblem):
         num_categorical_features = len(categorical_features_idx)
         groups_labels = unique_labels(x[:, group_labels_idx])
 
+        fe_regularization_weights = [1]*(len(fixed_features_idx) + 1) if not must_include_fe \
+            else [int(not must_include_fe[-1])] + [int(not flag) for flag in must_include_fe[fixed_features_idx]]
+        re_regularization_weights = [1]*(len(random_features_idx) + 1) if not must_include_re \
+            else [int(not must_include_re[-1])] + [int(not flag) for flag in must_include_re[random_features_idx]]
+
         if fixed_intercept & random_intercept:
             intercept_label = [3]
         elif random_intercept and not fixed_intercept:
@@ -542,6 +553,8 @@ class LinearLMEProblem(LMEProblem):
             'obs_stds': [],
             'group_labels': groups_labels,
             'column_labels': np.array(intercept_label + columns_labels),
+            'fe_regularization_weights': fe_regularization_weights,
+            're_regularization_weights': re_regularization_weights
         }
 
         order_of_objects = []
@@ -639,6 +652,58 @@ class LinearLMEProblem(LMEProblem):
             all_answers = None
         all_answers = all_answers[np.array(self.order_of_objects).argsort()]
         return data_with_column_labels, all_answers
+
+    @staticmethod
+    def from_dataframe(data: pd.DataFrame,
+                       fixed_effects: List[str],
+                       random_effects: List[str],
+                       groups: str,
+                       obs_std: str,
+                       target: str,
+                       must_include_fe: List[str],
+                       must_include_re: List[str]
+                       ):
+        if "intercept" in data.columns:
+            raise ValueError("intercept should not be in the data-frame")
+
+        for effect in fixed_effects + random_effects + [groups, obs_std, target] + must_include_fe + must_include_re:
+            if (effect != "intercept") and (effect not in data.columns):
+                raise ValueError(f"{effect} is not a column of the data-frame")
+
+        if not all(effect in fixed_effects for effect in must_include_fe):
+            raise ValueError("All elements from must_include_fe should also be in fixed_effects")
+        if not all(effect in random_effects for effect in must_include_re):
+            raise ValueError("All elements from must_include_re should also be in random_effects")
+
+        columns = []
+        column_labels = []
+
+        for effect in fixed_effects + random_effects:
+            if effect != "intercept":
+                if (effect in fixed_effects) and (effect in random_effects):
+                    column_labels.append(3)
+                elif effect in random_effects:
+                    column_labels.append(2)
+                else:
+                    column_labels.append(1)
+
+        must_include_fe_flags = [False, False] + [effect in must_include_fe for effect in columns] + ["intercept" in must_include_fe]
+        must_include_re_flags = [False, False] + [effect in must_include_re for effect in columns] + ["intercept" in must_include_re]
+
+        columns = [groups, obs_std] + columns
+        column_labels = [0, 4] + column_labels
+        must_include_fe_flags = []
+
+        x = data[columns].to_numpy()
+        y = data[target].to_numpy()
+        problem, answers = LinearLMEProblem.from_x_y(x=x,
+                                                     y=y,
+                                                     columns_labels=column_labels,
+                                                     fixed_intercept="intercept" in fixed_effects,
+                                                     random_intercept="intercept" in random_effects,
+                                                     must_include_fe=must_include_fe_flags,
+                                                     must_include_re=must_include_re_flags)
+        return problem, answers
 
     def pivot(self, categorical_features_set):
         """
