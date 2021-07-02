@@ -460,7 +460,7 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         p = sum(beta != 0)
         q = sum(gamma != 0)
-        return self.loss(beta=beta, gamma=gamma) + (p + q) * np.log(self._jones2010n_eff())
+        return self.value_function(self.beta_gamma_to_x(beta, gamma)) + (p + q) * np.log(self._jones2010n_eff())
 
     def muller2018ic(self, beta, gamma, **kwargs):
         self._recalculate_cholesky(gamma)
