@@ -64,6 +64,8 @@ class LinearLMEProblem(LMEProblem):
                  categorical_features: List[np.ndarray] = None,
                  answers=None,
                  categorical_features_bootstrap_idx=None,
+                 fe_columns=None,
+                 re_columns=None,
                  fe_regularization_weights=None,
                  re_regularization_weights=None):
 
@@ -87,6 +89,9 @@ class LinearLMEProblem(LMEProblem):
         self.num_categorical_features = sum([label == 5 for label in column_labels])
 
         self.categorical_features_bootstrap_idx = categorical_features_bootstrap_idx
+
+        self.fe_columns = fe_columns
+        self.re_columns = re_columns
         self.fe_regularization_weights = fe_regularization_weights
         self.re_regularization_weights = re_regularization_weights
 
@@ -466,6 +471,7 @@ class LinearLMEProblem(LMEProblem):
     @staticmethod
     def from_x_y(x: np.ndarray,
                  y: Optional[np.ndarray] = None,
+                 columns: List[str] = None,
                  columns_labels: List[int] = None,
                  random_intercept: bool = True,
                  fixed_intercept: bool = True,
@@ -522,7 +528,7 @@ class LinearLMEProblem(LMEProblem):
         obs_std_idx = [i for i, label in enumerate(columns_labels) if label == 4]
         assert len(obs_std_idx) == 1, "There should be only one 4 in columns_labels"
         obs_std_idx = obs_std_idx[0]
-        assert all(x[:, obs_std_idx] != 0), "Errors' STDs can't be zero. Check for zeros in the respective column."
+        assert all(x[:, obs_std_idx] != 0), "Errors' STD can't be zero. Check for zeros in the respective column."
         fixed_features_idx = [i for i, t in enumerate(columns_labels) if t == 1 or t == 3]
         random_features_idx = [i for i, t in enumerate(columns_labels) if t == 2 or t == 3]
         # We include the groups column to the list of categorical features
@@ -545,6 +551,9 @@ class LinearLMEProblem(LMEProblem):
         else:
             intercept_label = []
 
+        fe_columns = ((["intercept"] if fixed_intercept else []) + columns[fixed_features_idx]) if columns else None
+        re_columns = ((["intercept"] if random_intercept else []) + columns[random_features_idx]) if columns else None
+
         data = {
             'fixed_features': [],
             'random_features': [],
@@ -553,8 +562,10 @@ class LinearLMEProblem(LMEProblem):
             'obs_stds': [],
             'group_labels': groups_labels,
             'column_labels': np.array(intercept_label + columns_labels),
+            'fe_columns': fe_columns,
+            're_columns': re_columns,
             'fe_regularization_weights': fe_regularization_weights,
-            're_regularization_weights': re_regularization_weights
+            're_regularization_weights': re_regularization_weights,
         }
 
         order_of_objects = []
@@ -686,19 +697,22 @@ class LinearLMEProblem(LMEProblem):
                     column_labels.append(2)
                 else:
                     column_labels.append(1)
+                columns.append(effect)
 
-        must_include_fe_flags = [False, False] + [effect in must_include_fe for effect in columns] + ["intercept" in must_include_fe]
-        must_include_re_flags = [False, False] + [effect in must_include_re for effect in columns] + ["intercept" in must_include_re]
 
         columns = [groups, obs_std] + columns
         column_labels = [0, 4] + column_labels
-        must_include_fe_flags = []
+        must_include_fe_flags = [False, False] + [effect in must_include_fe for effect in columns] + \
+                                ["intercept" in must_include_fe]
+        must_include_re_flags = [False, False] + [effect in must_include_re for effect in columns] + \
+                                ["intercept" in must_include_re]
 
         x = data[columns].to_numpy()
         y = data[target].to_numpy()
         problem, answers = LinearLMEProblem.from_x_y(x=x,
                                                      y=y,
                                                      columns_labels=column_labels,
+                                                     columns=columns,
                                                      fixed_intercept="intercept" in fixed_effects,
                                                      random_intercept="intercept" in random_effects,
                                                      must_include_fe=must_include_fe_flags,

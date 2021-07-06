@@ -24,6 +24,7 @@ from scipy.optimize import minimize
 from scipy.optimize import LinearConstraint
 
 from skmixed.lme.problems import LinearLMEProblem
+from skmixed.priors import NonInformativePrior
 from typing import Optional
 
 
@@ -45,7 +46,8 @@ class LinearLMEOracle:
 
     """
 
-    def __init__(self, problem: Optional[LinearLMEProblem], n_iter_inner=200, tol_inner=1e-6, warm_start_duals=False):
+    def __init__(self, problem: Optional[LinearLMEProblem], n_iter_inner=200, tol_inner=1e-6, warm_start_duals=False,
+                 prior=None):
         """
         Creates an oracle on top of the given problem
 
@@ -55,6 +57,7 @@ class LinearLMEOracle:
             set of data and answers. See docs for LinearLMEProblem class for more details.
         """
         self.problem = problem
+        self.prior = prior if prior else NonInformativePrior()
         self.beta_to_gamma_map = None
         self.omega_cholesky_inv = []
         self.omega_cholesky = []
@@ -84,6 +87,7 @@ class LinearLMEOracle:
             else:
                 continue
         self.beta_to_gamma_map = beta_to_gamma_map
+        self.prior.instantiate(problem)
 
     def forget(self):
         self.problem = None
@@ -91,6 +95,7 @@ class LinearLMEOracle:
         self.omega_cholesky_inv = []
         self.omega_cholesky = []
         self.gamma = None
+        self.prior.forget()
 
     def _recalculate_cholesky(self, gamma: np.ndarray):
         """
@@ -150,7 +155,7 @@ class LinearLMEOracle:
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             result += 1 / 2 * np.sum(L_inv.dot(xi) ** 2) - np.sum(np.log(np.diag(L_inv)))
-        return result
+        return result + self.prior.loss(beta, gamma)
 
     def demarginalized_loss(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> float:
         result = 0
@@ -159,7 +164,7 @@ class LinearLMEOracle:
         for (x, y, z, stds), u in zip(self.problem, us):
             r = y - x.dot(beta) - z.dot(u)
             result += 1 / 2 * sum(r ** 2 / stds) + 1 / 2 * sum(np.log(stds))
-        return result
+        return result + self.prior.loss(beta, gamma)
 
     def gradient_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -186,7 +191,7 @@ class LinearLMEOracle:
             xi = y - x.dot(beta)
             Lz = L_inv.dot(z)
             grad_gamma += 1 / 2 * np.sum(Lz ** 2, axis=0) - 1 / 2 * Lz.T.dot(L_inv.dot(xi)) ** 2
-        return grad_gamma
+        return grad_gamma + self.prior.gradient_gamma(beta, gamma)
 
     def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, take_only_positive_part=False, **kwargs) -> np.ndarray:
         """
@@ -215,7 +220,7 @@ class LinearLMEOracle:
             Lxi = L_inv.dot(xi).reshape((len(xi), 1))
             hessian += ((0 if take_only_positive_part else -Lz.T.dot(Lz)) + 2 * (Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (
                 Lz.T.dot(Lz))
-        return 1 / 2 * hessian
+        return 1 / 2 * hessian + self.prior.hessian_gamma(beta, gamma)
 
     def optimal_gamma_pgd(self, beta: np.ndarray, gamma: np.ndarray, log_progress=False, **kwargs):
         step_len = 1
@@ -308,7 +313,7 @@ class LinearLMEOracle:
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             gradient += - (L_inv.dot(x)).T.dot(L_inv.dot(xi))
-        return gradient
+        return gradient + self.prior.gradient_beta(beta=beta, gamma=gamma)
 
     def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)
@@ -316,7 +321,7 @@ class LinearLMEOracle:
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             Lx = L_inv.dot(x)
             hessian += Lx.T.dot(Lx)
-        return hessian
+        return hessian + self.prior.hessian_beta(beta=beta, gamma=gamma)
 
     def hessian_beta_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)
@@ -327,7 +332,7 @@ class LinearLMEOracle:
             Lz = L_inv.dot(z)
             Lxi = L_inv.dot(xi)
             hessian += np.diag(Lz.T.dot(Lxi)).dot(Lz.T.dot(Lx))
-        return hessian.T
+        return hessian.T + self.prior.hessian_beta_gamma(beta=beta, gamma=gamma)
 
     def x_to_beta_gamma(self, x):
         beta = x[:self.problem.num_fixed_effects]
@@ -701,8 +706,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         return -lambdas * (x - w)
 
     def find_optimal_parameters(self, w, log_progress=False, regularizer=None, increase_lambdas=False,
-                                   line_search=False, prox_step_len=1.0, update_prox_every=1,
-                                   **kwargs):
+                                line_search=False, prox_step_len=1.0, update_prox_every=1,
+                                **kwargs):
         tbeta, tgamma = self.x_to_beta_gamma(w)
         beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(beta=2 * tbeta,
                                                                           gamma=2 * tgamma,
@@ -806,9 +811,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
             iteration += 1
 
-
             # optimize other components
-            if regularizer and update_prox_every > 0 and  iteration % update_prox_every == 0:
+            if regularizer and update_prox_every > 0 and iteration % update_prox_every == 0:
                 tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
                 tbeta, tgamma = self.x_to_beta_gamma(tx)
 
