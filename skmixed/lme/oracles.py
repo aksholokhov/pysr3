@@ -344,7 +344,7 @@ class LinearLMEOracle:
 
     def joint_loss(self, x, *args, **kwargs):
         beta, gamma = self.x_to_beta_gamma(x)
-        return self.loss(beta, gamma)
+        return self.loss(beta, gamma, **kwargs)
 
     def joint_gradient(self, x, *args, **kwargs):
         beta, gamma = self.x_to_beta_gamma(x)
@@ -354,8 +354,8 @@ class LinearLMEOracle:
             self.gradient_gamma(beta, gamma)
         return gradient
 
-    def value_function(self, w):
-        return self.joint_loss(w)
+    def value_function(self, w, **kwargs):
+        return self.joint_loss(w, **kwargs)
 
     def gradient_value_function(self, w):
         return self.joint_gradient(w)
@@ -531,7 +531,7 @@ class LinearLMEOracle:
         alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2 * self.value_function(self.beta_gamma_to_x(beta, gamma)) + alpha * (p + q)
+        return 2 * self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + alpha * (p + q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         if ic == "IC_vaida2005aic":

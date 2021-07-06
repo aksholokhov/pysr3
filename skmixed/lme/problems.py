@@ -537,10 +537,10 @@ class LinearLMEProblem(LMEProblem):
         num_categorical_features = len(categorical_features_idx)
         groups_labels = unique_labels(x[:, group_labels_idx])
 
-        fe_regularization_weights = [1]*(len(fixed_features_idx) + 1) if not must_include_fe \
-            else [int(not must_include_fe[-1])] + [int(not flag) for flag in must_include_fe[fixed_features_idx]]
-        re_regularization_weights = [1]*(len(random_features_idx) + 1) if not must_include_re \
-            else [int(not must_include_re[-1])] + [int(not flag) for flag in must_include_re[random_features_idx]]
+        fe_regularization_weights = [1] * (len(fixed_features_idx) + 1) if not must_include_fe \
+            else [int(not must_include_fe[-1])] + [int(not must_include_fe[i]) for i in fixed_features_idx]
+        re_regularization_weights = [1] * (len(random_features_idx) + 1) if not must_include_re \
+            else [int(not must_include_re[-1])] + [int(not must_include_re[i]) for i in random_features_idx]
 
         if fixed_intercept & random_intercept:
             intercept_label = [3]
@@ -551,8 +551,10 @@ class LinearLMEProblem(LMEProblem):
         else:
             intercept_label = []
 
-        fe_columns = ((["intercept"] if fixed_intercept else []) + columns[fixed_features_idx]) if columns else None
-        re_columns = ((["intercept"] if random_intercept else []) + columns[random_features_idx]) if columns else None
+        fe_columns = ((["intercept"] if fixed_intercept else []) + [columns[i] for i in
+                                                                    fixed_features_idx]) if columns else None
+        re_columns = ((["intercept"] if random_intercept else []) + [columns[i] for i in
+                                                                     random_features_idx]) if columns else None
 
         data = {
             'fixed_features': [],
@@ -689,35 +691,34 @@ class LinearLMEProblem(LMEProblem):
         columns = []
         column_labels = []
 
-        for effect in fixed_effects + random_effects:
-            if effect != "intercept":
-                if (effect in fixed_effects) and (effect in random_effects):
-                    column_labels.append(3)
-                elif effect in random_effects:
-                    column_labels.append(2)
-                else:
-                    column_labels.append(1)
-                columns.append(effect)
-
+        for effect in data.columns:
+            if (effect not in fixed_effects) and (effect not in random_effects):
+                continue
+            if (effect in fixed_effects) and (effect in random_effects):
+                column_labels.append(3)
+            elif effect in random_effects:
+                column_labels.append(2)
+            else:
+                column_labels.append(1)
+            columns.append(effect)
 
         columns = [groups, obs_std] + columns
         column_labels = [0, 4] + column_labels
-        must_include_fe_flags = [False, False] + [effect in must_include_fe for effect in columns] + \
+        must_include_fe_flags = [effect in must_include_fe for effect in columns] + \
                                 ["intercept" in must_include_fe]
-        must_include_re_flags = [False, False] + [effect in must_include_re for effect in columns] + \
+        must_include_re_flags = [effect in must_include_re for effect in columns] + \
                                 ["intercept" in must_include_re]
 
         x = data[columns].to_numpy()
         y = data[target].to_numpy()
-        problem, answers = LinearLMEProblem.from_x_y(x=x,
-                                                     y=y,
-                                                     columns_labels=column_labels,
-                                                     columns=columns,
-                                                     fixed_intercept="intercept" in fixed_effects,
-                                                     random_intercept="intercept" in random_effects,
-                                                     must_include_fe=must_include_fe_flags,
-                                                     must_include_re=must_include_re_flags)
-        return problem, answers
+        return LinearLMEProblem.from_x_y(x=x,
+                                         y=y,
+                                         columns_labels=column_labels,
+                                         columns=columns,
+                                         fixed_intercept="intercept" in fixed_effects,
+                                         random_intercept="intercept" in random_effects,
+                                         must_include_fe=must_include_fe_flags,
+                                         must_include_re=must_include_re_flags)
 
     def pivot(self, categorical_features_set):
         """
