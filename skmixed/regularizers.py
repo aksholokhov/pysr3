@@ -1,6 +1,8 @@
 import numpy as np
 
 from skmixed.lme.oracles import LinearLMEOracle
+from skmixed.lme.problems import LinearLMEProblem
+
 
 class L0Regularizer:
     def __init__(self,
@@ -11,9 +13,12 @@ class L0Regularizer:
                  oracle: LinearLMEOracle = None):
         self.nnz_tbeta = nnz_tbeta
         self.nnz_tgamma = nnz_tgamma
-        self.participation_in_selection=participation_in_selection
+        self.participation_in_selection = participation_in_selection
         self.oracle = oracle
         self.independent_beta_and_gamma = independent_beta_and_gamma
+
+    def instantiate(self, weights):
+        pass
 
     @staticmethod
     def _take_only_k_max(x: np.ndarray, k: int, **kwargs):
@@ -109,7 +114,7 @@ class L0Regularizer:
             not_participation_idx = (not_participation_idx[not_participation_idx >= 0]).astype(int)
             tgamma[not_participation_idx] = gamma[not_participation_idx]
             tgamma[participation_idx] = self._take_only_k_max(tgamma[participation_idx],
-                                                              self.nnz_tgamma - sum(~self.participation_in_selection))
+                                                              self.nnz_tgamma - sum(~participation_idx))
             return tgamma
         else:
             return self._take_only_k_max(tgamma, self.nnz_tgamma)
@@ -127,27 +132,180 @@ class L0Regularizer:
         return 0
 
 
-class L1Regularizer:
-    def __init__(self, lam, **kwargs):
-        self.lam = lam
+class L0Regularizer2:
+    def __init__(self,
+                 nnz_tbeta=1,
+                 nnz_tgamma=1,
+                 independent_beta_and_gamma=False,
+                 participation_in_selection=None,
+                 oracle: LinearLMEOracle = None):
+        self.nnz_tbeta = nnz_tbeta
+        self.nnz_tgamma = nnz_tgamma
+        self.oracle = oracle
+        self.participation_in_selection = participation_in_selection
+        self.independent_beta_and_gamma = independent_beta_and_gamma
+        self.beta_weights = None
+        self.gamma_weights = None
 
-    def value(self, x):
-        return self.lam*np.linalg.norm(x, 1)
+    def instantiate(self, weights):
+        beta_weights, gamma_weights = self.oracle.x_to_beta_gamma(weights)
+        self.beta_weights = beta_weights
+        self.gamma_weights = gamma_weights
+        self.beta_participation_in_selection = beta_weights.astype(bool)
+        self.gamma_participation_in_selection = gamma_weights.astype(bool)
+
+    @staticmethod
+    def _take_only_k_max(x: np.ndarray, k: int, **kwargs):
+        """
+        Returns a vector b which consists of k largest elements of x (at the same places) and zeros everywhere else.
+
+        Parameters
+        ----------
+        x : np.ndarray, shape = [n]
+            Vector which we take largest elements from.
+        k : int
+            How many elements we take from x
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters.
+
+        Returns
+        -------
+        b : np.ndarray, shape = [n]
+            A vector which consists of k largest elements of x (at the same places) and zeros everywhere else.
+        """
+
+        b = np.zeros(len(x))
+        if k > 0:
+            idx_k_max = np.abs(x).argsort()[-k:]
+            b[idx_k_max] = x[idx_k_max]
+        return b
+
+    def optimal_tbeta(self, beta: np.ndarray, **kwargs):
+        """
+        Returns tbeta which minimizes the loss function with all other variables fixed.
+
+        It is a projection of beta on the sparse subspace with no more than k elements, which can be constructed by
+        taking k largest elements from beta and setting the rest to be 0.
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [n]
+            Vector of estimates of fixed effects.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters.
+
+        Returns
+        -------
+        tbeta : np.ndarray, shape = [n]
+            Minimizer of the loss function w.r.t tbeta with other arguments fixed.
+        """
+        if self.beta_weights is not None:
+            result = np.copy(beta)
+
+            result[self.beta_participation_in_selection] = self._take_only_k_max(beta[self.beta_participation_in_selection],
+                                                                            self.nnz_tbeta - sum(
+                                                                                ~self.beta_participation_in_selection))
+            return result
+        else:
+            return self._take_only_k_max(beta, self.nnz_tbeta, **kwargs)
+
+    def optimal_tgamma(self, tbeta, gamma, **kwargs):
+        """
+        Returns tgamma which minimizes the loss function with all other variables fixed.
+
+        It is a projection of gamma on the sparse subspace with no more than nnz_gamma elements,
+        which can be constructed by taking nnz_gamma largest elements from gamma and setting the rest to be 0.
+        In addition, it preserves that for all the elements where tbeta = 0 it implies that tgamma = 0 as well.
+
+        Parameters
+        ----------
+        tbeta : np.ndarray, shape = [n]
+            Vector of (nnz_beta)-sparse estimates for fixed parameters.
+        gamma : np.ndarray, shape = [k]
+            Vector of covariance estimates of random effects.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters.
+
+        Returns
+        -------
+        tgamma : np.ndarray, shape = [k]
+            Minimizer of the loss function w.r.t tgamma with other arguments fixed.
+        """
+        tgamma = np.copy(gamma)
+        if not self.independent_beta_and_gamma:
+            idx = tbeta == 0
+            idx_gamma = self.oracle.beta_to_gamma_map[idx]
+            idx_gamma = [i for i in (idx_gamma[idx_gamma >= 0]).astype(int) if self.gamma_participation_in_selection[i]]
+            tgamma[idx_gamma] = 0
+
+        tgamma[self.gamma_participation_in_selection] = self._take_only_k_max(tgamma[self.gamma_participation_in_selection],
+                                                                                  self.nnz_tgamma - sum(~self.gamma_participation_in_selection))
+        return tgamma
 
     def prox(self, x, alpha):
+        beta, gamma = self.oracle.x_to_beta_gamma(x)
+        tbeta = self.optimal_tbeta(beta)
+        tgamma = self.optimal_tgamma(tbeta, gamma)
+        return self.oracle.beta_gamma_to_x(tbeta, tgamma)
+
+    def value(self, x):
+        k = sum(x != 0)
+        if k > self.nnz_tbeta + self.nnz_tgamma:
+            return np.infty
+        return 0
+
+
+class L1Regularizer:
+    def __init__(self, lam, weights=None, **kwargs):
+        self.lam = lam
+        self.weights = None
+
+    def instantiate(self, weights):
+        self.weights = weights
+
+    def value(self, x):
+        if self.weights is not None:
+            return self.weights.dot(np.abs(x))
+        return self.lam * np.linalg.norm(x, 1)
+
+    def prox(self, x, alpha):
+        if self.weights is not None:
+            return (x - alpha * self.weights * self.lam).clip(0, None) - (- x - alpha * self.weights * self.lam).clip(0,
+                                                                                                                      None)
         return (x - alpha * self.lam).clip(0, None) - (- x - alpha * self.lam).clip(0, None)
 
 
 class CADRegularizer:
-    def __init__(self, rho, lam, **kwargs):
+    def __init__(self, rho, lam, weights=None, **kwargs):
         self.rho = rho
         self.lam = lam
+        self.weights = weights
+
+    def instantiate(self, weights=None):
+        self.weights = weights
 
     def value(self, x):
-        return self.lam*np.minimum(np.abs(x), self.rho).sum()
+        if self.weights is not None:
+            return self.lam * np.minimum(self.weights * np.abs(x), self.rho).sum()
+        return self.lam * np.minimum(np.abs(x), self.rho).sum()
 
     def prox(self, x, alpha):
         v = np.copy(x)
-        idx_small = np.where(np.abs(x) <= self.rho)
-        v[idx_small] = (x[idx_small] - alpha * self.lam).clip(0, None) - (- x[idx_small] - alpha * self.lam).clip(0, None)
+        idx_small = np.where((np.abs(x) <= self.rho) & (self.weights > 0 if self.weights is not None else True))
+        v[idx_small] = (x[idx_small] - alpha * self.lam).clip(0, None) - (- x[idx_small] - alpha * self.lam).clip(0,
+                                                                                                                  None)
         return v
+
+
+class DummyRegularizer:
+    def __init(self):
+        pass
+
+    def instantiate(self, weights=None):
+        pass
+
+    def value(self, x):
+        return 0
+
+    def prox(self, x, alpha):
+        return x

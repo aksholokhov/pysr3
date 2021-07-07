@@ -25,7 +25,7 @@ from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized, LinearLMEOracleW, LinearLMEOracleSR3
 from skmixed.solvers import PGDSolver, FakePGDSolver, Fista
 from skmixed.priors import GaussianPrior, NonInformativePrior
-from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer
+from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer, L0Regularizer2, DummyRegularizer
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
 
@@ -614,6 +614,9 @@ class LMEModel(BaseEstimator, RegressorMixin):
                     **kwargs):
 
         self.oracle.instantiate(problem)
+        if self.regularizer:
+            self.regularizer.instantiate(weights=self.oracle.beta_gamma_to_x(beta=problem.fe_regularization_weights,
+                                                                             gamma=problem.re_regularization_weights))
 
         num_fixed_effects = problem.num_fixed_effects
         num_random_effects = problem.num_random_effects
@@ -805,7 +808,7 @@ class Sr3L0LmeModel(LMEModel):
                            fixed_step_len=(1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start)
-        regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
+        regularizer = L0Regularizer2(nnz_tbeta=nnz_tbeta,
                                     nnz_tgamma=nnz_tgamma,
                                     participation_in_selection=participation_in_selection,
                                     oracle=oracle)
@@ -862,56 +865,56 @@ class L1LmeModel(LMEModel):
                          initializer=initializer,
                          logger_keys=logger_keys)
 
+#
+# class L1FistaLMEModel(LMEModel):
+#     def __init__(self,
+#                  tol_solver: float = 1e-5,
+#                  initializer: str = "None",
+#                  max_iter_solver: int = 1000,
+#                  stepping: str = "line-search",
+#                  lam: float = 1,
+#                  logger_keys: Set = ('converged',),
+#                  fixed_step_len = None,
+#                  prior=None,
+#                  **kwargs):
+#         solver = Fista(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
+#         oracle = LinearLMEOracle(None, prior=prior if prior else NonInformativePrior())
+#         regularizer = L1Regularizer(lam=lam)
+#         super().__init__(oracle=oracle,
+#                          solver=solver,
+#                          regularizer=regularizer,
+#                          initializer=initializer,
+#                          logger_keys=logger_keys)
 
-class L1FistaLMEModel(LMEModel):
-    def __init__(self,
-                 tol_solver: float = 1e-5,
-                 initializer: str = "None",
-                 max_iter_solver: int = 1000,
-                 stepping: str = "line-search",
-                 lam: float = 1,
-                 logger_keys: Set = ('converged',),
-                 fixed_step_len = None,
-                 prior=None,
-                 **kwargs):
-        solver = Fista(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
-        oracle = LinearLMEOracle(None, prior=prior if prior else NonInformativePrior())
-        regularizer = L1Regularizer(lam=lam)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
-                         initializer=initializer,
-                         logger_keys=logger_keys)
-
-
-class SR3L1FistaLmeModel(LMEModel):
-    def __init__(self,
-                 tol_oracle: float = 1e-5,
-                 tol_solver: float = 1e-5,
-                 initializer: str = "None",
-                 max_iter_oracle: int = 1000,
-                 max_iter_solver: int = 20,
-                 stepping: str = "fixed",
-                 lb: float = 1,
-                 lg: float = 1,
-                 lam: float = 1,
-                 logger_keys: Set = ('converged',),
-                 warm_start=True,
-                 practical=False,
-                 update_prox_every=1,
-                 fixed_step_len = None,
-                 **kwargs):
-        regularizer = L1Regularizer(lam=lam)
-        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
-        solver = Fista(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=fixed_step_len)
-        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
-                         initializer=initializer,
-                         logger_keys=logger_keys)
+#
+# class SR3L1FistaLmeModel(LMEModel):
+#     def __init__(self,
+#                  tol_oracle: float = 1e-5,
+#                  tol_solver: float = 1e-5,
+#                  initializer: str = "None",
+#                  max_iter_oracle: int = 1000,
+#                  max_iter_solver: int = 20,
+#                  stepping: str = "fixed",
+#                  lb: float = 1,
+#                  lg: float = 1,
+#                  lam: float = 1,
+#                  logger_keys: Set = ('converged',),
+#                  warm_start=True,
+#                  practical=False,
+#                  update_prox_every=1,
+#                  fixed_step_len = None,
+#                  **kwargs):
+#         regularizer = L1Regularizer(lam=lam)
+#         fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
+#         solver = Fista(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+#                            fixed_step_len=fixed_step_len)
+#         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
+#                                     warm_start=warm_start)
+#         super().__init__(oracle=oracle,
+#                          solver=solver,
+#                          regularizer=regularizer,
+#                          initializer=initializer,
+#                          logger_keys=logger_keys)
 
 
 class SR3L1LmeModel(LMEModel):
