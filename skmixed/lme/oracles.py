@@ -19,6 +19,7 @@ from typing import Callable
 
 import numpy as np
 import scipy as sp
+from scipy import stats
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.optimize import minimize
 from scipy.optimize import LinearConstraint
@@ -322,6 +323,20 @@ class LinearLMEOracle:
             Lx = L_inv.dot(x)
             hessian += Lx.T.dot(Lx)
         return hessian + self.prior.hessian_beta(beta=beta, gamma=gamma)
+
+    def flip_probabilities_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+        hessian = self.hessian_beta(beta=beta, gamma=gamma)
+        cov_matrix = np.linalg.inv(hessian)
+        probabilities = []
+        for mean, var, sign in zip(beta, np.diag(cov_matrix),  np.sign(beta)):
+            if sign > 0:
+                probabilities.append(stats.norm.cdf(0, loc=mean, scale=np.sqrt(var)))
+            elif sign < 0:
+                probabilities.append(1 - stats.norm.cdf(0, loc=mean, scale=np.sqrt(var)))
+            else:
+                probabilities.append(0.5)
+        return np.array(probabilities)
+
 
     def hessian_beta_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         self._recalculate_cholesky(gamma)

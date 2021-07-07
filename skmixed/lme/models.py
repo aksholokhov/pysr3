@@ -783,6 +783,10 @@ class LMEModel(BaseEstimator, RegressorMixin):
         self.check_is_fitted()
         return self.oracle.jones2010bic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
 
+    def flip_probabilities(self):
+        self.check_is_fitted()
+        return self.oracle.flip_probabilities_beta(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
+
 
 class SimpleLMEModel(LMEModel):
     def __init__(self,
