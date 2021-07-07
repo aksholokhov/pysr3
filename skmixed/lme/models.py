@@ -784,6 +784,27 @@ class LMEModel(BaseEstimator, RegressorMixin):
         return self.oracle.jones2010bic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
 
 
+class SimpleLMEModel(LMEModel):
+    def __init__(self,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=5e-2 if not fixed_step_len else fixed_step_len)
+        oracle = LinearLMEOracle(None, prior=prior)
+        regularizer = DummyRegularizer()
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         initializer=initializer,
+                         logger_keys=logger_keys)
+
+
 class Sr3L0LmeModel(LMEModel):
     def __init__(self,
                  tol_oracle: float = 1e-5,
