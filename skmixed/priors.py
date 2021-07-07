@@ -58,8 +58,8 @@ class GaussianPrior:
         self.re_weights = None
 
     def loss(self, beta, gamma):
-        return self.fe_weights * (1 / (2 * self.fe_stds)) * ((beta - self.fe_means) ** 2).sum() + \
-               self.re_weights * (1 / (2 * self.re_stds)) * ((gamma - self.re_means) ** 2).sum()
+        return (self.fe_weights * (1 / (2 * self.fe_stds)) * ((beta - self.fe_means) ** 2)).sum() + \
+               (self.re_weights * (1 / (2 * self.re_stds)) * ((gamma - self.re_means) ** 2)).sum()
 
     def gradient_beta(self, beta, gamma):
         return self.fe_weights * (1 / self.fe_stds) * (beta - self.fe_means)

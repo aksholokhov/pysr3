@@ -823,12 +823,13 @@ class Sr3L0LmeModel(LMEModel):
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len = None,
+                 prior=None,
                  **kwargs):
         solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=(1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start)
+                                    warm_start=warm_start, prior=prior)
         regularizer = L0Regularizer2(nnz_tbeta=nnz_tbeta,
                                     nnz_tgamma=nnz_tgamma,
                                     participation_in_selection=participation_in_selection,
@@ -954,6 +955,7 @@ class SR3L1LmeModel(LMEModel):
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len = None,
+                 prior=None,
                  **kwargs):
         regularizer = L1Regularizer(lam=lam)
         fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
@@ -961,7 +963,7 @@ class SR3L1LmeModel(LMEModel):
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start)
+                                    warm_start=warm_start, prior=prior)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -1008,13 +1010,14 @@ class SR3CADLmeModel(LMEModel):
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len=None,
+                 prior=None,
                  **kwargs):
         fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
         solver = FakePGDSolver(update_prox_every=update_prox_every, fixed_step_len=fixed_step_len) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start)
+                                    warm_start=warm_start, prior=prior)
         regularizer = CADRegularizer(rho=rho, lam=lam)
         super().__init__(oracle=oracle,
                          solver=solver,
