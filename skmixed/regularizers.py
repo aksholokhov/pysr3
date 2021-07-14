@@ -202,9 +202,10 @@ class L0Regularizer2:
         if self.beta_weights is not None:
             result = np.copy(beta)
 
-            result[self.beta_participation_in_selection] = self._take_only_k_max(beta[self.beta_participation_in_selection],
-                                                                            self.nnz_tbeta - sum(
-                                                                                ~self.beta_participation_in_selection))
+            result[self.beta_participation_in_selection] = self._take_only_k_max(
+                beta[self.beta_participation_in_selection],
+                self.nnz_tbeta - sum(
+                    ~self.beta_participation_in_selection))
             return result
         else:
             return self._take_only_k_max(beta, self.nnz_tbeta, **kwargs)
@@ -238,8 +239,9 @@ class L0Regularizer2:
             idx_gamma = [i for i in (idx_gamma[idx_gamma >= 0]).astype(int) if self.gamma_participation_in_selection[i]]
             tgamma[idx_gamma] = 0
 
-        tgamma[self.gamma_participation_in_selection] = self._take_only_k_max(tgamma[self.gamma_participation_in_selection],
-                                                                                  self.nnz_tgamma - sum(~self.gamma_participation_in_selection))
+        tgamma[self.gamma_participation_in_selection] = self._take_only_k_max(
+            tgamma[self.gamma_participation_in_selection],
+            self.nnz_tgamma - sum(~self.gamma_participation_in_selection))
         return tgamma
 
     def prox(self, x, alpha):
@@ -258,7 +260,7 @@ class L0Regularizer2:
 class L1Regularizer:
     def __init__(self, lam, weights=None, **kwargs):
         self.lam = lam
-        self.weights = None
+        self.weights = weights
 
     def instantiate(self, weights):
         self.weights = weights
@@ -292,8 +294,9 @@ class CADRegularizer:
     def prox(self, x, alpha):
         v = np.copy(x)
         idx_small = np.where((np.abs(x) <= self.rho) & (self.weights > 0 if self.weights is not None else True))
-        v[idx_small] = (x[idx_small] - alpha * self.lam).clip(0, None) - (- x[idx_small] - alpha * self.lam).clip(0,
-                                                                                                                  None)
+        v[idx_small] = (x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0, None) - (
+                - x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0,
+                                                                                  None)
         return v
 
 
