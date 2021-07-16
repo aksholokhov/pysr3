@@ -9,7 +9,7 @@ docs_require=[
 
 setuptools.setup(
     name="skmixed",
-    version="0.1.1",
+    version="0.1.2",
     author="Aleksei Sholokhov",
     author_email="aksh@uw.edu",
     description="",
