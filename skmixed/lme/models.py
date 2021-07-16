@@ -25,7 +25,7 @@ from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized, LinearLMEOracleW, LinearLMEOracleSR3
 from skmixed.solvers import PGDSolver, FakePGDSolver, Fista
 from skmixed.priors import GaussianPrior, NonInformativePrior
-from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer, L0Regularizer2, DummyRegularizer
+from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, L0Regularizer2, DummyRegularizer
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
 
@@ -1023,6 +1023,63 @@ class SR3CADLmeModel(LMEModel):
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start, prior=prior)
         regularizer = CADRegularizer(rho=rho, lam=lam)
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         initializer=initializer,
+                         logger_keys=logger_keys)
+
+
+class SCADLmeModel(LMEModel):
+    def __init__(self,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 rho: float = 3.7,  # as per recommendation from (Fan, Li, 2001), p. 1351
+                 sigma: float = 1.6,  # same
+                 lam: float = 1.0,
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len = None,
+                 prior = None,
+                 **kwargs):
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
+        oracle = LinearLMEOracle(None, prior=prior)
+        regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         initializer=initializer,
+                         logger_keys=logger_keys)
+
+
+class SR3SCADLmeModel(LMEModel):
+    def __init__(self,
+                 tol_oracle: float = 1e-5,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_oracle: int = 1000,
+                 max_iter_solver: int = 20,
+                 stepping: str = "fixed",
+                 lb: float = 1.0,
+                 lg: float = 1.0,
+                 rho: float = 3.7,  # as per recommendation from (Fan, Li, 2001), p. 1351
+                 sigma: float = 1.6,  # same
+                 lam: float = 1.0,
+                 logger_keys: Set = ('converged',),
+                 warm_start=True,
+                 practical=False,
+                 update_prox_every=1,
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
+        solver = FakePGDSolver(update_prox_every=update_prox_every, fixed_step_len=fixed_step_len) if practical \
+            else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=fixed_step_len)
+        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
+                                    warm_start=warm_start, prior=prior)
+        regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
