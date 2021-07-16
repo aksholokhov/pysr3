@@ -313,7 +313,7 @@ class SCADRegularizer:
 
     def value(self, x):
         total = 0
-        for x_i, w in zip(x, self.weights if self.weights else np.ones(x.shape)):
+        for x_i, w in zip(x, self.weights if self.weights is not None else np.ones(x.shape)):
             if abs(x_i) < self.sigma:
                 total += w * self.sigma * x_i
             elif self.sigma <= abs(x_i) <= self.rho * self.sigma:
@@ -324,16 +324,18 @@ class SCADRegularizer:
 
     def prox(self, x, alpha):
         v = np.zeros(x.shape)
-        for i, w in enumerate(self.weights if self.weights else np.ones(x.shape)):
+        for i, w in enumerate(self.weights if self.weights is not None else np.ones(x.shape)):
+            alpha_eff = alpha * self.lam * w
             if w == 0:
                 v[i] = x[i]
-            elif abs(x) > self.rho * self.sigma:
+            elif abs(x[i]) > self.rho * self.sigma:
                 v[i] = x[i]
-            elif self.sigma * (1 + w * alpha) <= abs(x) <= self.rho * self.sigma:
-                v[i] = ((self.rho - 1) * x[i] + np.sign(x[i]) * self.rho * self.sigma * w * alpha) / (
-                            self.rho - 1 - w * alpha)
+            elif self.sigma * (1 + alpha_eff) <= abs(x[i]) <= self.rho * self.sigma:
+                v[i] = ((self.rho - 1) * x[i] + np.sign(x[i]) * self.rho * self.sigma * alpha_eff) / (
+                            self.rho - 1 - alpha_eff)
             else:
-                (x - self.sigma * w * alpha).clip(0, None) - (- x - self.sigma * w * alpha).clip(0, None)
+                v[i] = (x[i] - self.sigma * alpha_eff).clip(0, None) - (- x[i] - self.sigma * alpha_eff).clip(0, None)
+        return v
 
 
 class DummyRegularizer:
