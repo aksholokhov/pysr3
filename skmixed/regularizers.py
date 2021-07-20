@@ -326,6 +326,7 @@ class SCADRegularizer:
         v = np.zeros(x.shape)
         for i, w in enumerate(self.weights if self.weights is not None else np.ones(x.shape)):
             alpha_eff = alpha * self.lam * w
+            assert alpha_eff < self.rho - 1
             if w == 0:
                 v[i] = x[i]
             elif abs(x[i]) > self.rho * self.sigma:
