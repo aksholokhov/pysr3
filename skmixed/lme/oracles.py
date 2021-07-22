@@ -480,7 +480,7 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         p = sum(beta != 0)
         q = sum(gamma != 0)
-        return self.value_function(self.beta_gamma_to_x(beta, gamma)) + (p + q) * np.log(self._jones2010n_eff())
+        return self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + (p + q) * np.log(self._jones2010n_eff())
 
     def muller2018ic(self, beta, gamma, **kwargs):
         self._recalculate_cholesky(gamma)
@@ -1284,6 +1284,14 @@ class LinearLMEOracleRegularized(LinearLMEOracle):
                 self.logger.append(gamma)
 
         return beta, gamma, tbeta, tgamma, losses
+
+    def jones2010bic(self, beta, gamma, tbeta=None, tgamma=None, **kwargs):
+        # From here
+        # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
+        self._recalculate_cholesky(gamma)
+        p = sum(tbeta != 0)
+        q = sum(tgamma != 0)
+        return super().loss(tbeta, tgamma, **kwargs) + (p + q) * np.log(self._jones2010n_eff())
 
 
 class LinearLMEOracleW(LinearLMEOracleRegularized):
