@@ -676,11 +676,9 @@ class LinearLMEProblem(LMEProblem):
                        must_include_fe: List[str],
                        must_include_re: List[str]
                        ):
-        if "intercept" in data.columns:
-            raise ValueError("intercept should not be in the data-frame")
 
         for effect in fixed_effects + random_effects + [groups, obs_std, target] + must_include_fe + must_include_re:
-            if (effect != "intercept") and (effect not in data.columns):
+            if effect not in data.columns:
                 raise ValueError(f"{effect} is not a column of the data-frame")
 
         if not all(effect in fixed_effects for effect in must_include_fe):
@@ -692,7 +690,7 @@ class LinearLMEProblem(LMEProblem):
         column_labels = []
 
         for effect in data.columns:
-            if (effect not in fixed_effects) and (effect not in random_effects):
+            if (effect not in fixed_effects) and (effect not in random_effects) or (effect == "intercept"):
                 continue
             if (effect in fixed_effects) and (effect in random_effects):
                 column_labels.append(3)
