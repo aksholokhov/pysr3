@@ -25,7 +25,8 @@ from skmixed.lme.problems import LinearLMEProblem
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized, LinearLMEOracleW, LinearLMEOracleSR3
 from skmixed.solvers import PGDSolver, FakePGDSolver, Fista
 from skmixed.priors import GaussianPrior, NonInformativePrior
-from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, L0Regularizer2, DummyRegularizer
+from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, L0Regularizer2, \
+    DummyRegularizer
 from skmixed.logger import Logger
 from skmixed.helpers import get_per_group_coefficients
 
@@ -656,7 +657,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
         }
 
         # TODO: uncomment it so the oracle does not keep the dataset linked to its memory
-        #self.oracle.forget()
+        # self.oracle.forget()
 
         return self
 
@@ -817,8 +818,8 @@ class Sr3L0LmeModel(LMEModel):
                  max_iter_oracle: int = 1000,
                  max_iter_solver: int = 20,
                  stepping: str = "fixed",
-                 lb: float = 0,
-                 lg: float = 0,
+                 lb: float = 40,
+                 lg: float = 40,
                  nnz_tbeta: int = 1,
                  nnz_tgamma: int = 1,
                  participation_in_selection=None,
@@ -826,18 +827,19 @@ class Sr3L0LmeModel(LMEModel):
                  warm_start=True,
                  practical=False,
                  update_prox_every=1,
-                 fixed_step_len = None,
+                 fixed_step_len=None,
                  prior=None,
                  **kwargs):
         solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=(1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
+                           fixed_step_len=(
+                               1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start, prior=prior)
         regularizer = L0Regularizer2(nnz_tbeta=nnz_tbeta,
-                                    nnz_tgamma=nnz_tgamma,
-                                    participation_in_selection=participation_in_selection,
-                                    oracle=oracle)
+                                     nnz_tgamma=nnz_tgamma,
+                                     participation_in_selection=participation_in_selection,
+                                     oracle=oracle)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -858,7 +860,8 @@ class L0LmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=1 if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
         regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
                                     nnz_tgamma=nnz_tgamma,
@@ -882,7 +885,8 @@ class L1LmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
         regularizer = L1Regularizer(lam=lam)
         super().__init__(oracle=oracle,
@@ -890,6 +894,7 @@ class L1LmeModel(LMEModel):
                          regularizer=regularizer,
                          initializer=initializer,
                          logger_keys=logger_keys)
+
 
 #
 # class L1FistaLMEModel(LMEModel):
@@ -951,14 +956,14 @@ class SR3L1LmeModel(LMEModel):
                  max_iter_oracle: int = 1000,
                  max_iter_solver: int = 20,
                  stepping: str = "fixed",
-                 lb: float = 1,
-                 lg: float = 1,
+                 lb: float = 40,
+                 lg: float = 40,
                  lam: float = 1,
                  logger_keys: Set = ('converged',),
                  warm_start=True,
                  practical=False,
                  update_prox_every=1,
-                 fixed_step_len = None,
+                 fixed_step_len=None,
                  prior=None,
                  **kwargs):
         regularizer = L1Regularizer(lam=lam)
@@ -981,13 +986,14 @@ class CADLmeModel(LMEModel):
                  initializer: str = "None",
                  max_iter_solver: int = 1000,
                  stepping: str = "line-search",
-                 rho: float = 1.0,
+                 rho: float = 0.30,
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
-                 fixed_step_len = None,
-                 prior = None,
+                 fixed_step_len=None,
+                 prior=None,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
         regularizer = CADRegularizer(rho=rho, lam=lam)
         super().__init__(oracle=oracle,
@@ -1005,8 +1011,8 @@ class SR3CADLmeModel(LMEModel):
                  max_iter_oracle: int = 1000,
                  max_iter_solver: int = 20,
                  stepping: str = "fixed",
-                 lb: float = 1.0,
-                 lg: float = 1.0,
+                 lb: float = 40.0,
+                 lg: float = 40.0,
                  rho: float = 1.0,
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
@@ -1040,10 +1046,11 @@ class SCADLmeModel(LMEModel):
                  sigma: float = 1.6,  # same
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
-                 fixed_step_len = None,
-                 prior = None,
+                 fixed_step_len=None,
+                 prior=None,
                  **kwargs):
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping, fixed_step_len=1 if not fixed_step_len else fixed_step_len)
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
         regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
         super().__init__(oracle=oracle,
@@ -1061,8 +1068,8 @@ class SR3SCADLmeModel(LMEModel):
                  max_iter_oracle: int = 1000,
                  max_iter_solver: int = 20,
                  stepping: str = "fixed",
-                 lb: float = 1.0,
-                 lg: float = 1.0,
+                 lb: float = 40.0,
+                 lg: float = 40.0,
                  rho: float = 3.7,  # as per recommendation from (Fan, Li, 2001), p. 1351
                  sigma: float = 1.6,  # same
                  lam: float = 1.0,

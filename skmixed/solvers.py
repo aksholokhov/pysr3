@@ -39,7 +39,7 @@ class PGDSolver:
                     fun=lambda t: oracle.value_function(regularizer.prox(x + t * direction, t)) + regularizer.value(
                         regularizer.prox(x + t * direction, t)),
                     x0=0,
-                    bounds=[(0, max_step_len)]
+                    bounds=[(0, min(self.fixed_step_len, max_step_len))]
                 )
                 step_len = res.x
             elif self.stepping == "fixed_max":
