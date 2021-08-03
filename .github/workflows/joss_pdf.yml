@@ -1,3 +1,5 @@
+name: JOSS Paper Draft Generation
+
 on: [ push ]
 
 jobs:
