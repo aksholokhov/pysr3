@@ -60,8 +60,8 @@ numerical solvers.
 
 The skmixed package implements a variety of feature selection methods via a universal an easy-to-use interface. The
 package includes widely used methods and regularizers (LASSO, Adaptive LASSO, SCAD), as well as recently developed
-regularizers that have not been used before in LME feature selection(CAD, $\ell_0$). The library is built to make it as
-easy as possible to add new loss functions, constraints, information criteria, and regularization strategies. As part of
+regularizers that have not been used before in LME feature selection(CAD, L0). The library is built to make it as easy
+as possible to add new loss functions, constraints, information criteria, and regularization strategies. As part of
 standard output, skmixed provides the list of features that have been selected, as well as their ranking.
 
 The skmixed package also offers an implementation of Sparse Relaxed Regularized Regression (SR3) -- a relaxation that
