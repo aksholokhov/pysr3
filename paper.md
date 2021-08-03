@@ -83,7 +83,7 @@ non-smooth part captures the sparsity-promoting regularizer. For many widely-use
 are known in a closed form ([@Zheng2019]), which is a primary source of skmixed's flexibility. PGD together with a
 regularized likelihood already offer good performance for many real applications.
 
-![Summary of skmixed method [@LINK].\label{fig:RENT}](images/summary_picture.png)
+![Summary of skmixed method.\label{fig:RENT}](images/summary_picture.png)
 
 In addition to baseline implementations using PGD, skmixed also offers the SR3-relaxation to boost selection accuracy.
 SR3 preconditions the likelihood by relaxing the original formulation, applying partial minimization to the smooth
