@@ -461,7 +461,7 @@ class LinearLMEProblem(LMEProblem):
                 "active_categorical_set": active_categorical_set,
                 "true_group_labels": true_group_labels,
                 "random_effects": random_effects_list,
-                "errors": np.array(errors_list),
+                "errors": errors_list,
                 "reference_loss_value": reference_loss_value
             }
             return generated_problem, true_parameters
@@ -805,15 +805,3 @@ class LinearLMEProblem(LMEProblem):
                     self.categorical_features[i][np.ix_(objects_idx, categorical_features_idx)])
 
         return LinearLMEProblem(**data)
-
-
-if __name__ == "__main__":
-    problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[60, 40, 25],
-                                                         features_labels=[3, 5, 3, 6, 2, 5],
-                                                         random_intercept=False)
-
-    bootstrap_problem = problem.bootstrap(seed=42)
-    X1, y1 = problem.to_x_y()
-    X2, y2 = bootstrap_problem.to_x_y()
-    a = 3
-    pass

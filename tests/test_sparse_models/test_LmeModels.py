@@ -3,24 +3,25 @@ import unittest
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
 
-from skmixed.lme.models import Sr3L0LmeModel, L0LmeModel, L1LmeModel, SR3L1LmeModel, CADLmeModel, SR3CADLmeModel
-from skmixed.lme.problems import LinearLMEProblem
-
 from skmixed.helpers import random_effects_to_matrix
+from skmixed.lme.models import Sr3L0LmeModel, L0LmeModel, L1LmeModel, SR3L1LmeModel, CADLmeModel, SR3CADLmeModel, \
+    SCADLmeModel, SR3SCADLmeModel
+from skmixed.lme.problems import LinearLMEProblem
 
 
 class TestLmeModels(unittest.TestCase):
 
-
     def test_solving_dense_problem(self):
 
         models_to_test = {
-            "L0": L0LmeModel,
-            "L1": L1LmeModel,
-            "CAD": CADLmeModel,
-            "L0SR3": Sr3L0LmeModel,
-            "L1SR3": SR3L1LmeModel,
-            "CADSR3": SR3CADLmeModel
+            "L0": (L0LmeModel, {}),
+            "L1": (L1LmeModel, {}),
+            "CAD": (CADLmeModel, {}),
+            "SCAD": (SCADLmeModel, {"rho": 3.7, "sigma": 2.5}),
+            "L0SR3": (Sr3L0LmeModel, {}),
+            "L1SR3": (SR3L1LmeModel, {}),
+            "CADSR3": (SR3CADLmeModel, {}),
+            "SCADSR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 2.5})
         }
 
         trials = 20
@@ -36,14 +37,14 @@ class TestLmeModels(unittest.TestCase):
             ]),
             "obs_std": 0.1,
         }
-        model_parameters = {
+        default_params = {
             "nnz_tbeta": 4,
             "nnz_tgamma": 4,
             "lb": 1,
             "lg": 1,
             "rho": 0.1,
-            "lam": 0.0, # we expect the answers to be dense so the regularizers are small
-            #"stepping": "line-search",
+            "lam": 0.0,  # we expect the answers to be dense so the regularizers are small
+            # "stepping": "line-search",
             "initializer": 'None',
             "logger_keys": ('converged', 'loss',),
             "tol_oracle": 1e-3,
@@ -57,12 +58,15 @@ class TestLmeModels(unittest.TestCase):
 
         for i in range(trials):
             with self.subTest(i=i):
-                for model_name, model_constructor in models_to_test.items():
+                for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
                         problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters, seed=i)
                         x, y = problem.to_x_y()
 
-                        model = model_constructor(**model_parameters)
+                        model_params = default_params.copy()
+                        model_params.update(local_params)
+
+                        model = model_constructor(**model_params)
                         model.fit_problem(problem)
                         logger = model.logger_
                         loss = np.array(logger.get("loss"))
@@ -92,11 +96,15 @@ class TestLmeModels(unittest.TestCase):
     def test_solving_sparse_problem(self):
 
         models_to_test = {
-            "L0": L0LmeModel,
-            #"L1": L1LmeModel,
-            "L0SR3": Sr3L0LmeModel,
-            "L1SR3": SR3L1LmeModel,
-            "CADSR3": SR3CADLmeModel,
+            "L0": (L0LmeModel, {"stepping": "line-search", "fixed_step_len": 0.1}),
+            "L1": (L1LmeModel, {"lam": 1e5, "stepping": "line-search", "fixed_step_len": 0.1}),
+            "CAD": (CADLmeModel, {"lam": 1e5, "stepping": "line-search", "fixed_step_len": 0.1}),
+            "SCAD": (SCADLmeModel, {"lam": 1e5, "rho": 3.7, "sigma": 2.5, "stepping": "line-search",
+                                    "fixed_step_len": 1 / (1 + 1e5)}),
+            "L0_SR3": (Sr3L0LmeModel, {}),
+            "L1_SR3": (SR3L1LmeModel, {}),
+            "CAD_SR3": (SR3CADLmeModel, {}),
+            "SCAD_SR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 2.5})
         }
 
         trials = 10
@@ -108,29 +116,29 @@ class TestLmeModels(unittest.TestCase):
             "obs_std": 0.1,
         }
 
-        model_parameters = {
+        default_params = {
             "lb": 20,
             "lg": 20,
             "initializer": "EM",
             "lam": 1,
-            "rho": 0.1,
+            "rho": 0.2,
             "logger_keys": ('converged', 'loss',),
             "tol_oracle": 1e-3,
             "tol_solver": 1e-6,
             "max_iter_oracle": 1000,
-            "max_iter_solver": 1000
+            "max_iter_solver": 10000
         }
 
-        max_mse = 0.12
+        max_mse = 0.15
         min_explained_variance = 0.9
         fixed_effects_min_accuracy = 0.8
         random_effects_min_accuracy = 0.8
 
         for i in range(trials):
             with self.subTest(i=i):
-                for model_name, model_constructor in models_to_test.items():
+                for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
-                        np.random.seed(i)
+                        np.random.seed(i + 42)
                         true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
                         if sum(true_beta) == 0:
                             true_beta[0] = 1
@@ -142,10 +150,12 @@ class TestLmeModels(unittest.TestCase):
                                                                                    seed=i)
                         x, y = problem.to_x_y()
 
+                        model_params = default_params.copy()
+                        model_params.update(local_params)
 
-                        model = model_constructor(**model_parameters,
-                                                 nnz_tbeta=sum(true_beta),
-                                                 nnz_tgamma=sum(true_gamma))
+                        model = model_constructor(**model_params,
+                                                  nnz_tbeta=sum(true_beta),  # only L0-methods make use of those.
+                                                  nnz_tgamma=sum(true_gamma))
                         model.fit_problem(problem)
 
                         logger = model.logger_
@@ -161,8 +171,8 @@ class TestLmeModels(unittest.TestCase):
                         coefficients = model.coef_
                         maybe_tbeta = coefficients["beta"]
                         maybe_tgamma = coefficients["gamma"]
-                        fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta != 0)
-                        random_effects_accuracy = accuracy_score(true_gamma, maybe_tgamma != 0)
+                        fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta > 5e-3)
+                        random_effects_accuracy = accuracy_score(true_gamma, maybe_tgamma > 5e-3)
 
                         # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
 

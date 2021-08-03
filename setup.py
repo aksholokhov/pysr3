@@ -1,28 +1,46 @@
-import setuptools
+from pathlib import Path
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+from setuptools import setup, find_packages
 
-docs_require=[
-    'sphinx', 'sphinx_rtd_theme'
-]
+if __name__ == "__main__":
+    base_dir = Path(__file__).parent
+    src_dir = base_dir / 'src'
 
-setuptools.setup(
-    name="skmixed",
-    version="0.1.2",
-    author="Aleksei Sholokhov",
-    author_email="aksh@uw.edu",
-    description="",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/aksholokhov/skmixed",
-    license='GPLv3+',
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-        "Operating System :: OS Independent",
-    ],
-    python_requires='>=3.6',
-    install_requires=['numpy', 'scipy', 'sklearn', 'pytest', 'pandas'],
-)
+    about = {}
+    with (src_dir / "skmixed" / "__about__.py").open() as f:
+        exec(f.read(), about)
+
+    install_requirements = [t.strip() for t in open("requirements.txt", 'r').readlines()]
+
+    test_requirements = [
+        'pytest',
+    ]
+
+    doc_requirements = []
+
+    setup(
+        name=about['__title__'],
+        version=about['__version__'],
+
+        description=about['__summary__'],
+        long_description=about['__long_description__'],
+        long_description_content_type="text/markdown",
+        license=about['__license__'],
+        url=about["__uri__"],
+
+        author=about["__author__"],
+        author_email=about["__email__"],
+
+        package_dir={'': 'src'},
+        packages=find_packages(where='src'),
+
+        python_requires='>=3.7',
+        install_requires=install_requirements,
+        tests_require=test_requirements,
+        extras_require={
+            'docs': doc_requirements,
+            'test': test_requirements,
+            'dev': [doc_requirements, test_requirements]
+        },
+        zip_safe=False,
+    )

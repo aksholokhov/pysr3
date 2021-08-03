@@ -8,12 +8,11 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 import yaml
-
-from skmixed.lme.problems import LinearLMEProblem
-from skmixed.lme.models import SimpleLMEModel, L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
-from skmixed.lme.models import Sr3L0LmeModel, SR3L1LmeModel, SR3CADLmeModel, SR3SCADLmeModel
-
 from tqdm import tqdm
+
+from skmixed.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
+from skmixed.lme.models import Sr3L0LmeModel, SR3L1LmeModel, SR3CADLmeModel, SR3SCADLmeModel
+from skmixed.lme.problems import LinearLMEProblem
 
 MODELS_NAMES = ("L0", "L1", "CAD", "SCAD", "L0_SR3", "L1_SR3", "CAD_SR3", "SCAD_SR3")
 

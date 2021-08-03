@@ -1,8 +1,8 @@
-from typing import Tuple, Dict
+from typing import Dict
 
 import numpy as np
 
-from .lme.problems import LinearLMEProblem
+from skmixed.lme.problems import LinearLMEProblem
 
 
 class GaussianPrior:

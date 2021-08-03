@@ -1,6 +1,7 @@
-from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 import numpy as np
 import scipy as sp
+
+from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 
 
 class PGDSolver:
@@ -35,13 +36,21 @@ class PGDSolver:
             max_step_len = 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir])
 
             if self.stepping == "line-search":
-                res = sp.optimize.minimize(
-                    fun=lambda t: oracle.value_function(regularizer.prox(x + t * direction, t)) + regularizer.value(
-                        regularizer.prox(x + t * direction, t)),
-                    x0=0,
-                    bounds=[(0, min(self.fixed_step_len, max_step_len))]
-                )
-                step_len = res.x
+                step_len = min(self.fixed_step_len, max_step_len)
+                while step_len > 1e-14:
+                    z = regularizer.prox(x + step_len * direction, step_len)
+                    if oracle.value_function(z) <= oracle.value_function(x) - direction.dot(z - x) + (
+                            1 / 2 * step_len) * np.linalg.norm(z - x) ** 2:
+                        break
+                    step_len *= 0.8
+
+                # res = sp.optimize.minimize(
+                #     fun=lambda t: oracle.value_function(regularizer.prox(x + t * direction, t)) + regularizer.value(
+                #         regularizer.prox(x + t * direction, t)),
+                #     x0=0,
+                #     bounds=[(0, min(self.fixed_step_len, max_step_len))]
+                # )
+                # step_len = res.x
             elif self.stepping == "fixed_max":
                 step_len = min(max_step_len, self.fixed_step_len)
             else:
