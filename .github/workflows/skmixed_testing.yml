@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ master, active_set_to_pgd ]
+    branches: [ master, joss ]
   pull_request:
-    branches: [ master, active_set_to_pgd ]
+    branches: [ master, joss ]
 
 jobs:
   build:
