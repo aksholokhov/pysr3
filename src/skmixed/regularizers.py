@@ -3,7 +3,37 @@ import numpy as np
 from skmixed.lme.oracles import LinearLMEOracle
 
 
-class L0Regularizer:
+class Regularizer:
+    """
+    Template class for regularizers
+    """
+
+    def instantiate(self, **kwargs):
+        """
+        Attaches all problem-dependent required-to-work information to the regularizer.
+        This function is called at the beginning of the optimization project.
+
+        Parameters
+        ----------
+        kwargs
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def forget(self):
+        pass
+
+    def value(self, x):
+        pass
+
+    def prox(self, x, alpha):
+        pass
+
+
+class L0Regularizer(Regularizer):
     def __init__(self,
                  nnz_tbeta=1,
                  nnz_tgamma=1,
@@ -17,6 +47,8 @@ class L0Regularizer:
         self.independent_beta_and_gamma = independent_beta_and_gamma
         self.beta_weights = None
         self.gamma_weights = None
+        self.beta_participation_in_selection = None
+        self.gamma_participation_in_selection = None
 
     def instantiate(self, weights):
         beta_weights, gamma_weights = self.oracle.x_to_beta_gamma(weights)
@@ -26,7 +58,7 @@ class L0Regularizer:
         self.gamma_participation_in_selection = gamma_weights.astype(bool)
 
     @staticmethod
-    def _take_only_k_max(x: np.ndarray, k: int, **kwargs):
+    def _take_only_k_max(x: np.ndarray, k: int):
         """
         Returns a vector b which consists of k largest elements of x (at the same places) and zeros everywhere else.
 
@@ -36,8 +68,6 @@ class L0Regularizer:
             Vector which we take largest elements from.
         k : int
             How many elements we take from x
-        kwargs :
-            Not used, left for future and for passing debug/experimental parameters.
 
         Returns
         -------
@@ -51,7 +81,7 @@ class L0Regularizer:
             b[idx_k_max] = x[idx_k_max]
         return b
 
-    def optimal_tbeta(self, beta: np.ndarray, **kwargs):
+    def optimal_tbeta(self, beta: np.ndarray):
         """
         Returns tbeta which minimizes the loss function with all other variables fixed.
 
@@ -62,8 +92,6 @@ class L0Regularizer:
         ----------
         beta : np.ndarray, shape = [n]
             Vector of estimates of fixed effects.
-        kwargs :
-            Not used, left for future and for passing debug/experimental parameters.
 
         Returns
         -------
@@ -79,9 +107,9 @@ class L0Regularizer:
                     ~self.beta_participation_in_selection))
             return result
         else:
-            return self._take_only_k_max(beta, self.nnz_tbeta, **kwargs)
+            return self._take_only_k_max(beta, self.nnz_tbeta)
 
-    def optimal_tgamma(self, tbeta, gamma, **kwargs):
+    def optimal_tgamma(self, tbeta, gamma):
         """
         Returns tgamma which minimizes the loss function with all other variables fixed.
 
@@ -95,8 +123,6 @@ class L0Regularizer:
             Vector of (nnz_beta)-sparse estimates for fixed parameters.
         gamma : np.ndarray, shape = [k]
             Vector of covariance estimates of random effects.
-        kwargs :
-            Not used, left for future and for passing debug/experimental parameters.
 
         Returns
         -------
@@ -128,8 +154,8 @@ class L0Regularizer:
         return 0
 
 
-class L1Regularizer:
-    def __init__(self, lam, weights=None, **kwargs):
+class L1Regularizer(Regularizer):
+    def __init__(self, lam, weights=None):
         self.lam = lam
         self.weights = weights
 
@@ -143,13 +169,14 @@ class L1Regularizer:
 
     def prox(self, x, alpha):
         if self.weights is not None:
-            return (x - alpha * self.weights * self.lam).clip(0, None) - (- x - alpha * self.weights * self.lam).clip(0,
-                                                                                                                      None)
+            return (x - alpha * self.weights * self.lam).clip(0, None) \
+                   - (- x - alpha * self.weights * self.lam).clip(0,
+                                                                  None)
         return (x - alpha * self.lam).clip(0, None) - (- x - alpha * self.lam).clip(0, None)
 
 
-class CADRegularizer:
-    def __init__(self, rho, lam, weights=None, **kwargs):
+class CADRegularizer(Regularizer):
+    def __init__(self, rho, lam, weights=None):
         self.rho = rho
         self.lam = lam
         self.weights = weights
@@ -171,8 +198,8 @@ class CADRegularizer:
         return v
 
 
-class SCADRegularizer:
-    def __init__(self, rho, sigma, lam, weights=None, **kwargs):
+class SCADRegularizer(Regularizer):
+    def __init__(self, rho, sigma, lam, weights=None):
         assert rho > 1
         self.rho = rho
         self.sigma = sigma
@@ -204,18 +231,13 @@ class SCADRegularizer:
                 v[i] = x[i]
             elif self.sigma * (1 + alpha_eff) <= abs(x[i]) <= self.rho * self.sigma:
                 v[i] = ((self.rho - 1) * x[i] + np.sign(x[i]) * self.rho * self.sigma * alpha_eff) / (
-                            self.rho - 1 - alpha_eff)
+                        self.rho - 1 - alpha_eff)
             else:
                 v[i] = (x[i] - self.sigma * alpha_eff).clip(0, None) - (- x[i] - self.sigma * alpha_eff).clip(0, None)
         return v
 
 
-class DummyRegularizer:
-    def __init(self):
-        pass
-
-    def instantiate(self, weights=None):
-        pass
+class DummyRegularizer(Regularizer):
 
     def value(self, x):
         return 0

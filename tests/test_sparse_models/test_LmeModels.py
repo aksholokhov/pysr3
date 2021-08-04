@@ -24,7 +24,7 @@ class TestLmeModels(unittest.TestCase):
             "SCADSR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 2.5})
         }
 
-        trials = 20
+        trials = 5
 
         problem_parameters = {
             "groups_sizes": [20, 5, 10, 50],
@@ -107,7 +107,7 @@ class TestLmeModels(unittest.TestCase):
             "SCAD_SR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 2.5})
         }
 
-        trials = 10
+        trials = 5
 
         problem_parameters = {
             "groups_sizes": [20, 12, 14, 50, 11],
@@ -138,7 +138,8 @@ class TestLmeModels(unittest.TestCase):
             with self.subTest(i=i):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
-                        np.random.seed(i + 5)
+                        seed = i + 42  # just making it kind-of random, can be anything
+                        np.random.seed(seed)
                         true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
                         if sum(true_beta) == 0:
                             true_beta[0] = 1
@@ -147,7 +148,7 @@ class TestLmeModels(unittest.TestCase):
                         problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
                                                                                    beta=true_beta,
                                                                                    gamma=true_gamma,
-                                                                                   seed=i)
+                                                                                   seed=seed)
                         x, y = problem.to_x_y()
 
                         model_params = default_params.copy()

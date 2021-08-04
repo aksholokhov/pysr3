@@ -1,6 +1,8 @@
 import numpy as np
 
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
+from skmixed.logger import Logger
+from skmixed.regularizers import Regularizer
 
 
 class PGDSolver:
@@ -8,7 +10,7 @@ class PGDSolver:
     Implements a general Proximal Gradient Descent solver.
     """
 
-    def __init__(self, tol=1e-4, max_iter=1000, stepping="fixed", fixed_step_len=1, **kwargs):
+    def __init__(self, tol=1e-4, max_iter=1000, stepping="fixed", fixed_step_len=1):
         """
         Creates an instance of the solver.
 
@@ -23,15 +25,34 @@ class PGDSolver:
         fixed_step_len: float
             Length of the step size. If stepping="fixed" then this step-size is always used.
             If stepping="line-search" then the line-search starts shrinking the step from this step size.
-        kwargs
-            Extra arguments
         """
         self.tol = tol
         self.max_iter = max_iter
         self.stepping = stepping
         self.fixed_step_len = fixed_step_len
 
-    def optimize(self, x0, oracle: LinearLMEOracle = None, regularizer=None, logger=None):
+    def optimize(self, x0, oracle: LinearLMEOracle = None, regularizer: Regularizer = None, logger: Logger = None):
+        """
+        Solves the optimization problem for
+
+        Loss(x) = oracle(x) + regularizer(x)
+
+        Parameters
+        ----------
+        x0: ndarray
+            starting point of the optimizer.
+        oracle: LinearLMEOracle
+            provides the value and the gradient of the smooth part of the loss.
+        regularizer: Regularizer
+            provides the value and the proximal operator of the non-smooth part of the loss.
+        logger: Logger
+            logs the progress (loss, convergence, etc).
+
+        Returns
+        -------
+        x: ndarray
+            the minimum.
+        """
         if not oracle:
             raise ValueError("oracle can't be None")
         x = x0
@@ -78,12 +99,50 @@ class PGDSolver:
 
 
 class FakePGDSolver:
+    """
+    This class is designed for the situations where the oracle can provide the optimal
+    solution by itself, e.g. when it's accessible analytically.
+    It's also used for PracticalSR3 methods, when the relaxed variables are
+    updated together with the original ones inside of the oracle's subroutine.
+    """
 
     def __init__(self, fixed_step_len=1, update_prox_every=1):
+        """
+        Initializes the solver
+
+        Parameters
+        ----------
+        fixed_step_len: float
+            step-size
+        update_prox_every: int
+            how often should the oracle update the relaxed variable (every X steps).
+        """
         self.fixed_step_len = fixed_step_len
         self.update_prox_every = update_prox_every
 
-    def optimize(self, x0, oracle: LinearLMEOracleSR3 = None, regularizer=None, logger=None, **kwargs):
+    def optimize(self, x0, oracle: LinearLMEOracleSR3 = None, regularizer: Regularizer = None, logger: Logger = None,
+                 **kwargs):
+        """
+        Solves the optimization problem for
+
+        Loss(x) = oracle(x) + regularizer(x)
+
+        Parameters
+        ----------
+        x0: ndarray
+            starting point of the optimizer.
+        oracle: LinearLMEOracle
+            provides the value and the gradient of the smooth part of the loss.
+        regularizer: Regularizer
+            provides the value and the proximal operator of the non-smooth part of the loss.
+        logger: Logger
+            logs the progress (loss, convergence, etc).
+
+        Returns
+        -------
+        x: ndarray
+            the minimum.
+        """
         if not oracle:
             raise ValueError("oracle can't be None")
         if not regularizer:

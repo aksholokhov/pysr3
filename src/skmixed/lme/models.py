@@ -170,8 +170,6 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
 
-        self.logger_.add('converged', 1)
-
         self.coef_ = {
             "beta": beta,
             "gamma": gamma,
@@ -408,7 +406,7 @@ class Sr3L0LmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
-        solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
+        solver = FakePGDSolver(update_prox_every=1) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=(
                                1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
