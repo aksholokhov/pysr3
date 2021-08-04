@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Example workflow for Codecov
+name: Testing and Coverage
 on: [ push ]
 jobs:
   run:
@@ -35,8 +35,7 @@ jobs:
           directory: ./coverage/reports/
           env_vars: OS,PYTHON
           fail_ci_if_error: true
-          files: ./coverage1.xml,./coverage2.xml
+          files: ./coverage.xml
           flags: unittests
           name: codecov-umbrella
-          path_to_write_report: ./coverage/codecov_report.txt
           verbose: true
