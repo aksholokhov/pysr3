@@ -1,6 +1,5 @@
 [run]
 branch = True
-source = src/skmixed
 
 [report]
 exclude_lines =
