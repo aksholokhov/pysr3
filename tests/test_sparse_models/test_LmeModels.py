@@ -131,6 +131,8 @@ class TestLmeModels(unittest.TestCase):
 
         max_mse = 0.15
         min_explained_variance = 0.9
+        fixed_effects_min_accuracy = 0.8
+        random_effects_min_accuracy = 0.8
 
         for i in range(trials):
             with self.subTest(i=i):
@@ -171,10 +173,6 @@ class TestLmeModels(unittest.TestCase):
                         maybe_tgamma = coefficients["gamma"]
                         fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta > 5e-3)
                         random_effects_accuracy = accuracy_score(true_gamma, maybe_tgamma > 5e-3)
-
-                        # SR3 generally works better than regular models, so we ask for higher standards.
-                        fixed_effects_min_accuracy = 0.9 if model_name.endswith("SR3") else 0.8
-                        random_effects_min_accuracy = 0.9 if model_name.endswith("SR3") else 0.8
 
                         self.assertGreater(explained_variance, min_explained_variance,
                                            msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
