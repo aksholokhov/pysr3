@@ -129,7 +129,7 @@ class TestLmeModels(unittest.TestCase):
             "max_iter_solver": 10000
         }
 
-        max_mse = 0.15
+        max_mse = 0.2
         min_explained_variance = 0.9
         fixed_effects_min_accuracy = 0.8
         random_effects_min_accuracy = 0.8
