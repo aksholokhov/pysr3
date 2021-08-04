@@ -37,3 +37,6 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           verbose: true
+          directory: ./coverage/reports/
+          path_to_write_report: ./coverage/codecov_report.txt
+
