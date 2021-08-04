@@ -10,36 +10,92 @@ class Regularizer:
 
     def instantiate(self, **kwargs):
         """
-        Attaches all problem-dependent required-to-work information to the regularizer.
-        This function is called at the beginning of the optimization project.
+        Attaches weights to the regularizer.
 
         Parameters
         ----------
-        kwargs
+        kwargs:
+            whatever is needed for the regularizer to work
 
         Returns
         -------
-
+        None
         """
         pass
 
     def forget(self):
+        """
+        Unlinks all problem-dependent information from the regularizer.
+
+        Returns
+        -------
+        None
+        """
         pass
 
     def value(self, x):
+        """
+        Returns the value for the regularizer at the point x
+
+        Parameters
+        ----------
+        x: ndarray
+            point
+
+        Returns
+        -------
+        the value of the regularizer
+        """
         pass
 
     def prox(self, x, alpha):
+        """
+        Return the value of the proximal operator evaluated at the point x and the step parameter alpha.
+
+        Parameters
+        ----------
+        x: ndarray
+            point.
+        alpha:
+            step parameter.
+
+        Returns
+        -------
+        result of the application of the proximal operator to x
+        """
         pass
 
 
 class L0Regularizer(Regularizer):
+    """
+    Implements an L0-type regularizer, where the desired number of non-zero coordinates for
+    fixed and random effects is given
+    """
+
     def __init__(self,
                  nnz_tbeta=1,
                  nnz_tgamma=1,
                  independent_beta_and_gamma=False,
                  participation_in_selection=None,
                  oracle: LinearLMEOracle = None):
+        """
+        Create the regularizer.
+
+        Parameters
+        ----------
+        nnz_tbeta: int
+            desired number of non-zero fixed effects
+        nnz_tgamma: int
+            desired number of non-zero random effects
+        independent_beta_and_gamma: bool
+            If true then we only can set an element of gamma as non-zero when the respective
+            element of beta is non-zero too.
+        participation_in_selection: ndarray
+            Array of boolean values telling whether the regularizer should be applied to the respective
+            coordinate.
+        oracle: LinearLMEOracle
+            class that encompasses the information about the problem
+        """
         self.nnz_tbeta = nnz_tbeta
         self.nnz_tgamma = nnz_tgamma
         self.oracle = oracle
@@ -51,11 +107,37 @@ class L0Regularizer(Regularizer):
         self.gamma_participation_in_selection = None
 
     def instantiate(self, weights):
+        """
+        Attaches weights to the regularizer.
+
+        Parameters
+        ----------
+        weights:
+            regularization weights
+
+        Returns
+        -------
+        None
+
+        """
         beta_weights, gamma_weights = self.oracle.x_to_beta_gamma(weights)
         self.beta_weights = beta_weights
         self.gamma_weights = gamma_weights
         self.beta_participation_in_selection = beta_weights.astype(bool)
         self.gamma_participation_in_selection = gamma_weights.astype(bool)
+
+    def forget(self):
+        """
+        Unlinks all problem-dependent information from the regularizer.
+
+        Returns
+        -------
+        None
+        """
+        self.beta_weights = None
+        self.gamma_weights = None
+        self.beta_participation_in_selection = None
+        self.gamma_participation_in_selection = None
 
     @staticmethod
     def _take_only_k_max(x: np.ndarray, k: int):
@@ -142,12 +224,38 @@ class L0Regularizer(Regularizer):
         return tgamma
 
     def prox(self, x, alpha):
+        """
+        Return the value of the proximal operator evaluated at the point x and the step parameter alpha.
+
+        Parameters
+        ----------
+        x: ndarray
+            point.
+        alpha:
+            step parameter.
+
+        Returns
+        -------
+        result of the application of the proximal operator to x
+        """
         beta, gamma = self.oracle.x_to_beta_gamma(x)
         tbeta = self.optimal_tbeta(beta)
         tgamma = self.optimal_tgamma(tbeta, gamma)
         return self.oracle.beta_gamma_to_x(tbeta, tgamma)
 
     def value(self, x):
+        """
+        Returns the value for the regularizer at the point x
+
+        Parameters
+        ----------
+        x: ndarray
+            point
+
+        Returns
+        -------
+        the value of the regularizer
+        """
         k = sum(x != 0)
         if k > self.nnz_tbeta + self.nnz_tgamma:
             return np.infty
@@ -155,19 +263,80 @@ class L0Regularizer(Regularizer):
 
 
 class L1Regularizer(Regularizer):
-    def __init__(self, lam, weights=None):
+    """
+    Implements an L1-regularizer, a.k.a. LASSO.
+    N.B. Adaptive LASSO is implemented by providing custom weights.
+    """
+
+    def __init__(self, lam):
+        """
+        Creates LASSO regularizer
+
+        Parameters
+        ----------
+        lam: float
+            strength of the regularizer
+        """
         self.lam = lam
-        self.weights = weights
+        self.weights = None
 
     def instantiate(self, weights):
+        """
+        Attach regularization weights
+
+        Parameters
+        ----------
+        weights: ndarray
+            individual weights for the regularizer's coordinates.
+
+        Returns
+        -------
+        None
+        """
         self.weights = weights
 
+    def forget(self):
+        """
+        Unlinks all problem-dependent information from the regularizer.
+
+        Returns
+        -------
+        None
+        """
+        self.weights = None
+
     def value(self, x):
+        """
+        Returns the value for the regularizer at the point x
+
+        Parameters
+        ----------
+        x: ndarray
+            point
+
+        Returns
+        -------
+        the value of the regularizer
+        """
         if self.weights is not None:
             return self.weights.dot(np.abs(x))
         return self.lam * np.linalg.norm(x, 1)
 
     def prox(self, x, alpha):
+        """
+        Return the value of the proximal operator evaluated at the point x and the step parameter alpha.
+
+        Parameters
+        ----------
+        x: ndarray
+            point.
+        alpha:
+            step parameter.
+
+        Returns
+        -------
+        result of the application of the proximal operator to x
+        """
         if self.weights is not None:
             return (x - alpha * self.weights * self.lam).clip(0, None) \
                    - (- x - alpha * self.weights * self.lam).clip(0,
@@ -176,20 +345,82 @@ class L1Regularizer(Regularizer):
 
 
 class CADRegularizer(Regularizer):
-    def __init__(self, rho, lam, weights=None):
+    """
+    Implement Clipped Absolute Deviation (CAD) regularizer
+    """
+
+    def __init__(self, rho, lam):
+        """
+        Creates CAD regularizer.
+
+        Parameters
+        ----------
+        rho: float
+            constant that prevents values larger than it from being penalized.
+        lam: float
+            strength of the regularizer
+        """
         self.rho = rho
         self.lam = lam
-        self.weights = weights
+        self.weights = None
 
     def instantiate(self, weights=None):
+        """
+        Attach regularization weights
+
+        Parameters
+        ----------
+        weights: ndarray
+            individual weights for the regularizer's coordinates.
+
+        Returns
+        -------
+        None
+        """
         self.weights = weights
 
+    def forget(self):
+        """
+        Unlinks all problem-dependent information from the regularizer.
+
+        Returns
+        -------
+        None
+        """
+        self.weights = None
+
     def value(self, x):
+        """
+        Returns the value for the regularizer at the point x
+
+        Parameters
+        ----------
+        x: ndarray
+            point
+
+        Returns
+        -------
+        the value of the regularizer
+        """
         if self.weights is not None:
             return self.lam * np.minimum(self.weights * np.abs(x), self.rho).sum()
         return self.lam * np.minimum(np.abs(x), self.rho).sum()
 
     def prox(self, x, alpha):
+        """
+        Return the value of the proximal operator evaluated at the point x and the step parameter alpha.
+
+        Parameters
+        ----------
+        x: ndarray
+            point.
+        alpha:
+            step parameter.
+
+        Returns
+        -------
+        result of the application of the proximal operator to x
+        """
         v = np.copy(x)
         idx_small = np.where((np.abs(x) <= self.rho) & (self.weights > 0 if self.weights is not None else True))
         v[idx_small] = (x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0, None) - (
@@ -199,17 +430,68 @@ class CADRegularizer(Regularizer):
 
 
 class SCADRegularizer(Regularizer):
-    def __init__(self, rho, sigma, lam, weights=None):
+    """
+    Implements Smoothly Clipped Absolute Deviations (SCAD) regularizer.
+    """
+
+    def __init__(self, rho, sigma, lam):
+        """
+        Creates SCAD regularizer
+
+        Parameters
+        ----------
+        rho: float, rho > 1
+            first knot of the spline
+        sigma: float, sigma > 1
+            sigma*rho is the second knot of the spline
+        lam: float, lambda > 1
+            strength of the regularizer
+        """
         assert rho > 1
         self.rho = rho
         self.sigma = sigma
         self.lam = lam
-        self.weights = weights
+        self.weights = None
 
     def instantiate(self, weights=None):
+        """
+        Attach regularization weights
+
+        Parameters
+        ----------
+        weights: ndarray
+            individual weights for the regularizer's coordinates.
+
+        Returns
+        -------
+        None
+        """
+
         self.weights = weights
 
+    def forget(self):
+        """
+        Unlinks all problem-dependent information from the regularizer.
+
+        Returns
+        -------
+        None
+        """
+        self.weights = None
+
     def value(self, x):
+        """
+        Returns the value for the regularizer at the point x
+
+        Parameters
+        ----------
+        x: ndarray
+            point
+
+        Returns
+        -------
+        the value of the regularizer
+        """
         total = 0
         for x_i, w in zip(x, self.weights if self.weights is not None else np.ones(x.shape)):
             if abs(x_i) < self.sigma:
@@ -221,6 +503,20 @@ class SCADRegularizer(Regularizer):
         return self.lam * total
 
     def prox(self, x, alpha):
+        """
+        Return the value of the proximal operator evaluated at the point x and the step parameter alpha.
+
+        Parameters
+        ----------
+        x: ndarray
+            point.
+        alpha:
+            step parameter.
+
+        Returns
+        -------
+        result of the application of the proximal operator to x
+        """
         v = np.zeros(x.shape)
         for i, w in enumerate(self.weights if self.weights is not None else np.ones(x.shape)):
             alpha_eff = alpha * self.lam * w
@@ -238,9 +534,38 @@ class SCADRegularizer(Regularizer):
 
 
 class DummyRegularizer(Regularizer):
+    """
+    Fake regularizer that has no effect.
+    """
 
     def value(self, x):
+        """
+        Returns the value for the regularizer at the point x
+
+        Parameters
+        ----------
+        x: ndarray
+            point
+
+        Returns
+        -------
+        the value of the regularizer
+        """
         return 0
 
     def prox(self, x, alpha):
+        """
+        Return the value of the proximal operator evaluated at the point x and the step parameter alpha.
+
+        Parameters
+        ----------
+        x: ndarray
+            point.
+        alpha:
+            step parameter.
+
+        Returns
+        -------
+        result of the application of the proximal operator to x
+        """
         return x

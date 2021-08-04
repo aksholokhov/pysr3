@@ -75,4 +75,16 @@ def get_per_group_coefficients(beta, random_effects, labels):
 
 
 def random_effects_to_matrix(random_effects):
+    """
+    Stacks a list of tuples (group: random effects) into an array
+
+    Parameters
+    ----------
+    random_effects: List[Tuple[Any, ndarray]]
+        List of random effects in the format [(group1: effect1), (group2: effects2), ...]
+
+    Returns
+    -------
+    ndarray of random effects stacked vertically
+    """
     return np.array([u for k, u in random_effects])

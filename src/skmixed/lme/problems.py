@@ -26,13 +26,52 @@ from skmixed.helpers import get_per_group_coefficients
 
 
 class LMEProblem(object):
+    """
+    Template class for various representations of datasets.
+    """
+
     def __init__(self, **kwargs):
+        """
+        Initializes the class
+        Parameters
+        ----------
+        kwargs:
+            anything needed
+        """
         pass
 
-    def from_x_y(self, **kwargs):
+    def from_x_y(self, x, y, **kwargs):
+        """
+        Creates LMEProblem from matrices X and Y
+
+        Parameters
+        ----------
+        x: ndarray, (n, p)
+            data matrix
+        y: ndarray (n, )
+            target variable
+        kwargs:
+            anything needed
+
+        Returns
+        -------
+        LMEProblem
+        """
         pass
 
     def to_x_y(self, **kwargs):
+        """
+        Converts its internal representation into the (X, y) dataset
+
+        Parameters
+        ----------
+        kwargs:
+            anything needed
+
+        Returns
+        -------
+            Matrices X (n, p) and y (n, )
+        """
         pass
 
 
@@ -96,10 +135,29 @@ class LinearLMEProblem(LMEProblem):
         self.re_regularization_weights = re_regularization_weights
 
     def __iter__(self):
+        """
+        Iterator initializer
+
+        Returns
+        -------
+        self
+        """
         self.__iteration_pos = 0
         return self
 
     def __next__(self):
+        """
+        Iterates over (x, y, z, l) for each group
+
+        Returns
+        -------
+        Iterator for a tuple of four elements for group i:
+
+            - xi, ndarray (ni, p), fixed effects
+            - yi, ndarray (ni, ), target variable
+            - zi, ndarray (ni, q), random effects
+            - li, ndarray (ni, ), variances of observation errors
+        """
         j = self.__iteration_pos
         if j < len(self.fixed_features):
             self.__iteration_pos += 1
@@ -201,8 +259,20 @@ class LinearLMEProblem(LMEProblem):
             If given, initializes the global Numpy random generator with this seed.
 
         generator_params : dict
-            Dictionary with the parameters of the problem generator, like min-max bounds for the number of groups and objects.
+            Dictionary with the parameters of the problem generator,
+            like min-max bounds for the number of groups and objects.
             If None then the default one is used (see at the beginning of this file).
+
+        distribution : str
+            which distribution is used for generating features: "normal" or "uniform"
+        chance_outlier : float, from 0 to 1
+            chance that a selected value in data matrix is an outlier. If so, it gets 
+            multiplied by outlier_multiplier
+        outlier_multiplier : float
+            magnitude of the outliers
+        chance_missing : float, from 0 to 1
+            chance that a selected value is going to be missing from the dataset, 
+            in which case it's set to 0.
 
         Returns
         -------
@@ -210,7 +280,7 @@ class LinearLMEProblem(LMEProblem):
             Generated problem
 
         true_parameters : dict, optional
-            True parameters for genrated problem:
+            True parameters for generated problem:
 
                 - "beta" : true beta,
                 - "gamma" : true gamma,
@@ -243,10 +313,9 @@ class LinearLMEProblem(LMEProblem):
 
         continuous_features_idx = np.array(
             [0] + [i + 1 for i, label in enumerate(features_labels) if label in (1, 2, 3)])
-        num_continuous_features = len(continuous_features_idx)
         # We calculate continuous features idxes like other feature don't exist
         # because we need these structures for slicing over continuous features
-        continuous_features_labels = [l for l in features_labels if l in (1, 2, 3)]
+        continuous_features_labels = [t for t in features_labels if t in (1, 2, 3)]
         # We add the intercept manually since it is not mentioned in features_labels.
         fixed_features_idx = np.array(
             [0] + [i + 1 for i, label in enumerate(continuous_features_labels) if label in (1, 3)])
@@ -260,9 +329,8 @@ class LinearLMEProblem(LMEProblem):
             beta = np.random.rand(num_fixed_features)
         else:
             assert beta.shape[0] == num_fixed_features, \
-                "beta has the size %d, but the number of fixed effects, including intercept, is %s" % (beta.shape[0],
-                                                                                                       num_fixed_features
-                                                                                                       )
+                (f"beta has the size {beta.shape[0]}, but the number of fixed effects," +
+                 f" including intercept, is {num_fixed_features}")
         if gamma is None:
             gamma = np.random.rand(num_random_features)
         else:
@@ -279,8 +347,8 @@ class LinearLMEProblem(LMEProblem):
             features_covariance_matrix = np.eye(num_features_to_generate)
         else:
             assert features_covariance_matrix.shape[0] == num_features_to_generate == \
-                   features_covariance_matrix.shape[1], \
-                "features_covariance_matrix should be n*n where n is the number of continuous features"
+                   features_covariance_matrix.shape[1], ("features_covariance_matrix should be n*n " +
+                                                         "where n is the number of continuous features")
 
         data = {
             'fixed_features': [],
@@ -349,9 +417,9 @@ class LinearLMEProblem(LMEProblem):
             sub_labels_counters = [tupled_categorical_features.count(s) for s in unique_sub_labels]
             if all([s > 2 for s in sub_labels_counters]):
                 for s in unique_sub_labels:
-                    subgroup_idxs = np.array([i for i, t in enumerate(tupled_categorical_features) if t == s])
-                    new_groups.append((s, subgroup_idxs))
-                    categorical_features_list.append(categorical_features[subgroup_idxs, :])
+                    subgroup_indices = np.array([i for i, t in enumerate(tupled_categorical_features) if t == s])
+                    new_groups.append((s, subgroup_indices))
+                    categorical_features_list.append(categorical_features[subgroup_indices, :])
                 got_good_subdivision = True
                 break
 
@@ -368,10 +436,10 @@ class LinearLMEProblem(LMEProblem):
         reference_loss_value = 0
         start = 0
 
-        for i, (group_label, group_idxs) in enumerate(new_groups):
-            group_size = len(group_idxs)
+        for i, (group_label, group_indices) in enumerate(new_groups):
+            group_size = len(group_indices)
 
-            group_continuous_features = all_data_in_one_matrix[np.ix_(group_idxs, continuous_features_idx)]
+            group_continuous_features = all_data_in_one_matrix[np.ix_(group_indices, continuous_features_idx)]
             group_fixed_features = group_continuous_features[:, fixed_features_idx]
             # TODO: this one fails if there are no random effects. Fix it.
             group_random_features = group_continuous_features[:, random_features_idx]
@@ -489,6 +557,9 @@ class LinearLMEProblem(LMEProblem):
 
         y: array-like, shape = [m]
             Answers.
+        
+        columns: List[str]
+            List of columns names
 
         columns_labels: List, shape = [n], Optional
             A list of column labels which can be 0 (group labels), 1 (fixed effect), 2 (random effect),
@@ -497,10 +568,21 @@ class LinearLMEProblem(LMEProblem):
             it is the first row of x.
 
         fixed_intercept: bool, default = True
-            Whether to treat the intercept as a fixed featue
+            Whether to treat the intercept as a fixed feature
 
         random_intercept: bool, default = True
             Whether to treat the intercept as a random feature.
+        
+        add_group_as_categorical_feature: bool
+            Whether to add the group's number as a categorical feature
+        
+        must_include_re: List[str]
+            List of fixed effects for which any effect of sparsity-promoting regularizers
+            should be disabled. NB: it does not guarantee the inclusion of this feature
+            to the ultimate model.
+            
+        must_include_fe: List[str]
+            Same for random effects
 
         kwargs:
             It's not used now, but it's left here for future.
@@ -617,6 +699,7 @@ class LinearLMEProblem(LMEProblem):
         all_group_labels = np.repeat(self.group_labels, self.groups_sizes)
         all_fixed_features = np.concatenate(self.fixed_features, axis=0)
         all_random_features = np.concatenate(self.random_features, axis=0)
+        all_categorical_features = None
         if self.num_categorical_features > 0:
             all_categorical_features = np.concatenate(self.categorical_features, axis=0)
 
@@ -736,13 +819,13 @@ class LinearLMEProblem(LMEProblem):
         x, y = self.to_x_y()
         group_labels_idx = [i for i, label in enumerate(x[0, :]) if label == 0]
         assert len(group_labels_idx) == 1, "More than one group label column is found. Check labels."
-        categorical_features_idxs = [i for i, label in enumerate(x[0, :]) if label == 5]
-        indexing_features_idxs = np.array([categorical_features_idxs[i] for i in categorical_features_set])
-        indexing_features = x[1:, indexing_features_idxs]
+        categorical_features_indices = [i for i, label in enumerate(x[0, :]) if label == 5]
+        indexing_features_indices = np.array([categorical_features_indices[i] for i in categorical_features_set])
+        indexing_features = x[1:, indexing_features_indices]
         tupled_indexing_features = [tuple(s) for s in indexing_features]
         for i, s in enumerate(set(tupled_indexing_features)):
-            subgroup_idxs = np.array([i + 1 for i, t in enumerate(tupled_indexing_features) if t == s])
-            x[subgroup_idxs, group_labels_idx[0]] = i
+            subgroup_indices = np.array([i + 1 for i, t in enumerate(tupled_indexing_features) if t == s])
+            x[subgroup_indices, group_labels_idx[0]] = i
         return LinearLMEProblem.from_x_y(x, y, random_intercept=True if self.column_labels[0] == 3 else False)
 
     def reconfigure_columns(self, new_columns_labels):
