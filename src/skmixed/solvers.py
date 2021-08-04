@@ -1,11 +1,31 @@
 import numpy as np
-import scipy as sp
 
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 
 
 class PGDSolver:
+    """
+    Implements a general Proximal Gradient Descent solver.
+    """
+
     def __init__(self, tol=1e-4, max_iter=1000, stepping="fixed", fixed_step_len=1, **kwargs):
+        """
+        Creates an instance of the solver.
+
+        Parameters
+        ----------
+        tol: float
+            Tolerance for the stop-criterion: norm(x - x0) is less than tol.
+        max_iter: int
+            Maximum number of iterations that the solver is allowed to make.
+        stepping: str
+            Stepping policy. Can be either "line-search" or "fixed".
+        fixed_step_len: float
+            Length of the step size. If stepping="fixed" then this step-size is always used.
+            If stepping="line-search" then the line-search starts shrinking the step from this step size.
+        kwargs
+            Extra arguments
+        """
         self.tol = tol
         self.max_iter = max_iter
         self.stepping = stepping
@@ -26,47 +46,34 @@ class PGDSolver:
             x_prev = x
 
             direction = -oracle.gradient_value_function(x)
-            # make sure gamma >= 0
-            ind_zero_x = np.where((x <= 0) & (direction < 0))[0]
-            ind_zero_x = ind_zero_x[(ind_zero_x >= oracle.problem.num_fixed_effects)]
-            direction[ind_zero_x] = 0
-
-            ind_neg_dir = np.where(direction < 0.0)[0]
-            ind_neg_dir = ind_neg_dir[(ind_neg_dir >= oracle.problem.num_fixed_effects)]
-            max_step_len = 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir])
 
             if self.stepping == "line-search":
-                step_len = min(self.fixed_step_len, max_step_len)
+                step_len = self.fixed_step_len
                 while step_len > 1e-14:
-                    z = regularizer.prox(x + step_len * direction, step_len)
+                    y = x + step_len * direction
+                    y[oracle.problem.num_fixed_effects:] = np.clip(y[oracle.problem.num_fixed_effects:], 0, None)
+                    z = regularizer.prox(y, step_len)
                     if oracle.value_function(z) <= oracle.value_function(x) - direction.dot(z - x) + (
                             1 / 2 * step_len) * np.linalg.norm(z - x) ** 2:
                         break
-                    step_len *= 0.8
+                    else:
+                        step_len *= 0.5
 
-                # res = sp.optimize.minimize(
-                #     fun=lambda t: oracle.value_function(regularizer.prox(x + t * direction, t)) + regularizer.value(
-                #         regularizer.prox(x + t * direction, t)),
-                #     x0=0,
-                #     bounds=[(0, min(self.fixed_step_len, max_step_len))]
-                # )
-                # step_len = res.x
-            elif self.stepping == "fixed_max":
-                step_len = min(max_step_len, self.fixed_step_len)
+            elif self.stepping == "fixed":
+                step_len = self.fixed_step_len
             else:
                 step_len = self.fixed_step_len
 
-            x = x + step_len * direction
-            x = regularizer.prox(x, step_len)
+            y = x + step_len * direction
+            y[oracle.problem.num_fixed_effects:] = np.clip(y[oracle.problem.num_fixed_effects:], 0, None)
+            x = regularizer.prox(y, step_len)
             iteration += 1
             if len(logger.keys) > 0:
                 loss = oracle.value_function(x) + regularizer.value(x)
                 logger.log(locals())
 
-        if iteration == self.max_iter:
-            pass
-            # did not converge
-            # raise Exception(f"Did not converge, increase max_iter (current = {self.max_iter})")
+        logger.add("converged", iteration < self.max_iter)
+
         return x
 
 
@@ -91,120 +98,3 @@ class FakePGDSolver:
             logger.log(locals())
 
         return x
-
-
-class AcceleratedPGDSolver:
-    def __init__(self, tol=1e-4, max_iter=1000, stepping="fixed", fixed_step_len=1, **kwargs):
-        self.tol = tol
-        self.max_iter = max_iter
-        self.stepping = stepping
-        self.fixed_step_len = fixed_step_len
-
-    def optimize(self, x0, oracle: LinearLMEOracle = None, regularizer=None, logger=None):
-        if not oracle:
-            raise ValueError("oracle can't be None")
-        x = x0
-        x_prev = np.infty
-        iteration = 1
-
-        if len(logger.keys) > 0:
-            loss = oracle.value_function(x) + regularizer.value(x)
-            logger.log(locals())
-
-        while np.linalg.norm(x - x_prev) > self.tol and iteration <= self.max_iter:
-            x_prev = x
-            w = 0 if iteration == 1 else iteration / (iteration + 3)
-            y = x + w * (x - x_prev)
-            direction = -oracle.gradient_value_function(y)
-            # make sure gamma >= 0
-            ind_zero_y = np.where((y <= 0) & (direction < 0))[0]
-            ind_zero_y = ind_zero_y[(ind_zero_y >= oracle.problem.num_fixed_effects)]
-            direction[ind_zero_y] = 0
-
-            ind_neg_dir = np.where(direction < 0.0)[0]
-            ind_neg_dir = ind_neg_dir[(ind_neg_dir >= oracle.problem.num_fixed_effects)]
-            max_step_len = 1 if len(ind_neg_dir) == 0 else np.min(-y[ind_neg_dir] / direction[ind_neg_dir])
-
-            if self.stepping == "line-search":
-                res = sp.optimize.minimize(
-                    fun=lambda t: oracle.value_function(regularizer.prox(y + t * direction, t)) + regularizer.value(
-                        regularizer.prox(y + t * direction, t)),
-                    x0=0,
-                    bounds=[(0, max_step_len)]
-                )
-                step_len = res.x
-            elif self.stepping == "decreasing":
-                step_len = max_step_len / (iteration + 1)
-            else:
-                step_len = self.fixed_step_len
-
-            y = y + step_len * direction
-            x = regularizer.prox(y, step_len)
-            iteration += 1
-            if len(logger.keys) > 0:
-                loss = oracle.value_function(x) + regularizer.value(x)
-                logger.log(locals())
-
-        if iteration == self.max_iter:
-            pass
-            # did not converge
-            # raise Exception(f"Did not converge, increase max_iter (current = {self.max_iter})")
-        return x
-
-
-class Fista:
-    def __init__(self, tol=1e-4, max_iter=1000, stepping="fixed", fixed_step_len=1, **kwargs):
-        self.tol = tol
-        self.max_iter = max_iter
-        self.stepping = stepping
-        self.fixed_step_len = fixed_step_len
-
-    def optimize(self, x0, oracle: LinearLMEOracle = None, regularizer=None, logger=None):
-        if not oracle:
-            raise ValueError("oracle can't be None")
-        x = x0
-        x_prev = np.infty
-        iteration = 0
-        a = 1
-        y = x0
-
-        if len(logger.keys) > 0:
-            loss = oracle.value_function(x) + regularizer.value(x)
-            logger.log(locals())
-
-        while np.linalg.norm(x - x_prev) > self.tol and iteration < self.max_iter:
-            x_prev = x
-
-            direction = -oracle.gradient_value_function(x)
-            # make sure gamma >= 0
-            ind_zero_x = np.where((x <= 0) & (direction < 0))[0]
-            ind_zero_x = ind_zero_x[(ind_zero_x >= oracle.problem.num_fixed_effects)]
-            direction[ind_zero_x] = 0
-
-            ind_neg_dir = np.where(direction < 0.0)[0]
-            ind_neg_dir = ind_neg_dir[(ind_neg_dir >= oracle.problem.num_fixed_effects)]
-            max_step_len = 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir])
-
-            if self.stepping == "decreasing":
-                step_len = max_step_len / (iteration + 1)
-            else:
-                step_len = self.fixed_step_len
-
-            y_next = regularizer.prox(x + step_len * direction, step_len)
-            a_next = (1 + np.sqrt(1 + 4*a**2))/2
-            x = y_next + (a - 1) / a_next * (y_next - y)
-
-            y = y_next
-            a = a_next
-
-            iteration += 1
-            if len(logger.keys) > 0:
-                loss = oracle.value_function(x) + regularizer.value(x)
-                logger.log(locals())
-
-        if iteration == self.max_iter:
-            pass
-            # did not converge
-            # raise Exception(f"Did not converge, increase max_iter (current = {self.max_iter})")
-        return x
-

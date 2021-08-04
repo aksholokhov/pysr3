@@ -131,14 +131,12 @@ class TestLmeModels(unittest.TestCase):
 
         max_mse = 0.15
         min_explained_variance = 0.9
-        fixed_effects_min_accuracy = 0.8
-        random_effects_min_accuracy = 0.8
 
         for i in range(trials):
             with self.subTest(i=i):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
-                        np.random.seed(i + 42)
+                        np.random.seed(i + 5)
                         true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
                         if sum(true_beta) == 0:
                             true_beta[0] = 1
@@ -174,7 +172,9 @@ class TestLmeModels(unittest.TestCase):
                         fixed_effects_accuracy = accuracy_score(true_beta, maybe_tbeta > 5e-3)
                         random_effects_accuracy = accuracy_score(true_gamma, maybe_tgamma > 5e-3)
 
-                        # maybe_per_group_coefficients = coefficients["per_group_coefficients"]
+                        # SR3 generally works better than regular models, so we ask for higher standards.
+                        fixed_effects_min_accuracy = 0.9 if model_name.endswith("SR3") else 0.8
+                        random_effects_min_accuracy = 0.9 if model_name.endswith("SR3") else 0.8
 
                         self.assertGreater(explained_variance, min_explained_variance,
                                            msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
