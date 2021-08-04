@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 import yaml
-from tqdm import tqdm
 
 from skmixed.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
 from skmixed.lme.models import Sr3L0LmeModel, SR3L1LmeModel, SR3CADLmeModel, SR3SCADLmeModel
@@ -17,15 +16,15 @@ from skmixed.lme.problems import LinearLMEProblem
 MODELS_NAMES = ("L0", "L1", "CAD", "SCAD", "L0_SR3", "L1_SR3", "CAD_SR3", "SCAD_SR3")
 
 
-def sel_covariates(df: pd.DataFrame,
-                   target: str,
-                   se: str,
-                   group: str,
-                   covs: Optional[Dict[str, List[str]]] = None,
-                   pre_sel_covs: Optional[Dict[str, List[str]]] = None,
-                   output_folder: Union[str, Path] = ".",
-                   model: str = "L1_SR3",
-                   **kwargs) -> None:
+def select_covariates(df: pd.DataFrame,
+                      target: str,
+                      se: str,
+                      group: str,
+                      covs: Optional[Dict[str, List[str]]] = None,
+                      pre_sel_covs: Optional[Dict[str, List[str]]] = None,
+                      output_folder: Union[str, Path] = ".",
+                      model: str = "L1_SR3",
+                      **kwargs) -> None:
     """Select covariates
 
     Parameters
@@ -85,7 +84,7 @@ def sel_covariates(df: pd.DataFrame,
     model_constructor, selection_spectrum = get_model(model, problem)
     best_model = None
     best_score = +np.infty
-    for params in tqdm(selection_spectrum):
+    for params in selection_spectrum:
         model = model_constructor(params)
         model.fit_problem(problem)
         score = model.jones2010bic()
