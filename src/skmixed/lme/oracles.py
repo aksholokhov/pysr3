@@ -1,4 +1,4 @@
-# This code implements linear mixed-effects oracle as a subroutine for skmixed's subroutines.
+# This code implements linear mixed-effects oracle as a subroutine for skmixed subroutines.
 # Copyright (C) 2020 Aleksei Sholokhov, aksh@uw.edu
 #
 # This program is free software: you can redistribute it and/or modify
@@ -73,6 +73,7 @@ class LinearLMEOracle:
         self.omega_cholesky_inv = []
         self.omega_cholesky = []
         self.gamma = None
+        self.logger = None
         self.n_iter_inner = n_iter_inner
         self.tol_inner = tol_inner
         if warm_start_duals:
@@ -155,10 +156,10 @@ class LinearLMEOracle:
             invert_upper_triangular: Callable[[np.ndarray], np.ndarray] = get_lapack_funcs("trtri")
             for x, y, z, stds in self.problem:
                 omega = z.dot(gamma_mat).dot(z.T) + np.diag(stds)
-                L = np.linalg.cholesky(omega)
-                L_inv = invert_upper_triangular(L.T)[0].T
-                self.omega_cholesky.append(L)
-                self.omega_cholesky_inv.append(L_inv)
+                el = np.linalg.cholesky(omega)
+                el_inv = invert_upper_triangular(el.T)[0].T
+                self.omega_cholesky.append(el)
+                self.omega_cholesky_inv.append(el_inv)
             self.gamma = gamma
         return None
 
@@ -207,7 +208,7 @@ class LinearLMEOracle:
         """
         result = 0
         self._recalculate_cholesky(gamma)
-        us = self.optimal_random_effects(beta, gamma)
+        us = self.optimal_random_effects(beta, gamma, **kwargs)
         for (x, y, z, stds), u in zip(self.problem, us):
             r = y - x.dot(beta) - z.dot(u)
             result += 1 / 2 * sum(r ** 2 / stds) + 1 / 2 * sum(np.log(stds))
@@ -234,10 +235,10 @@ class LinearLMEOracle:
 
         self._recalculate_cholesky(gamma)
         grad_gamma = np.zeros(len(gamma))
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
-            Lz = L_inv.dot(z)
-            grad_gamma += 1 / 2 * np.sum(Lz ** 2, axis=0) - 1 / 2 * Lz.T.dot(L_inv.dot(xi)) ** 2
+            el_z = el_inv.dot(z)
+            grad_gamma += 1 / 2 * np.sum(el_z ** 2, axis=0) - 1 / 2 * el_z.T.dot(el_inv.dot(xi)) ** 2
         return grad_gamma + self.prior.gradient_gamma(beta, gamma)
 
     def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, take_only_positive_part=False, **kwargs) -> np.ndarray:
@@ -263,12 +264,13 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         num_random_effects = self.problem.num_random_effects
         hessian = np.zeros(shape=(num_random_effects, num_random_effects))
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
-            Lz = L_inv.dot(z)
-            Lxi = L_inv.dot(xi).reshape((len(xi), 1))
-            hessian += ((0 if take_only_positive_part else -Lz.T.dot(Lz)) + 2 * (Lz.T.dot(Lxi).dot(Lxi.T).dot(Lz))) * (
-                Lz.T.dot(Lz))
+            el_z = el_inv.dot(z)
+            el_xi = el_inv.dot(xi).reshape((len(xi), 1))
+            hessian += ((0 if take_only_positive_part else -el_z.T.dot(el_z)) + 2 * (
+                el_z.T.dot(el_xi).dot(el_xi.T).dot(el_z))) * (
+                           el_z.T.dot(el_z))
         return 1 / 2 * hessian + self.prior.hessian_gamma(beta, gamma)
 
     def optimal_gamma_pgd(self, beta: np.ndarray, gamma: np.ndarray, log_progress=False, **kwargs):
@@ -338,18 +340,28 @@ class LinearLMEOracle:
         optimal gamma
         """
         n = len(gamma)
-        I = np.eye(n)
+        eye = np.eye(n)
+
         # v = x[:n], g = x[n:]
-        F_coord = lambda v, g, mu: np.concatenate([
-            v * g - mu,
-            self.gradient_gamma(beta, g, **kwargs) - v
-        ])
-        F = lambda x, mu: F_coord(x[:n], x[n:], mu)
-        dF_coord = lambda v, g: np.block([
-            [np.diag(g), np.diag(v)],
-            [-I, self.hessian_gamma(beta, g, take_only_positive_part=True, **kwargs)]
-        ])
-        dF = lambda x: dF_coord(x[:n], x[n:])
+
+        def F_coord(v, g, mu):
+            return np.concatenate([
+                v * g - mu,
+                self.gradient_gamma(beta, g, **kwargs) - v
+            ])
+
+        def F(x, mu):
+            return F_coord(x[:n], x[n:], mu)
+
+        def dF_coord(v, g):
+            return np.block([
+                [np.diag(g), np.diag(v)],
+                [-eye, self.hessian_gamma(beta, g, take_only_positive_part=True, **kwargs)]
+            ])
+
+        def dF(x):
+            return dF_coord(x[:n], x[n:])
+
         v = np.ones(n)
         g = gamma
         x = np.concatenate([v, g])
@@ -396,9 +408,8 @@ class LinearLMEOracle:
             Vector of estimates of random effects, initial point.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
-        log_progress : bool
-            Whether to log the loss function during optimization (for debugging only)
-
+        method : str
+            which numerical subroutine to use: "pgd" or "ip"
         Returns
         -------
         optimal gamma
@@ -475,7 +486,6 @@ class LinearLMEOracle:
         Returns
         -------
         probabilities each coordinates of beta, as ndarray.
-
         """
         hessian = self.hessian_beta(beta=beta, gamma=gamma)
         cov_matrix = np.linalg.inv(hessian)
@@ -508,12 +518,12 @@ class LinearLMEOracle:
         """
         self._recalculate_cholesky(gamma)
         hessian = np.zeros((self.problem.num_random_effects, self.problem.num_fixed_effects))
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
-            Lx = L_inv.dot(x)
-            Lz = L_inv.dot(z)
-            Lxi = L_inv.dot(xi)
-            hessian += np.diag(Lz.T.dot(Lxi)).dot(Lz.T.dot(Lx))
+            el_x = el_inv.dot(x)
+            el_z = el_inv.dot(z)
+            el_xi = el_inv.dot(xi)
+            hessian += np.diag(el_z.T.dot(el_xi)).dot(el_z.T.dot(el_x))
         return hessian.T + self.prior.hessian_beta_gamma(beta=beta, gamma=gamma)
 
     def x_to_beta_gamma(self, x):
@@ -527,7 +537,7 @@ class LinearLMEOracle:
 
         Returns
         -------
-        Tuple of ndarrays: beta and gamma
+        Tuple of numpy arrays: beta and gamma
         """
         beta = x[:self.problem.num_fixed_effects]
         gamma = x[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects]
@@ -645,7 +655,7 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         _dont_solve_wrt_beta : bool, Optional
             If true, then it does not perform the outer matrix inversion and returns the (kernel, tail) instead.
@@ -656,16 +666,16 @@ class LinearLMEOracle:
 
         Returns
         -------
-        beta: np.ndarray, shape = [n]
+        beta: np.ndarray, shape = [p]
             Vector of optimal estimates of the fixed effects for given gamma.
         """
         self._recalculate_cholesky(gamma)
         kernel = 0
         tail = 0
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
-            Lx = L_inv.dot(x)
-            kernel += Lx.T.dot(Lx)
-            tail += Lx.T.dot(L_inv.dot(y))
+        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
+            el_x = el_inv.dot(x)
+            kernel += el_x.T.dot(el_x)
+            tail += el_x.T.dot(el_inv.dot(y))
         if _dont_solve_wrt_beta:
             return kernel, tail
         else:
@@ -677,16 +687,16 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
         Returns
         -------
-        u : np.ndarray, shape = [m, k]
+        u : np.ndarray, shape = [m, q]
             Set of optimal random effects estimations for given beta and gamma
 
         """
@@ -716,9 +726,9 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
@@ -763,9 +773,9 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
@@ -777,7 +787,8 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         p = sum(beta != 0)
         q = sum(gamma != 0)
-        return self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + (p + q) * np.log(self._jones2010n_eff())
+        return self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + (p + q) * np.log(
+            self._jones2010n_eff())
 
     def muller2018ic(self, beta, gamma, **kwargs):
         """
@@ -785,9 +796,9 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
@@ -809,7 +820,7 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
 
         Returns
@@ -822,10 +833,10 @@ class LinearLMEOracle:
         h_beta_tail = []
         xs = []
         # Form the beta kernel and tail
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
-            Lx = L_inv.dot(x)
-            h_beta_kernel += Lx.T.dot(Lx)
-            h_beta_tail.append(Lx.T.dot(L_inv))
+        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
+            el_x = el_inv.dot(x)
+            h_beta_kernel += el_x.T.dot(el_x)
+            h_beta_tail.append(el_x.T.dot(el_inv))
             xs.append(x)
 
         h_beta = np.concatenate([np.linalg.inv(h_beta_kernel).dot(tail) for tail in h_beta_tail], axis=1)
@@ -837,7 +848,7 @@ class LinearLMEOracle:
         mask = np.abs(gamma) > 1e-10
 
         random_effects_parts = []
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
             # Form the h_gamma
             stds_inv_mat = np.diag(1 / stds)
             # If the variance of R.E. is 0 then the R.E. is 0, so we take it into account separately
@@ -861,7 +872,7 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
@@ -880,16 +891,16 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
         Returns
         -------
-        Value for Vaida's AIC
+        Value for Vaida AIC
         """
         rho = self._hodges2001ddf(gamma)
         n = self.problem.num_obs
@@ -908,9 +919,9 @@ class LinearLMEOracle:
         ----------
         ic: str
             Can be "IC_jones2010bic", "IC_vaida2005aic"
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
@@ -929,48 +940,27 @@ class LinearLMEOracle:
 
     def get_condition_numbers(self):
         """
-        Returns the condition numbers of the data matrcies X and Z
+        Returns the condition numbers of the data matrices X and Z
 
         Returns
         -------
-        Tuple of the condition numbers of the data matrcies X and Z
+        Tuple of the condition numbers of the data matrices X and Z
         """
-        singv_x = []
-        singv_z = []
+        singular_values_x = []
+        singular_values_z = []
         for x, y, z, l in self.problem:
-            U, Sx, V = np.linalg.svd(x.T.dot(x))
-            U, Sz, V = np.linalg.svd(z.T.dot(z))
-            singv_x += list(Sx)
-            singv_z += list(Sz)
+            u, sx, v = np.linalg.svd(x.T.dot(x))
+            u, sz, v = np.linalg.svd(z.T.dot(z))
+            singular_values_x += list(sx)
+            singular_values_z += list(sz)
 
-        return (np.infty if min(singv_x) == 0 else max(singv_x) / min(singv_x),
-                np.infty if min(singv_z) == 0 else max(singv_z) / min(singv_z))
+        return (np.infty if min(singular_values_x) == 0 else max(singular_values_x) / min(singular_values_x),
+                np.infty if min(singular_values_z) == 0 else max(singular_values_z) / min(singular_values_z))
 
 
 class LinearLMEOracleSR3(LinearLMEOracle):
     """
-       Implements Regularized Linear Mixed-Effects Model functional for given problem::
-
-           Y_i = X_i*β + Z_i*u_i + 𝜺_i,
-
-           where
-
-           β ~ 𝒩(tb, 1/lb),
-
-           ||tβ||_0 = nnz(β) <= nnz_tbeta,
-
-           u_i ~ 𝒩(0, diag(𝛄)),
-
-           𝛄 ~ 𝒩(t𝛄, 1/lg),
-
-           ||t𝛄||_0 = nnz(t𝛄) <= nnz_tgamma,
-
-           𝜺_i ~ 𝒩(0, Λ)
-
-       Here tβ and t𝛄 are single variables, not multiplications (e.g. not t*β). This oracle is designed for
-       a solver (LinearLMESparseModel) which searches for a sparse solution (tβ, t𝛄) with at most k and j <= k non-zero
-       elements respectively. For more details, see the documentation for LinearLMESparseModel.
-
+       Implements Sparse Relaxed Regularized Regression (SR3) for Linear Mixed-Effects Model.
        The problem should be provided as LinearLMEProblem.
 
        """
@@ -1006,9 +996,9 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         gamma : np.ndarray, shape = [k]
             Vector of estimates of random effects.
         tbeta : np.ndarray, shape = [n]
-            Vector of (nnz_tbeta)-sparse estimates of fixed effects.
+            Vector of relaxed estimates of fixed effects.
         tgamma : np.ndarray, shape = [k]
-            Vector of (nnz_tgamma)-sparse estimates of random effects.
+            Vector of relaxed estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters.
 
@@ -1028,18 +1018,18 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
         Parameters
         ----------
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
-        tgamma : np.ndarray, shape = [k]
-            Vector of (nnz_tgamma)-sparse covariance estimates of random effects.
+        tgamma : np.ndarray, shape = [q]
+            Vector of relaxed estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
         Returns
         -------
-            grad_gamma: np.ndarray, shape = [k]
+            grad_gamma: np.ndarray, shape = [q]
                 The gradient of the loss function with respect to gamma: grad_gamma = ∇_𝛄[ℒ](β, 𝛄) + lg*(𝛄 - t𝛄)
         """
 
@@ -1047,37 +1037,107 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
     def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         """
-        Returns the Hessian of the loss function with respect to gamma: ∇²_𝛄[ℒ](β, 𝛄) + lg*I.
+        Returns the Hessian of the loss function with respect to gamma.
 
         Parameters
         ----------
-        beta : np.ndarray, shape = [n]
+        beta : np.ndarray, shape = [p]
             Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [k]
+        gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
         Returns
         -------
-            hessian: np.ndarray, shape = [k, k]
-                Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄) + lg*I.
+            hessian: np.ndarray, shape = [q, q]
+                Hessian of the loss function with respect to gamma.
         """
 
         return super().hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_effects)
 
     def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, **kwargs) -> np.ndarray:
+        """
+        Evaluates the gradient of the loss-function with respect to beta
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects, initial point.
+        tbeta : np.ndarray, shape = [p]
+            Vector of relaxed estimates of fixed effects.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        the gradient of the loss function with respect to beta
+        """
         return super().gradient_beta(beta, gamma, **kwargs) + self.lb * (beta - tbeta)
 
     def hessian_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs):
+        """
+        Returns the Hessian of the loss function with respect to gamma
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+            hessian: np.ndarray, shape = [q, q]
+                Hessian of the loss function with respect to gamma
+        """
         return super().hessian_beta(beta, gamma, **kwargs) + self.lb * np.eye(self.problem.num_fixed_effects)
 
     def joint_loss(self, x, w=None, *args, **kwargs):
+        """
+        Takes x = [beta, gamma], w = [tbeta, tgamma],
+        and evaluates the loss with this beta and gamma.
+
+        Parameters
+        ----------
+        x: ndarray, (p+q)
+            vector of parameters [beta, gamma]
+        w: ndarray, (p+q)
+            vector of parameters [tbeta, tgamma]
+
+        args:
+            for debugging and passing parameters
+        kwargs:
+            for debugging and passing parameters
+
+        Returns
+        -------
+        Loss at (x, w)
+        """
         beta, gamma = self.x_to_beta_gamma(x)
         tbeta, tgamma = self.x_to_beta_gamma(w)
         return self.loss(beta, gamma, tbeta, tgamma, **kwargs)
 
     def joint_gradient(self, x, tbeta=None, tgamma=None):
+        """
+        Takes x = [beta, gamma] and evaluates the gradient of the loss with this beta and gamma.
+
+        Parameters
+        ----------
+        x: ndarray, (p+q)
+           vector of parameters [beta, gamma]
+        tbeta : np.ndarray, shape = [p]
+            Vector of relaxed estimates of fixed effects.
+        tgamma : np.ndarray, shape = [q]
+            Vector of relaxed estimates of random effects.
+        Returns
+        -------
+        Gradient of the loss at x = [beta, gamma]
+        """
         beta, gamma = self.x_to_beta_gamma(x)
         gradient = np.zeros(len(x))
         gradient[:self.problem.num_fixed_effects] = self.gradient_beta(beta, gamma, tbeta=tbeta)
@@ -1086,12 +1146,38 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         return gradient
 
     def value_function(self, w, **kwargs):
+        """
+        Evaluates value function of the problem.
+
+        Parameters
+        ----------
+        w: ndarray, (p+q)
+            vector of parameters [beta, gamma]
+        kwargs:
+            for debugging and passing parameters
+
+        Returns
+        -------
+        Value of the value function
+        """
         tbeta, tgamma = self.x_to_beta_gamma(w)
         beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
                                                                           tgamma=tgamma, **kwargs)
         return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
 
     def gradient_value_function(self, w):
+        """
+        Returns the gradient of the value function.
+
+        Parameters
+        ----------
+        w: ndarray, (p+q)
+            vector of parameters [beta, gamma]
+
+        Returns
+        -------
+        Gradient of the value function
+        """
         tbeta, tgamma = self.x_to_beta_gamma(w)
         beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
                                                                           tgamma=tgamma)
@@ -1102,6 +1188,34 @@ class LinearLMEOracleSR3(LinearLMEOracle):
     def find_optimal_parameters(self, w, log_progress=False, regularizer=None, increase_lambdas=False,
                                 line_search=False, prox_step_len=1.0, update_prox_every=1,
                                 **kwargs):
+        """
+        Wrapper around the routine that maximizes the likelihood of the oracle with respect to its
+        non-relaxed parameters. This routine is designed for experiments doing all relaxations of (SR3 and IP)
+        simultaneously (SR3Practical).
+
+        Parameters
+        ----------
+        w: ndarray, (p+q)
+            vector of parameters [beta, gamma]
+        log_progress: bool
+            whether to log progress of internal numerical routines
+        regularizer: Regularizer
+            an instance of Regularizer class
+        increase_lambdas: bool
+            whether to iteratively increase the parameters of SR3 relaxation
+        line_search: bool
+            whether to perform line-search inside IP method
+        prox_step_len: float
+            step-size for numerical subroutines
+        update_prox_every: int
+            how frequently algorithm updates sparse variables (tbeta, tgamma)
+        kwargs:
+            for passing extra arguments
+
+        Returns
+        -------
+        Five objects: beta, gamma, tbeta, tgamma, logger
+        """
         tbeta, tgamma = self.x_to_beta_gamma(w)
         beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(beta=2 * tbeta,
                                                                           gamma=2 * tgamma,
@@ -1138,12 +1252,16 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         if log_progress:
             self.logger = [gamma]
         losses_kkt = []
-        F_coord = lambda v, b, g, mu: np.concatenate([
-            v * g - mu,
-            self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
-            self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
-        ])
-        F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
+
+        def F_coord(v, b, g, mu):
+            return np.concatenate([
+                v * g - mu,
+                self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+            ])
+
+        def F(x, mu):
+            return F_coord(x[:n], x[n:-n], x[-n:], mu)
 
         prev_tbeta = np.infty
         prev_tgamma = np.infty
@@ -1165,20 +1283,28 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             prev_tbeta = tbeta
             prev_tgamma = tgamma
 
-            F_coord = lambda v, b, g, mu: np.concatenate([
-                v * g - mu,
-                self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
-                self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
-            ])
-            F = lambda x, mu: F_coord(x[:n], x[n:-n], x[-n:], mu)
-            dF_coord = lambda v, b, g: np.block([
-                [np.diag(g), Zb, np.diag(v)],
-                [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
-                 self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
-                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T,
-                 self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
-            ])
-            dF = lambda x: dF_coord(x[:n], x[n:-n], x[-n:])
+            def F_coord(v, b, g, mu):
+                return np.concatenate([
+                    v * g - mu,
+                    self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                    self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
+                ])
+
+            def F(x, mu):
+                return F_coord(x[:n], x[n:-n], x[-n:], mu)
+
+            def dF_coord(v, b, g):
+                return np.block([
+                    [np.diag(g), Zb, np.diag(v)],
+                    [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                     self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
+                    [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T,
+                     self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+                ])
+
+            def dF(x):
+                return dF_coord(x[:n], x[n:-n], x[-n:])
+
             F_current = F(x, mu)
             dF_current = dF(x)
             direction = np.linalg.solve(dF_current, -F_current)
@@ -1210,7 +1336,6 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
                 tbeta, tgamma = self.x_to_beta_gamma(tx)
 
-            # losses.append(np.linalg.norm(F(x, mu)))
             losses_kkt.append(np.linalg.norm(F(x, mu)))
 
             if log_progress:

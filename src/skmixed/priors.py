@@ -5,7 +5,11 @@ import numpy as np
 from skmixed.lme.problems import LinearLMEProblem
 
 
-class GaussianPrior:
+class Prior:
+    pass
+
+
+class GaussianPrior(Prior):
     """
     Implements Gaussian Prior for various models
     """
@@ -201,7 +205,7 @@ class GaussianPrior:
         return 0
 
 
-class NonInformativePrior:
+class NonInformativePrior(Prior):
     """
     Implements a non-informative prior
     """

@@ -31,18 +31,9 @@ from skmixed.solvers import PGDSolver, FakePGDSolver
 
 class LMEModel(BaseEstimator, RegressorMixin):
     """
-    Solve regularized sparse Linear Mixed Effects problem with projected gradient descent method.
+    Solve Linear Mixed Effects problem with projected gradient descent method.
 
     The log-likelihood minimization problem which this model solves is::
-
-        min ℋ(β, 𝛄, tβ, t𝛄) w.r.t. all four arguments (β, 𝛄, tβ, t𝛄)
-        s.t. nnz(tbeta) <= nnz_tbeta and nnz(gamma) <= nnz_tgamma where
-
-        ℋ(β, 𝛄, tβ, t𝛄) := ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2
-
-        ℒ(β, 𝛄) = ∑(yi - Xi*β)ᵀΩi^{-1}(yi - Xi*β) + ln(det(Ωi))
-
-        Ωi = Zi*diag(𝛄)Ziᵀ + diag(obs_stds)
 
     The original statistical model which this loss is based on is::
 
@@ -58,7 +49,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         𝜺_i ~ 𝒩(0, diag(obs_std)
 
-    See my paper for more details.
+    See the paper for more details.
     """
 
     def __init__(self,
@@ -109,10 +100,6 @@ class LMEModel(BaseEstimator, RegressorMixin):
                             | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
                         -   | 'gamma0' : np.ndarray, shape = [k],
                             | Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
-                        -   | 'tbeta0' : np.ndarray, shape = [n],
-                            | Initial estimate of sparse fixed effects. If None then it defaults to an all-zeros vector.
-                        -   | 'tgamma0' : np.ndarray, shape = [k],
-                            | Initial estimate of sparse random covariances. If None then it defaults to an all-zeros vector.
 
                 warm_start : bool, default is False
                     Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
@@ -137,6 +124,33 @@ class LMEModel(BaseEstimator, RegressorMixin):
                     initial_parameters: dict = None,
                     warm_start=False,
                     **kwargs):
+        """
+        Fits the model to a provided problem
+
+        Parameters
+        ----------
+        problem: LinearLMEProblem
+            an instance of LinearLMEProblem that contains all data-dependent information
+
+        initial_parameters : np.ndarray
+            Dict with possible fields:
+
+                -   | 'beta0' : np.ndarray, shape = [n],
+                    | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
+                -   | 'gamma0' : np.ndarray, shape = [k],
+                    | Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
+
+        warm_start : bool, default is False
+            Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
+            Throws NotFittedError if set to True when not fitted.
+
+        kwargs :
+            Not used currently, left here for passing debugging parameters.
+
+        Returns
+        -------
+            self
+        """
 
         self.oracle.instantiate(problem)
         if self.regularizer:
@@ -193,10 +207,15 @@ class LMEModel(BaseEstimator, RegressorMixin):
             Data matrix. Should have the same format as the data which was used for fitting the model:
             the number of columns and the columns' labels should be the same. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
+        columns_labels : Optional[List[int]]
+            List of column labels. There shall be only one column of group labels and answers STDs,
+            and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
 
-        use_sparse_coefficients : bool, default is False
-            If true then uses sparse coefficients, tbeta and tgamma, for making a prediction, otherwise uses
-            beta and gamma.
+                - 1 : fixed effect
+                - 2 : random effect
+                - 3 : both fixed and random,
+                - 0 : groups labels
+                - 4 : answers standard deviations
 
         Returns
         -------
@@ -207,20 +226,19 @@ class LMEModel(BaseEstimator, RegressorMixin):
         problem = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
         return self.predict_problem(problem, **kwargs)
 
-    def predict_problem(self, problem, use_sparse_coefficients=False, **kwargs):
+    def predict_problem(self, problem, **kwargs):
         """
-        Makes a prediction if .fit(X, y) was called before and throws an error otherwise.
+        Makes a prediction if .fit was called before and throws an error otherwise.
 
         Parameters
         ----------
-        x : np.ndarray
-            Data matrix. Should have the same format as the data which was used for fitting the model:
-            the number of columns and the columns' labels should be the same. It may contain new groups, in which case
+        problem : LinearLMEProblem
+            An instance of LinearLMEProblem. Should have the same format as the data
+            which was used for fitting the model. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
 
-        use_sparse_coefficients : bool, default is False
-            If true then uses sparse coefficients, tbeta and tgamma, for making a prediction, otherwise uses
-            beta and gamma.
+        kwargs :
+            for passing debugging parameters
 
         Returns
         -------
@@ -291,27 +309,69 @@ class LMEModel(BaseEstimator, RegressorMixin):
         return 1 - u / v
 
     def check_is_fitted(self):
+        """
+        Checks if the model was fitted before. Throws an error otherwise.
+
+        Returns
+        -------
+        None
+        """
         if not hasattr(self, "coef_"):
             raise AssertionError("The model has not been fitted yet. Call .fit() first.")
 
-    def muller2018ic(self, **kwargs):
+    def muller2018ic(self):
+        """
+        Implements Information Criterion (IC) from (Muller, 2018)
+
+        Returns
+        -------
+        Value of Mueller's IC
+        """
+
         self.check_is_fitted()
         return self.oracle.muller2018ic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
 
     def vaida2005aic(self):
+        """
+        Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
+
+        Returns
+        -------
+        Value for Vaida AIC
+        """
         self.check_is_fitted()
         return self.oracle.vaida2005aic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
 
     def jones2010bic(self):
+        """
+        Implements Bayes Information Criterion (BIC) from (Jones, 2010)
+        # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
+
+        Returns
+        -------
+        Value of Jones's BIC
+        """
         self.check_is_fitted()
         return self.oracle.jones2010bic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
 
     def flip_probabilities(self):
+        """
+        Estimates the probabilities of coordinates in beta to flip their signs
+        under the normal posterior.
+
+        Returns
+        -------
+        probabilities each coordinates of beta, as ndarray.
+        """
         self.check_is_fitted()
         return self.oracle.flip_probabilities_beta(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
 
 
 class SimpleLMEModel(LMEModel):
+    """
+    Implements a standard Linear Mixed-Effects Model.
+    """
+
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
@@ -321,6 +381,33 @@ class SimpleLMEModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=5e-2 if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
@@ -333,6 +420,11 @@ class SimpleLMEModel(LMEModel):
 
 
 class L0LmeModel(LMEModel):
+    """
+    Implements an L0-regularized Linear Mixed-Effect Model. It allows specifying the maximal number of
+    non-zero fixed and random effects in your model
+    """
+
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
@@ -345,6 +437,39 @@ class L0LmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        nnz_tbeta : int
+            the maximal number of non-zero fixed effects in your model
+        nnz_tgamma : int
+            the maximal number of non-zero random effects in your model
+        participation_in_selection: ndarray of int
+            0 if the feature should be affected by the regularizer, 0 otherwise
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
@@ -406,6 +531,52 @@ class Sr3L0LmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_oracle: float
+            tolerance for SR3 oracle's internal numerical subroutines
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        lb: float
+            level of SR3-relaxation for fixed effects
+        lg: float
+            level of SR3-relaxation for random effects
+        nnz_tbeta : int
+            the maximal number of non-zero fixed effects in your model
+        nnz_tgamma : int
+            the maximal number of non-zero random effects in your model
+        participation_in_selection: ndarray of int
+            0 if the feature should be affected by the regularizer, 0 otherwise
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        warm_start: bool
+            if fitting should be started from the current model's coefficients.
+            Used for fine-tuning and iterative fitting.
+        practical: bool
+            whether to use SR3-Practical method, which works faster at the expense of accuracy
+        update_prox_every: int
+            how often update the relaxed variables. Only if practical=True
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
         solver = FakePGDSolver(update_prox_every=1) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=(
@@ -424,6 +595,10 @@ class Sr3L0LmeModel(LMEModel):
 
 
 class L1LmeModel(LMEModel):
+    """
+    Implements a LASSO-regularized Linear Mixed-Effect Model
+    """
+
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
@@ -434,6 +609,35 @@ class L1LmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        lam: float
+            strength of LASSO regularizer
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
@@ -446,6 +650,10 @@ class L1LmeModel(LMEModel):
 
 
 class SR3L1LmeModel(LMEModel):
+    """
+    Implements an SR3-relaxed LASSO-regularized Linear Mixed-Effect Model
+    """
+
     def __init__(self,
                  tol_oracle: float = 1e-5,
                  tol_solver: float = 1e-5,
@@ -463,6 +671,51 @@ class SR3L1LmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_oracle: float
+            tolerance for SR3 oracle's internal numerical subroutines
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        lb: float
+            level of SR3-relaxation for fixed effects
+        lg: float
+            level of SR3-relaxation for random effects
+        lam: float
+            strength of LASSO regularizer
+        participation_in_selection: ndarray of int
+            0 if the feature should be affected by the regularizer, 0 otherwise
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        warm_start: bool
+            if fitting should be started from the current model's coefficients.
+            Used for fine-tuning and iterative fitting.
+        practical: bool
+            whether to use SR3-Practical method, which works faster at the expense of accuracy
+        update_prox_every: int
+            how often update the relaxed variables. Only if practical=True
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+
         regularizer = L1Regularizer(lam=lam)
         fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
         solver = FakePGDSolver(fixed_step_len=fixed_step_len, update_prox_every=update_prox_every) if practical \
@@ -478,6 +731,10 @@ class SR3L1LmeModel(LMEModel):
 
 
 class CADLmeModel(LMEModel):
+    """
+    Implements a CAD-regularized Linear Mixed-Effects Model
+    """
+
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
@@ -489,6 +746,37 @@ class CADLmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        lam: float
+            strength of CAD regularizer
+        rho: float
+            cut-off amplitude above which the coefficients are not penalized
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
@@ -501,6 +789,10 @@ class CADLmeModel(LMEModel):
 
 
 class SR3CADLmeModel(LMEModel):
+    """
+    Implements a CAD-regularized SR3-relaxed Linear Mixed-Effect Model
+    """
+
     def __init__(self,
                  tol_oracle: float = 1e-5,
                  tol_solver: float = 1e-5,
@@ -519,6 +811,53 @@ class SR3CADLmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_oracle: float
+            tolerance for SR3 oracle's internal numerical subroutines
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        lb: float
+            level of SR3-relaxation for fixed effects
+        lg: float
+            level of SR3-relaxation for random effects
+        lam: float
+            strength of CAD regularizer
+        rho: float
+            cut-off amplitude above which the coefficients are not penalized
+        participation_in_selection: ndarray of int
+            0 if the feature should be affected by the regularizer, 0 otherwise
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        warm_start: bool
+            if fitting should be started from the current model's coefficients.
+            Used for fine-tuning and iterative fitting.
+        practical: bool
+            whether to use SR3-Practical method, which works faster at the expense of accuracy
+        update_prox_every: int
+            how often update the relaxed variables. Only if practical=True
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+
         fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
         solver = FakePGDSolver(update_prox_every=update_prox_every, fixed_step_len=fixed_step_len) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
@@ -534,6 +873,10 @@ class SR3CADLmeModel(LMEModel):
 
 
 class SCADLmeModel(LMEModel):
+    """
+    Implements SCAD-regularized Linear Mixed-Effect Model
+    """
+
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
@@ -546,6 +889,39 @@ class SCADLmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        lam: float
+            strength of SCAD regularizer
+        rho: float, rho > 1
+            first knot of the SCAD spline
+        sigma: float, sigma > 1
+            a positive constant such that sigma*rho is the second knot of the SCAD spline
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
@@ -558,6 +934,10 @@ class SCADLmeModel(LMEModel):
 
 
 class SR3SCADLmeModel(LMEModel):
+    """
+    Implements SCAD-regularized SR3-relaxed Linear Mixed-Effects Model
+    """
+
     def __init__(self,
                  tol_oracle: float = 1e-5,
                  tol_solver: float = 1e-5,
@@ -577,6 +957,55 @@ class SR3SCADLmeModel(LMEModel):
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_oracle: float
+            tolerance for SR3 oracle's internal numerical subroutines
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        lb: float
+            level of SR3-relaxation for fixed effects
+        lg: float
+            level of SR3-relaxation for random effects
+        lam: float
+            strength of SCAD regularizer
+        rho: float, rho > 1
+            first knot of the SCAD spline
+        sigma: float, sigma > 1
+            a positive constant such that sigma*rho is the second knot of the SCAD spline
+        participation_in_selection: ndarray of int
+            0 if the feature should be affected by the regularizer, 0 otherwise
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        warm_start: bool
+            if fitting should be started from the current model's coefficients.
+            Used for fine-tuning and iterative fitting.
+        practical: bool
+            whether to use SR3-Practical method, which works faster at the expense of accuracy
+        update_prox_every: int
+            how often update the relaxed variables. Only if practical=True
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+
         fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
         solver = FakePGDSolver(update_prox_every=update_prox_every, fixed_step_len=fixed_step_len) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
