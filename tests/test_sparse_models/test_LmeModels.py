@@ -23,7 +23,7 @@ class TestLmeModels(unittest.TestCase):
             "SCADSR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 2.5})
         }
 
-        trials = 5
+        trials = 3
 
         problem_parameters = {
             "groups_sizes": [20, 5, 10, 50],
@@ -97,50 +97,51 @@ class TestLmeModels(unittest.TestCase):
             "L0": (L0LmeModel, {"stepping": "line-search"}),
             "L1": (L1LmeModel, {"stepping": "line-search"}),
             "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
-            "SCAD": (SCADLmeModel, {"rho": 2.7, "sigma": 1.5, "stepping": "line-search"}),
+            # "SCAD": (SCADLmeModel, {"rho": 2.7, "sigma": 1.5, "stepping": "line-search"}),
             "L0_SR3": (Sr3L0LmeModel, {}),
             "L1_SR3": (SR3L1LmeModel, {}),
             "CAD_SR3": (SR3CADLmeModel, {}),
-            "SCAD_SR3": (SR3SCADLmeModel, {"rho": 2.7, "sigma": 1.5})
+            #"SCAD_SR3": (SR3SCADLmeModel, {"rho": 2.7, "sigma": 1.5})
         }
 
         trials = 3
 
         problem_parameters = {
-            "groups_sizes": [20, 12, 14, 50, 11],
-            "features_labels": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            "groups_sizes": [10] * 6,
+            "features_labels": [3] * 10,
             "random_intercept": True,
             "obs_std": 0.1,
         }
 
         default_params = {
-            "lb": 20,
-            "lg": 20,
+            "lb": 40,
+            "lg": 40,
             "initializer": "EM",
             "lam": 5,
             "rho": 0.3,
             "logger_keys": ('converged', 'loss',),
             "tol_oracle": 1e-5,
             "tol_solver": 1e-5,
-            "max_iter_oracle": 2000,
+            "max_iter_oracle": 1000,
             "max_iter_solver": 5000
         }
 
         max_mse = 0.2
         min_explained_variance = 0.9
-        fixed_effects_min_accuracy = 0.7
-        random_effects_min_accuracy = 0.7
+        fixed_effects_min_accuracy = 0.8
+        random_effects_min_accuracy = 0.8
 
         for i in range(trials):
             with self.subTest(i=i):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
 
-                        seed = i + 10  # just making it kind-of random, can be anything
+                        seed = i + 42
                         np.random.seed(seed)
                         true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
                         if sum(true_beta) == 0:
                             true_beta[0] = 1
+                        np.random.seed(2 + 5 * seed)
                         true_gamma = np.random.choice(2, size=11, p=np.array([0.2, 0.8])) * true_beta
 
                         problem, true_model_parameters = LinearLMEProblem.generate(**problem_parameters,
