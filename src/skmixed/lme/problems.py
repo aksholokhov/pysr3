@@ -24,7 +24,6 @@ import numpy as np
 import pandas as pd
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y
-
 from skmixed.helpers import get_per_group_coefficients
 
 
@@ -624,7 +623,8 @@ class LinearLMEProblem(LMEProblem):
 
         fe_regularization_weights = [1] * (len(fixed_features_idx) + 1) if not must_include_fe \
             else [int(not must_include_fe[-1])] + [int(not must_include_fe[i]) for i in fixed_features_idx]
-        re_regularization_weights = [1] * (len(random_features_idx) + 1) if not must_include_re \
+        re_regularization_weights = [1] * (
+                    len(random_features_idx) + (1 if random_intercept else 0)) if not must_include_re \
             else [int(not must_include_re[-1])] + [int(not must_include_re[i]) for i in random_features_idx]
 
         if fixed_intercept & random_intercept:
