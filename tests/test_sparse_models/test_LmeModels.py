@@ -77,7 +77,6 @@ class TestLmeModels(unittest.TestCase):
                         explained_variance = explained_variance_score(y, y_pred)
                         mse = mean_squared_error(y, y_pred)
 
-
                         self.assertGreater(explained_variance, min_explained_variance,
                                            msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
                                                % (i,
@@ -96,16 +95,16 @@ class TestLmeModels(unittest.TestCase):
 
         models_to_test = {
             "L0": (L0LmeModel, {"stepping": "line-search"}),
-            "L1": (L1LmeModel, {"lam": 5, "stepping": "line-search"}),
-            "CAD": (CADLmeModel, {"lam": 5, "rho": 0.3, "stepping": "line-search"}),
-            "SCAD": (SCADLmeModel, {"lam": 5, "rho": 2.7, "sigma": 1.5, "stepping": "line-search"}),
+            "L1": (L1LmeModel, {"stepping": "line-search"}),
+            "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
+            "SCAD": (SCADLmeModel, {"rho": 2.7, "sigma": 1.5, "stepping": "line-search"}),
             "L0_SR3": (Sr3L0LmeModel, {}),
             "L1_SR3": (SR3L1LmeModel, {}),
             "CAD_SR3": (SR3CADLmeModel, {}),
             "SCAD_SR3": (SR3SCADLmeModel, {"rho": 2.7, "sigma": 1.5})
         }
 
-        trials = 5
+        trials = 3
 
         problem_parameters = {
             "groups_sizes": [20, 12, 14, 50, 11],
@@ -118,12 +117,12 @@ class TestLmeModels(unittest.TestCase):
             "lb": 20,
             "lg": 20,
             "initializer": "EM",
-            "lam": 1,
+            "lam": 5,
             "rho": 0.3,
             "logger_keys": ('converged', 'loss',),
-            "tol_oracle": 1e-3,
+            "tol_oracle": 1e-5,
             "tol_solver": 1e-5,
-            "max_iter_oracle": 1000,
+            "max_iter_oracle": 2000,
             "max_iter_solver": 5000
         }
 
@@ -137,9 +136,9 @@ class TestLmeModels(unittest.TestCase):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
 
-                        seed = i  # just making it kind-of random, can be anything
+                        seed = i + 10  # just making it kind-of random, can be anything
                         np.random.seed(seed)
-                        true_beta = np.random.choice(2, size=11, p=np.array([0.4, 0.6]))
+                        true_beta = np.random.choice(2, size=11, p=np.array([0.5, 0.5]))
                         if sum(true_beta) == 0:
                             true_beta[0] = 1
                         true_gamma = np.random.choice(2, size=11, p=np.array([0.2, 0.8])) * true_beta
@@ -168,40 +167,16 @@ class TestLmeModels(unittest.TestCase):
                         fixed_effects_accuracy = accuracy_score(true_beta, abs(maybe_tbeta) > 1e-2)
                         random_effects_accuracy = accuracy_score(true_gamma, abs(maybe_tgamma) > 1e-2)
 
-                        explained_variance_is_ok = explained_variance > min_explained_variance
-                        mse_is_ok = max_mse > mse
-                        fe_accuracy_is_ok = fixed_effects_accuracy > fixed_effects_min_accuracy
-                        re_accuracy_is_ok = random_effects_accuracy > random_effects_min_accuracy
-
                         self.assertGreater(explained_variance, min_explained_variance,
-                                           msg="%d) Explained variance is too small: %.3f < %.3f. (seed=%d)"
-                                               % (i,
-                                                  explained_variance,
-                                                  min_explained_variance,
-                                                  i))
+                                           msg=f"{model_name}: Explained variance is too small: {explained_variance} < {min_explained_variance} (seed={seed})")
                         self.assertGreater(max_mse, mse,
-                                           msg="%d) MSE is too big: %.3f > %.2f  (seed=%d)"
-                                               % (i,
-                                                  mse,
-                                                  max_mse,
-                                                  i))
+                                           msg=f"{model_name}: MSE is too big: {max_mse} > {mse} (seed={seed})")
                         self.assertGreater(fixed_effects_accuracy, fixed_effects_min_accuracy,
-                                           msg="%d) Fixed Effects Selection Accuracy is too small: %.3f < %.2f  (seed=%d)"
-                                               % (i,
-                                                  fixed_effects_accuracy,
-                                                  fixed_effects_min_accuracy,
-                                                  i)
-                                           )
+                                           msg=f"{model_name}: Fixed Effects Selection Accuracy is too small: {fixed_effects_accuracy} < {fixed_effects_min_accuracy}  (seed={seed})")
                         self.assertGreater(random_effects_accuracy, random_effects_min_accuracy,
-                                           msg="%d) Random Effects Selection Accuracy is too small: %.3f < %.2f  (seed=%d)"
-                                               % (i,
-                                                  random_effects_accuracy,
-                                                  random_effects_min_accuracy,
-                                                  i)
-                                           )
+                                           msg=f"{model_name}: Random Effects Selection Accuracy is too small: {random_effects_accuracy} < {random_effects_min_accuracy} (seed={seed})")
 
         return None
-
 
     def test_score_function(self):
         # this is only a basic test which checks R^2 in two points: nearly perfect prediction and constant prediction.
