@@ -1,3 +1,7 @@
+"""
+Implements general purpose numerical solvers, like PGD
+"""
+
 import numpy as np
 
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3

@@ -1,6 +1,7 @@
 """
-Interface for Covariates Selection Step
+Black-box routines for automatic feature selection for mixed-models.
 """
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Union

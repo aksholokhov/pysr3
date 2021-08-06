@@ -1263,6 +1263,18 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         def F(x, mu):
             return F_coord(x[:n], x[n:-n], x[-n:], mu)
 
+        def dF_coord(v, b, g):
+            return np.block([
+                [np.diag(g), Zb, np.diag(v)],
+                [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
+                 self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
+                [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T,
+                 self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+            ])
+
+        def dF(x):
+            return dF_coord(x[:n], x[n:-n], x[-n:])
+
         prev_tbeta = np.infty
         prev_tgamma = np.infty
         prev_beta = np.infty
@@ -1282,28 +1294,6 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             prev_gamma = gamma
             prev_tbeta = tbeta
             prev_tgamma = tgamma
-
-            def F_coord(v, b, g, mu):
-                return np.concatenate([
-                    v * g - mu,
-                    self.gradient_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
-                    self.gradient_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs) - v
-                ])
-
-            def F(x, mu):
-                return F_coord(x[:n], x[n:-n], x[-n:], mu)
-
-            def dF_coord(v, b, g):
-                return np.block([
-                    [np.diag(g), Zb, np.diag(v)],
-                    [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
-                     self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
-                    [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T,
-                     self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
-                ])
-
-            def dF(x):
-                return dF_coord(x[:n], x[n:-n], x[-n:])
 
             F_current = F(x, mu)
             dF_current = dF(x)

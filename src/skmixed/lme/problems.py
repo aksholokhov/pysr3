@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Representations of datasets that are compatible with skmixed's models
+"""
 
 from typing import Union, Sized, List, Optional, Tuple
 

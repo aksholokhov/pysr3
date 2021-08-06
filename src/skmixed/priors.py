@@ -1,3 +1,7 @@
+"""
+Prior distributions for models' parameters
+"""
+
 from typing import Dict
 
 import numpy as np

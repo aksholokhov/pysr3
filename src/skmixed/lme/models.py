@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Linear Mixed-Effects Models (simple, relaxed, and regularized)
+"""
+
 from typing import Set
 
 import numpy as np
@@ -24,7 +28,7 @@ from skmixed.helpers import get_per_group_coefficients
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.logger import Logger
-from skmixed.regularizers import L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
+from skmixed.regularizers import Regularizer, L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
     DummyRegularizer
 from skmixed.solvers import PGDSolver, FakePGDSolver
 
@@ -58,11 +62,29 @@ class LMEModel(BaseEstimator, RegressorMixin):
                  regularizer=None,
                  initializer: str = "None",
                  logger_keys: Set = ('converged',)):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        solver: PGDSolver
+            an instance of PGDSolver
+        oracle: LinearLMEOracle
+            an instance of LinearLMEOracle
+        regularizer: Regularizer
+            an instance of Regularizer
+        initializer: str
+            "EM" or "None"
+        logger_keys: Optional[Set[str]]
+            list of values for the logger to track.
+        """
         self.regularizer = regularizer
         self.oracle = oracle
         self.solver = solver
         self.initializer = initializer
         self.logger_keys = logger_keys
+        self.coef_ = None
+        self.logger_ = None
 
     def fit(self,
             x: np.ndarray,
@@ -99,7 +121,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
                         -   | 'beta0' : np.ndarray, shape = [n],
                             | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
                         -   | 'gamma0' : np.ndarray, shape = [k],
-                            | Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
+                            | Initial estimate of random effects covariances.
+                            | If None then it defaults to an all-ones vector.
 
                 warm_start : bool, default is False
                     Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
@@ -163,11 +186,12 @@ class LMEModel(BaseEstimator, RegressorMixin):
         if initial_parameters is None:
             initial_parameters = {}
 
-        beta = self.coef_["beta"] if warm_start and check_is_fitted(self, 'coef_') else initial_parameters.get("beta",
-                                                                                                               np.ones(
-                                                                                                                   num_fixed_effects))
-        gamma = self.coef_["gamma"] if warm_start and check_is_fitted(self, 'coef_') else initial_parameters.get(
-            "gamma", np.ones(num_random_effects))
+        if hasattr(self, "coef_") and warm_start and check_is_fitted(self, 'coef_'):
+            beta = self.coef_["beta"]
+            gamma = self.coef_["gamma"]
+        else:
+            beta = initial_parameters.get("beta", np.ones(num_fixed_effects))
+            gamma = initial_parameters.get("gamma", np.ones(num_random_effects))
 
         if self.initializer == "EM":
             beta = self.oracle.optimal_beta(gamma, tbeta=beta, beta=beta)
@@ -192,7 +216,6 @@ class LMEModel(BaseEstimator, RegressorMixin):
             "per_group_coefficients": per_group_coefficients,
         }
 
-        # TODO: uncomment it so the oracle does not keep the dataset linked to its memory
         # self.oracle.forget()
 
         return self
@@ -316,7 +339,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
         -------
         None
         """
-        if not hasattr(self, "coef_"):
+        if not hasattr(self, "coef_") or self.coef_ is None:
             raise AssertionError("The model has not been fitted yet. Call .fit() first.")
 
     def muller2018ic(self):
@@ -577,7 +600,7 @@ class Sr3L0LmeModel(LMEModel):
         kwargs:
             for passing debugging info
         """
-        solver = FakePGDSolver(update_prox_every=1) if practical \
+        solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=(
                                1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)

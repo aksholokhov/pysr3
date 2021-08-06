@@ -16,7 +16,10 @@ if __name__ == "__main__":
         'pytest',
     ]
 
-    doc_requirements = []
+    doc_requirements = [
+        'sphinx',
+        'sphinxbootstrap4theme'
+    ]
 
     setup(
         name=about['__title__'],
