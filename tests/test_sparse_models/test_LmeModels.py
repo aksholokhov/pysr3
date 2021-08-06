@@ -128,8 +128,8 @@ class TestLmeModels(unittest.TestCase):
 
         max_mse = 0.2
         min_explained_variance = 0.9
-        fixed_effects_min_accuracy = 0.8
-        random_effects_min_accuracy = 0.8
+        fixed_effects_min_accuracy = 0.7
+        random_effects_min_accuracy = 0.7
 
         for i in range(trials):
             with self.subTest(i=i):
