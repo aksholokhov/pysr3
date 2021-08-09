@@ -23,7 +23,6 @@ from typing import Set
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
-
 from skmixed.helpers import get_per_group_coefficients
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 from skmixed.lme.problems import LinearLMEProblem
@@ -36,8 +35,6 @@ from skmixed.solvers import PGDSolver, FakePGDSolver
 class LMEModel(BaseEstimator, RegressorMixin):
     """
     Solve Linear Mixed Effects problem with projected gradient descent method.
-
-    The log-likelihood minimization problem which this model solves is::
 
     The original statistical model which this loss is based on is::
 
