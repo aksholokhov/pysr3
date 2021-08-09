@@ -1,0 +1,9 @@
+include LICENSE
+include README.md
+include requirements.txt
+
+recursive-include docs *
+prune docs/_build
+
+recursive-include src/skmixed *.py
+recursive-include tests *.py

@@ -1,6 +1,7 @@
 """
-Interface for Covariates Selection Step
+Black-box routines for automatic feature selection for mixed-models.
 """
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -9,25 +10,24 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from skmixed.lme.problems import LinearLMEProblem
-from skmixed.lme.models import SimpleLMEModel, L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
+from skmixed.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
 from skmixed.lme.models import Sr3L0LmeModel, SR3L1LmeModel, SR3CADLmeModel, SR3SCADLmeModel
-
-from tqdm import tqdm
+from skmixed.lme.problems import LinearLMEProblem
 
 MODELS_NAMES = ("L0", "L1", "CAD", "SCAD", "L0_SR3", "L1_SR3", "CAD_SR3", "SCAD_SR3")
 
 
-def sel_covariates(df: pd.DataFrame,
-                   target: str,
-                   se: str,
-                   group: str,
-                   covs: Optional[Dict[str, List[str]]] = None,
-                   pre_sel_covs: Optional[Dict[str, List[str]]] = None,
-                   output_folder: Union[str, Path] = ".",
-                   model: str = "L1_SR3",
-                   **kwargs) -> None:
-    """Select covariates
+def select_covariates(df: pd.DataFrame,
+                      target: str,
+                      se: str,
+                      group: str,
+                      covs: Optional[Dict[str, List[str]]] = None,
+                      pre_sel_covs: Optional[Dict[str, List[str]]] = None,
+                      output_folder: Union[str, Path] = ".",
+                      model: str = "L1_SR3",
+                      **kwargs) -> None:
+    """Implements a black-box functionality for selecting most important fixed and random features
+    in Linear Mixed-Effect Models.
 
     Parameters
     ----------
@@ -49,6 +49,8 @@ def sel_covariates(df: pd.DataFrame,
         Same structure with `covs`. Default to `None`.
     output_folder : Union[str, Path]
         Path for output folder to store the results. Default to `"."`.
+    model : str
+        which model to use. Can be "L0", "L0_SR3", "L1", "L1_SR3", "CAD", "CAD_SR3", "SCAD", "SCAD_SR3"
 
     Returns
     -------
@@ -86,7 +88,7 @@ def sel_covariates(df: pd.DataFrame,
     model_constructor, selection_spectrum = get_model(model, problem)
     best_model = None
     best_score = +np.infty
-    for params in tqdm(selection_spectrum):
+    for params in selection_spectrum:
         model = model_constructor(params)
         model.fit_problem(problem)
         score = model.jones2010bic()
@@ -108,6 +110,19 @@ def sel_covariates(df: pd.DataFrame,
 
 
 def get_model(model: str, problem: LinearLMEProblem):
+    """
+    Takes the name of the model. Returns the constructor for it,
+    as well as a suitable parameter grid for various sparsity levels.
+
+    Parameters
+    ----------
+    model
+    problem
+
+    Returns
+    -------
+
+    """
     if model == "L0" or model == "SR3_L0":
         selection_spectrum = [{"nnz_tbeta": p, "nnz_tgamma": q} for p in range(1, problem.num_fixed_effects) for q in
                               range(1, problem.num_random_effects) if p >= q]

@@ -4,52 +4,12 @@ from unittest import TestCase
 import numpy as np
 from numpy import allclose
 
-from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleRegularized
-from skmixed.legacy.oracles import LinearLMEOracle as OldOracle
-from skmixed.lme.problems import LinearLMEProblem
 from skmixed.helpers import random_effects_to_matrix
+from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
+from skmixed.lme.problems import LinearLMEProblem
 
 
 class TestLinearLMEOracle(TestCase):
-
-    def test_compare_to_old_oracle(self):
-        num_fixed_effects = 4
-        num_random_effects = 2
-        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
-                                                             features_labels=[3, 3, 1],
-                                                             random_intercept=False,
-                                                             obs_std=0.1,
-                                                             seed=42)
-        new_oracle = LinearLMEOracle(problem)
-        old_oracle = OldOracle(problem)
-        np.random.seed(42)
-        trials = 100
-        # the error should stem only from Cholesky/regular inversions instabilities, so
-        # tolerances should pretty much represent machine precision
-        rtol = 1e-8
-        atol = 1e-10
-        for random_beta, random_gamma in zip(np.random.rand(trials, num_fixed_effects),
-                                             np.random.rand(trials, num_random_effects)):
-            loss1 = new_oracle.loss(random_beta, random_gamma)
-            loss2 = old_oracle.loss(random_beta, random_gamma)
-            self.assertAlmostEqual(loss1, loss2, delta=atol, msg="Loss does not match with old oracle")
-            gradient1 = new_oracle.gradient_gamma(random_beta, random_gamma)
-            gradient2 = old_oracle.gradient_gamma(random_beta, random_gamma)
-            self.assertTrue(allclose(gradient1, gradient2, rtol=rtol, atol=atol),
-                            msg="Gradients don't match with old oracle")
-            hessian1 = new_oracle.hessian_gamma(random_beta, random_gamma)
-            hessian2 = old_oracle.hessian_gamma(random_beta, random_gamma)
-            self.assertTrue(allclose(hessian1, hessian2, rtol=100 * rtol, atol=100 * atol),
-                            msg="Hessian does not match with old oracle")
-            beta1 = new_oracle.optimal_beta(random_gamma)
-            beta2 = old_oracle.optimal_beta(random_gamma)
-            self.assertTrue(allclose(beta1, beta2, rtol=rtol, atol=atol),
-                            msg="Optimal betas don't match with old oracle")
-            us1 = new_oracle.optimal_random_effects(random_beta, random_gamma)
-            us2 = old_oracle.optimal_random_effects(random_beta, random_gamma)
-            self.assertTrue(allclose(us1, us2, rtol=rtol, atol=atol),
-                            msg="Optimal random effects don't match with old oracle")
-        return None
 
     def test_gradients(self):
         trials = 100
@@ -187,7 +147,7 @@ class TestLinearLMEOracle(TestCase):
                                                              seed=42)
         # when both regularization coefficients are zero, these two oracles should be exactly equivalent
         oracle_non_regularized = LinearLMEOracle(problem)
-        oracle_regularized = LinearLMEOracleRegularized(problem, lg=0, lb=0, nnz_tbeta=1, nnz_tgamma=1)
+        oracle_regularized = LinearLMEOracleSR3(problem, lg=0, lb=0)
         np.random.seed(42)
         trials = 100
         rtol = 1e-14
@@ -209,7 +169,7 @@ class TestLinearLMEOracle(TestCase):
             hessian2 = oracle_non_regularized.hessian_gamma(random_beta, random_gamma)
             self.assertTrue(allclose(hessian1, hessian2, rtol=100 * rtol, atol=100 * atol),
                             msg="Hessian w.r.t. gamma of zero-regularized and non-regularized oracles are different")
-            beta1 = oracle_regularized.optimal_beta(random_gamma, random_tbeta)
+            beta1 = oracle_regularized.optimal_beta(random_gamma)
             beta2 = oracle_non_regularized.optimal_beta(random_gamma)
             self.assertTrue(allclose(beta1, beta2, rtol=rtol, atol=atol),
                             msg="Optimal betas of zero-regularized and non-regularized oracles are different")

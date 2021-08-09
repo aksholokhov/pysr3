@@ -1,4 +1,4 @@
-# This code implements different skmixed's subroutines.
+# skmixed: Library for Feature Selection in Linear Mixed-Effect Models.
 # Copyright (C) 2020 Aleksei Sholokhov, aksh@uw.edu
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,11 +24,11 @@ def get_per_group_coefficients(beta, random_effects, labels):
 
     Parameters
     ----------
-    beta: np.ndarray, shape=(n,), n is the number of fixed effects.
+    beta: ndarray, shape=(n,), n is the number of fixed effects.
         Vector of fixed effects.
-    random_effects: np.ndarray or list, shape=(m, k), m groups, k random effects.
+    random_effects: ndarray or list, shape=(m, k), m groups, k random effects.
         Array of random effects.
-    labels: np.ndarray[int], shape=(t,), t -- number of columns in the dataset INCLUDING INTERCEPT.
+    labels: ndarray[int], shape=(t,), t -- number of columns in the dataset INCLUDING INTERCEPT.
         Vector of labels of the column's dataset, including intercept. Labels can be the following integers:
             0 : Groups labels (ignored).
             1 : Fixed effect.
@@ -38,7 +38,7 @@ def get_per_group_coefficients(beta, random_effects, labels):
 
     Returns
     -------
-    per_group_coefficients: np.ndarray, shape=(m, t)
+    per_group_coefficients: ndarray, shape=(m, t)
         Array of cluster coefficients: m clusters times t coefficients.
     """
     is_arrays = False
@@ -75,4 +75,16 @@ def get_per_group_coefficients(beta, random_effects, labels):
 
 
 def random_effects_to_matrix(random_effects):
+    """
+    Stacks a list of tuples (group: random effects) into an array
+
+    Parameters
+    ----------
+    random_effects: List[Tuple[Any, ndarray]]
+        List of random effects in the format [(group1: effect1), (group2: effects2), ...]
+
+    Returns
+    -------
+    ndarray of random effects stacked vertically
+    """
     return np.array([u for k, u in random_effects])

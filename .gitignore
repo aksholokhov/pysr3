@@ -22,7 +22,7 @@ docs/_build
 # Specific files extensions
 *.csv
 *.pdf
-*.png
+#*.png
 *.jpeg
 *.jpg
 
