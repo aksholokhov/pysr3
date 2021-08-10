@@ -529,7 +529,7 @@ class SCADRegularizer(Regularizer):
             elif abs(x[i]) > max(self.rho, 1 + alpha_eff) * self.sigma:
                 v[i] = x[i]
             elif self.sigma * (1 + alpha_eff) <= abs(x[i]) <= max(self.rho, 1 + alpha_eff) * self.sigma:
-                v[i] = ((self.rho - 1) * x[i] + np.sign(x[i]) * self.rho * self.sigma * alpha_eff) / (
+                v[i] = ((self.rho - 1) * x[i] - np.sign(x[i]) * self.rho * self.sigma * alpha_eff) / (
                         self.rho - 1 - alpha_eff)
             else:
                 v[i] = (x[i] - self.sigma * alpha_eff).clip(0, None) - (- x[i] - self.sigma * alpha_eff).clip(0, None)
