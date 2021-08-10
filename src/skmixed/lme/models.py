@@ -28,7 +28,7 @@ from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 from skmixed.lme.problems import LinearLMEProblem
 from skmixed.logger import Logger
 from skmixed.regularizers import Regularizer, L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
-    DummyRegularizer
+    DummyRegularizer, PositiveQuadrantRegularizer
 from skmixed.solvers import PGDSolver, FakePGDSolver
 
 
@@ -175,7 +175,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
         self.oracle.instantiate(problem)
         if self.regularizer:
             self.regularizer.instantiate(weights=self.oracle.beta_gamma_to_x(beta=problem.fe_regularization_weights,
-                                                                             gamma=problem.re_regularization_weights))
+                                                                             gamma=problem.re_regularization_weights),
+                                         oracle=self.oracle)
 
         num_fixed_effects = problem.num_fixed_effects
         num_random_effects = problem.num_random_effects
@@ -493,10 +494,11 @@ class L0LmeModel(LMEModel):
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
-        regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
-                                    nnz_tgamma=nnz_tgamma,
-                                    participation_in_selection=participation_in_selection,
-                                    oracle=oracle)
+        l0_regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
+                                       nnz_tgamma=nnz_tgamma,
+                                       participation_in_selection=participation_in_selection,
+                                       oracle=oracle)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=l0_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -603,10 +605,11 @@ class Sr3L0LmeModel(LMEModel):
                                1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start, prior=prior)
-        regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
-                                    nnz_tgamma=nnz_tgamma,
-                                    participation_in_selection=participation_in_selection,
-                                    oracle=oracle)
+        l0_regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
+                                       nnz_tgamma=nnz_tgamma,
+                                       participation_in_selection=participation_in_selection,
+                                       oracle=oracle)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=l0_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -661,7 +664,8 @@ class L1LmeModel(LMEModel):
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
-        regularizer = L1Regularizer(lam=lam)
+        l1_regularizer = L1Regularizer(lam=lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -736,13 +740,14 @@ class SR3L1LmeModel(LMEModel):
             for passing debugging info
         """
 
-        regularizer = L1Regularizer(lam=lam)
         fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
         solver = FakePGDSolver(fixed_step_len=fixed_step_len, update_prox_every=update_prox_every) if practical \
             else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start, prior=prior)
+        l1_regularizer = L1Regularizer(lam=lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -800,7 +805,8 @@ class CADLmeModel(LMEModel):
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
-        regularizer = CADRegularizer(rho=rho, lam=lam)
+        cad_regularizer = CADRegularizer(rho=rho, lam=lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -884,7 +890,8 @@ class SR3CADLmeModel(LMEModel):
                            fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start, prior=prior)
-        regularizer = CADRegularizer(rho=rho, lam=lam)
+        cad_regularizer = CADRegularizer(rho=rho, lam=lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -945,7 +952,8 @@ class SCADLmeModel(LMEModel):
         solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
                            fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
         oracle = LinearLMEOracle(None, prior=prior)
-        regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
+        scad_regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,
@@ -1032,7 +1040,8 @@ class SR3SCADLmeModel(LMEModel):
                            fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
                                     warm_start=warm_start, prior=prior)
-        regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
+        scad_regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
         super().__init__(oracle=oracle,
                          solver=solver,
                          regularizer=regularizer,

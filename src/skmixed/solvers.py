@@ -76,7 +76,6 @@ class PGDSolver:
                 step_len = self.fixed_step_len
                 while step_len > 1e-14:
                     y = x + step_len * direction
-                    y[oracle.problem.num_fixed_effects:] = np.clip(y[oracle.problem.num_fixed_effects:], 0, None)
                     z = regularizer.prox(y, step_len)
                     if oracle.value_function(z) <= oracle.value_function(x) - direction.dot(z - x) + (
                             1 / (2 * step_len)) * np.linalg.norm(z - x) ** 2:
@@ -90,7 +89,6 @@ class PGDSolver:
                 step_len = self.fixed_step_len
 
             y = x + step_len * direction
-            y[oracle.problem.num_fixed_effects:] = np.clip(y[oracle.problem.num_fixed_effects:], 0, None)
             x = regularizer.prox(y, step_len)
             iteration += 1
             if len(logger.keys) > 0:

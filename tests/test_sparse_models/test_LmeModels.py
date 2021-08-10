@@ -97,14 +97,14 @@ class TestLmeModels(unittest.TestCase):
             "L0": (L0LmeModel, {"stepping": "line-search"}),
             "L1": (L1LmeModel, {"stepping": "line-search"}),
             "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
-            # "SCAD": (SCADLmeModel, {"rho": 2.7, "sigma": 1.5, "stepping": "line-search"}),
+            "SCAD": (SCADLmeModel, {"rho": 3.7, "sigma": 0.5, "lam": 15, "stepping": "line-search"}),
             "L0_SR3": (Sr3L0LmeModel, {}),
             "L1_SR3": (SR3L1LmeModel, {}),
             "CAD_SR3": (SR3CADLmeModel, {}),
-            #"SCAD_SR3": (SR3SCADLmeModel, {"rho": 2.7, "sigma": 1.5})
+            "SCAD_SR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 0.5})
         }
 
-        trials = 3
+        trials = 5
 
         problem_parameters = {
             "groups_sizes": [10] * 6,
@@ -121,7 +121,7 @@ class TestLmeModels(unittest.TestCase):
             "rho": 0.3,
             "logger_keys": ('converged', 'loss',),
             "tol_oracle": 1e-5,
-            "tol_solver": 1e-5,
+            "tol_solver": 1e-6,
             "max_iter_oracle": 1000,
             "max_iter_solver": 5000
         }

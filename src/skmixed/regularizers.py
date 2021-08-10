@@ -37,7 +37,7 @@ class Regularizer:
         """
         pass
 
-    def value(self, x):
+    def value(self, x) -> float:
         """
         Returns the value for the regularizer at the point x
 
@@ -572,3 +572,31 @@ class DummyRegularizer(Regularizer):
         result of the application of the proximal operator to x
         """
         return x
+
+
+class PositiveQuadrantRegularizer(Regularizer):
+
+    def __init__(self, other_regularizer: Regularizer = None):
+        self.other_regularizer = other_regularizer
+        self.positive_coordinates = None
+
+    def instantiate(self, weights, oracle, **kwargs):
+        self.positive_coordinates = ([False] * oracle.problem.num_fixed_effects +
+                                     [True] * oracle.problem.num_random_effects)
+        if self.other_regularizer:
+            self.other_regularizer.instantiate(weights=weights, **kwargs)
+
+    def value(self, x):
+        y = np.infty if any(x[self.positive_coordinates] < 0) else 0
+        if self.other_regularizer:
+            return y + self.other_regularizer.value(x)
+        else:
+            return y
+
+    def prox(self, x, alpha):
+        y = x.copy()
+        y[self.positive_coordinates] = np.clip(x[self.positive_coordinates], 0, None)
+        if self.other_regularizer:
+            return self.other_regularizer.prox(y, alpha)
+        else:
+            return y
