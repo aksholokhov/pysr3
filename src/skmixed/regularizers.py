@@ -499,7 +499,7 @@ class SCADRegularizer(Regularizer):
         total = 0
         for x_i, w in zip(x, self.weights if self.weights is not None else np.ones(x.shape)):
             if abs(x_i) < self.sigma:
-                total += w * self.sigma * x_i
+                total += w * self.sigma * abs(x_i)
             elif self.sigma <= abs(x_i) <= self.rho * self.sigma:
                 total += w * (-x_i ** 2 + 2 * self.rho * self.sigma * abs(x_i) - self.sigma ** 2) / (2 * (self.rho - 1))
             else:
