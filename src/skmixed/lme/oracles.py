@@ -24,8 +24,8 @@ from scipy import stats
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.optimize import minimize
 
+from skmixed.lme.priors import NonInformativePriorLME
 from skmixed.lme.problems import LinearLMEProblem
-from skmixed.priors import NonInformativePrior
 
 
 class LinearLMEOracle:
@@ -68,7 +68,7 @@ class LinearLMEOracle:
             additional prior for the oracle, see skmixed.priors for more info.
         """
         self.problem = problem
-        self.prior = prior if prior else NonInformativePrior()
+        self.prior = prior if prior else NonInformativePriorLME()
         self.beta_to_gamma_map = None
         self.omega_cholesky_inv = []
         self.omega_cholesky = []

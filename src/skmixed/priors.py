@@ -13,12 +13,12 @@ class Prior:
     pass
 
 
-class GaussianPrior(Prior):
+class GaussianPrior:
     """
-    Implements Gaussian Prior for various models
-    """
+        Implements Gaussian Prior for various models
+        """
 
-    def __init__(self, fe_params: Dict, re_params: Dict):
+    def __init__(self, params: Dict):
         """
         Creates GaussianPrior
 
@@ -27,19 +27,15 @@ class GaussianPrior(Prior):
         fe_params: dict[str: tuple(float, float)]
             gaussian prior parameters for fixed effects. The format is {"name": (mean, std), ...}
              E.g. {"intercept": (0, 2), "time": (1, 1)}
-        re_params: dict[str: tuple(float, float)]
+        params: dict[str: tuple(float, float)]
             gaussian prior for variances of random effects. Same format as above.
         """
-        self.fe_params = fe_params
-        self.re_params = re_params
-        self.fe_means = None
-        self.fe_stds = None
-        self.fe_weights = None
-        self.re_means = None
-        self.re_stds = None
-        self.re_weights = None
+        self.params = params
+        self.means = None
+        self.stds = None
+        self.weights = None
 
-    def instantiate(self, problem: LinearLMEProblem):
+    def instantiate(self, problem_columns):
         """
         Instantiates a Gaussian prior with problem-dependent quantities
 
@@ -52,37 +48,22 @@ class GaussianPrior(Prior):
         -------
         None
         """
-        assert problem.fe_columns and problem.re_columns, "Problem does not have column names attached"
-        assert all(key in problem.fe_columns for key in self.fe_params.keys()), \
-            F"Some keys are listed in the prior for FE but not listed in the prolem's column labels: {[key for key in self.fe_params.keys() if key not in problem.fe_columns]}"
-        assert all(key in problem.fe_columns for key in self.fe_params.keys()), \
-            F"Some keys are listed in the prior for RE but not listed in the prolem's column labels: {[key for key in self.re_params.keys() if key not in problem.re_columns]}"
+        assert all(key in problem_columns for key in self.params.keys()), \
+            (f"Some keys are listed in the prior but not listed in the prolem's column labels:" +
+             f" {[key for key in self.params.keys() if key not in problem_columns]}")
 
-        fe_means = []
-        fe_stds = []
-        fe_weights = []
-        for label in problem.fe_columns:
-            mean, std = self.fe_params.get(label, (0, 0))
+        means = []
+        stds = []
+        weights = []
+        for label in problem_columns:
+            mean, std = self.params.get(label, (0, 0))
             assert std >= 0
-            fe_means.append(mean)
-            fe_weights.append(1 if std > 0 else 0)
-            fe_stds.append(std if std > 0 else 1)
-        self.fe_means = np.array(fe_means)
-        self.fe_stds = np.array(fe_stds)
-        self.fe_weights = np.array(fe_weights)
-
-        re_means = []
-        re_stds = []
-        re_weights = []
-        for label in problem.re_columns:
-            mean, std = self.re_params.get(label, (0, 0))
-            assert std >= 0
-            re_means.append(mean)
-            re_weights.append(1 if std > 0 else 0)
-            re_stds.append(std if std > 0 else 1)
-        self.re_means = np.array(re_means)
-        self.re_stds = np.array(re_stds)
-        self.re_weights = np.array(re_weights)
+            means.append(mean)
+            weights.append(1 if std > 0 else 0)
+            stds.append(std if std > 0 else 1)
+        self.means = np.array(means)
+        self.stds = np.array(stds)
+        self.weights = np.array(weights)
 
     def forget(self):
         """
@@ -92,14 +73,11 @@ class GaussianPrior(Prior):
         -------
         None
         """
-        self.fe_means = None
-        self.fe_stds = None
-        self.fe_weights = None
-        self.re_means = None
-        self.re_stds = None
-        self.re_weights = None
+        self.means = None
+        self.stds = None
+        self.weights = None
 
-    def loss(self, beta, gamma):
+    def loss(self, x):
         """
         Value of the prior at beta, gamma.
 
@@ -115,10 +93,9 @@ class GaussianPrior(Prior):
         -------
         value of the prior.
         """
-        return (self.fe_weights * (1 / (2 * self.fe_stds)) * ((beta - self.fe_means) ** 2)).sum() + \
-               (self.re_weights * (1 / (2 * self.re_stds)) * ((gamma - self.re_means) ** 2)).sum()
+        return (self.weights * (1 / (2 * self.stds)) * ((x - self.means) ** 2)).sum()
 
-    def gradient_beta(self, beta, gamma):
+    def gradient(self, x):
         """
         Evaluates the gradient of the prior with respect to the vector of fixed effects
 
@@ -134,27 +111,9 @@ class GaussianPrior(Prior):
         -------
         gradient w.r.t. beta
         """
-        return self.fe_weights * (1 / self.fe_stds) * (beta - self.fe_means)
+        return self.weights * (1 / self.stds) * (x - self.means)
 
-    def gradient_gamma(self, beta, gamma):
-        """
-        Evaluates the gradient of the prior with respect to the vector of random effects
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
-        Returns
-        -------
-        gradient w.r.t. gamma
-        """
-        return self.re_weights * (1 / self.re_stds) * (gamma - self.re_means)
-
-    def hessian_beta(self, beta, gamma):
+    def hessian(self, x):
         """
         Evaluates Hessian of the prior with respect to the vector of fixed effects
 
@@ -170,43 +129,7 @@ class GaussianPrior(Prior):
         -------
         Hessian w.r.t. (beta, beta)
         """
-        return np.diag(self.fe_weights * (1 / self.fe_stds))
-
-    def hessian_gamma(self, beta, gamma):
-        """
-        Evaluates Hessian of the prior with respect to the vector of random effects
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
-        Returns
-        -------
-        Hessian w.r.t. (gamma, gamma)
-        """
-        return np.diag(self.re_weights * (1 / self.re_stds))
-
-    def hessian_beta_gamma(self, beta, gamma):
-        """
-        Evaluates the mixed Hessian of the prior with respect to the vector of fixed and random effects
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
-        Returns
-        -------
-        Hessian w.r.t. (beta, gamma)
-        """
-        return 0
+        return np.diag(self.weights * (1 / self.stds))
 
 
 class NonInformativePrior(Prior):
@@ -244,7 +167,7 @@ class NonInformativePrior(Prior):
         """
         pass
 
-    def loss(self, beta, gamma):
+    def loss(self, x):
         """
         Value of the prior at beta, gamma.
 
@@ -262,7 +185,7 @@ class NonInformativePrior(Prior):
         """
         return 0
 
-    def gradient_beta(self, beta, gamma):
+    def gradient(self, x):
         """
         Evaluates the gradient of the prior with respect to the vector of fixed effects
 
@@ -280,43 +203,7 @@ class NonInformativePrior(Prior):
         """
         return 0
 
-    def gradient_gamma(self, beta, gamma):
-        """
-        Evaluates the gradient of the prior with respect to the vector of random effects
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
-        Returns
-        -------
-        gradient w.r.t. gamma
-        """
-        return 0
-
-    def hessian_beta(self, beta, gamma):
-        """
-        Evaluates Hessian of the prior with respect to the vector of fixed effects
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
-        Returns
-        -------
-        Hessian w.r.t. (beta, beta)
-        """
-        return 0
-
-    def hessian_gamma(self, beta, gamma):
+    def hessian(self, x):
         """
         Evaluates Hessian of the prior with respect to the vector of random effects
 
@@ -331,23 +218,5 @@ class NonInformativePrior(Prior):
         Returns
         -------
         Hessian w.r.t. (gamma, gamma)
-        """
-        return 0
-
-    def hessian_beta_gamma(self, beta, gamma):
-        """
-        Evaluates the mixed Hessian of the prior with respect to the vector of fixed and random effects
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
-        Returns
-        -------
-        Hessian w.r.t. (beta, gamma)
         """
         return 0

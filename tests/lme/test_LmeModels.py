@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
+
 from skmixed.helpers import random_effects_to_matrix
 from skmixed.lme.models import Sr3L0LmeModel, L0LmeModel, L1LmeModel, SR3L1LmeModel, CADLmeModel, SR3CADLmeModel, \
     SCADLmeModel, SR3SCADLmeModel

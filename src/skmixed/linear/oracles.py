@@ -1,21 +1,33 @@
 import numpy as np
+
 from skmixed.linear.problems import LinearProblem
+from skmixed.priors import Prior, NonInformativePrior
 
 
 class LinearOracle:
 
-    def __init__(self, problem: LinearProblem):
-        assert problem.c is None, "non-trivial C is not supported by a LinearOracle. Use LinearOralceSR3 instead."
+    def __init__(self, problem: LinearProblem = None, prior: Prior = None):
+        if problem:
+            assert problem.c is None, "non-trivial C is not supported by a LinearOracle. Use LinearOralceSR3 instead."
         self.problem = problem
+        self.prior = prior if prior else NonInformativePrior()
+
+    def instantiate(self, problem):
+        self.problem = problem
+        self.prior.instantiate(problem)
+
+    def forget(self):
+        self.problem = None
+        self.prior.forget()
 
     def loss(self, x):
-        return 1 / 2 * np.linalg.norm(self.problem.a.dot(x) - self.problem.b, ord=2) ** 2
+        return 1 / 2 * np.linalg.norm(self.problem.a.dot(x) - self.problem.b, ord=2) ** 2 + self.prior.loss(x)
 
     def gradient(self, x):
-        return self.problem.a.T.dot(self.problem.a.dot(x) - self.problem.b)
+        return self.problem.a.T.dot(self.problem.a.dot(x) - self.problem.b) + self.prior.gradient(x)
 
     def hessian(self, x):
-        return self.problem.a.T.dot(self.problem.a)
+        return self.problem.a.T.dot(self.problem.a) + self.prior.hessian(x)
 
     def value_function(self, x):
         return self.loss(x)
@@ -26,25 +38,46 @@ class LinearOracle:
 
 class LinearOracleSR3:
 
-    def __init__(self, problem: LinearProblem, lam=1, practical=False):
+    def __init__(self, problem: LinearProblem = None, lam=1, practical=False, prior: Prior = None):
+        assert not prior, "Priors for LinearOracleSR3 are not supported yet"
+        self.prior = prior if prior else NonInformativePrior()
+        self.lam = lam
+        self.practical = practical
+        self.problem = problem
+        self.f_matrix = None
+        self.g_matrix = None
+        self.h_matrix = None
+        self.h_inv = None
+        self.g = None
+        self.ab = None
+
+    def instantiate(self, problem):
+        self.problem = problem
         a = problem.a
         c = problem.c
-        self.problem = problem
-        self.lam = lam
+        lam = self.lam
         self.h_matrix = a.T.dot(a) + lam * c.dot(c)
         self.h_inv = np.linalg.inv(self.h_matrix)
         self.ab = a.T.dot(problem.b)
-        self.practical = practical
-        if practical:
+        if not self.practical:
             self.f_matrix = np.vstack([lam * a.dot(self.h_inv).dot(c.T),
                                        (np.sqrt(lam) * (np.eye(c.shape[0]) - lam * c.dot(self.h_inv).dot(c.T)))])
             self.g_matrix = np.vstack([np.eye(a.shape[0]) - a.dot(self.h_inv).dot(a.T),
-                                       np.sqrt(lam) * c.dot(self.h_inv).dot(a)])
+                                       np.sqrt(lam) * c.dot(self.h_inv).dot(a.T)])
             self.g = self.g_matrix.dot(problem.b)
+
+    def forget(self):
+        self.problem = None
+        self.f_matrix = None
+        self.g_matrix = None
+        self.h_matrix = None
+        self.h_inv = None
+        self.g = None
+        self.ab = None
 
     def loss(self, x, w):
         return (1 / 2 * np.linalg.norm(self.problem.a.dot(x) - self.problem.b, ord=2) ** 2 +
-                self.lam / 2 * np.linalg.norm(self.problem.c.dot(x) - w, ord=2) ** 2)
+                self.lam / 2 * np.linalg.norm(self.problem.c.dot(x) - w, ord=2) ** 2) + self.prior.loss(x)
 
     def value_function(self, x):
         assert not self.practical, "The oracle is in 'practical' mode. The value function is inaccessible."
@@ -52,7 +85,7 @@ class LinearOracleSR3:
 
     def gradient_value_function(self, x):
         assert not self.practical, "The oracle is in 'practical' mode. The value function is inaccessible."
-        return self.f_matrix.T.dot(self.f_matrix.dot(x) - self.g, ord=2)
+        return self.f_matrix.T.dot(self.f_matrix.dot(x) - self.g)
 
     def find_optimal_parameters(self, x0, regularizer=None, tol=1e-4, max_iter=1000, **kwargs):
         x = x0

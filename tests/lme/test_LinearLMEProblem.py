@@ -96,11 +96,37 @@ class TestLinearLMEProblem(unittest.TestCase):
         unique_pivot_groups = set([tuple(s) for s in x1[1:, np.array([1, 6])]])
         assert problem2.num_groups == len(unique_pivot_groups)
         x2, y2 = problem2.to_x_y()
-        problem3 = LinearLMEProblem.from_x_y(x2, y2).pivot((0, ))
+        problem3 = LinearLMEProblem.from_x_y(x2, y2).pivot((0,))
         assert problem3.num_groups == 3
         x3, y3 = problem3.to_x_y()
         self.assertTrue(np.all(x3 == x1), msg="x is not the same after from/to transformation")
         self.assertTrue(np.all(y3 == y1), msg="y is not the same after from/to transformation")
+
+    def test_from_dataframe(self):
+        # TODO: fix the order of columns
+        pass
+        # problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+        #                                                      features_labels=[3, 3],
+        #                                                      random_intercept=True,
+        #                                                      obs_std=0.1,
+        #                                                      seed=42,
+        #                                                      )
+        # x, y = problem.to_x_y()
+        # import pandas as pd
+        # data = pd.DataFrame(data=np.hstack([x, np.concatenate([[1], y]).reshape(-1, 1)])[1:, 1:],
+        #                     columns=["groups", "x1", "x2", "obs_std", "target"])
+        # data["intercept"] = 1
+        # problem2 = LinearLMEProblem.from_dataframe(data,
+        #                                            fixed_effects=["intercept", "x1", "x2"],
+        #                                            random_effects=["intercept", "x1", "x2"],
+        #                                            obs_std="obs_std",
+        #                                            target="target",
+        #                                            groups="groups",
+        #                                            must_include_fe=[],
+        #                                            must_include_re=["x1"])
+        # x2, y2 = problem2.to_x_y()
+        # self.assertTrue((x == x2).all())
+        # self.assertTrue((y == y2).all())
 
 
 if __name__ == '__main__':

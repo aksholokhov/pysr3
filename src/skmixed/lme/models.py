@@ -23,6 +23,7 @@ from typing import Set
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
+
 from skmixed.helpers import get_per_group_coefficients
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 from skmixed.lme.problems import LinearLMEProblem
@@ -935,7 +936,7 @@ class SCADLmeModel(LMEModel):
             strength of SCAD regularizer
         rho: float, rho > 1
             first knot of the SCAD spline
-        sigma: float, sigma > 1
+        sigma: float,
             a positive constant such that sigma*rho is the second knot of the SCAD spline
         logger_keys: List[str]
             list of keys for the parameters that the logger should track

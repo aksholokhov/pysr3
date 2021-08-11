@@ -1,8 +1,12 @@
 from typing import Set
 
 import numpy as np
+
+from skmixed.linear.oracles import LinearOracle, LinearOracleSR3
 from skmixed.linear.problems import LinearProblem
 from skmixed.logger import Logger
+from skmixed.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer
+from skmixed.solvers import PGDSolver
 
 
 class LinearModel:
@@ -38,7 +42,6 @@ class LinearModel:
             y: np.ndarray,
             initial_parameters: dict = None,
             warm_start=False,
-            random_intercept=True,
             **kwargs):
         """
                 Fits a Linear Model to the given data.
@@ -54,15 +57,13 @@ class LinearModel:
                 initial_parameters : np.ndarray
                     Dict with possible fields:
 
-                        -   | 'beta0' : np.ndarray, shape = [n],
-                            | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
+                        -   | 'x0' : np.ndarray, shape = [n],
+                            | Initial estimate of model's coefficients. If None then it defaults to an all-ones vector.
 
                 warm_start : bool, default is False
                     Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
                     Throws NotFittedError if set to True when not fitted.
 
-                random_intercept : bool, default = True
-                    Whether treat the intercept as a random effect.
                 kwargs :
                     Not used currently, left here for passing debugging parameters.
 
@@ -86,12 +87,12 @@ class LinearModel:
         Parameters
         ----------
         problem: LinearProblem
-            an instance of LinearLMEProblem that contains all data-dependent information
+            an instance of LinearProblem that contains all data-dependent information
 
         initial_parameters : np.ndarray
             Dict with possible fields:
 
-                -   | 'beta0' : np.ndarray, shape = [n],
+                -   | 'x0' : np.ndarray, shape = [n],
                     | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
 
         warm_start : bool, default is False
@@ -113,7 +114,9 @@ class LinearModel:
         if initial_parameters is None:
             initial_parameters = {}
 
-        x = initial_parameters.get("x", np.ones(problem.num_features))
+        x = np.ones(problem.num_features)
+        if warm_start:
+            x = initial_parameters.get("x0", x)
 
         self.logger_ = Logger(self.logger_keys)
 
@@ -125,7 +128,7 @@ class LinearModel:
 
         return self
 
-    def predict(self, x, columns_labels=None, **kwargs):
+    def predict(self, x, **kwargs):
         """
         Makes a prediction if .fit(X, y) was called before and throws an error otherwise.
 
@@ -181,3 +184,396 @@ class LinearModel:
             "Number of features is not the same to what it was in the train data."
 
         return problem.a.dot(x)
+
+    def check_is_fitted(self):
+        """
+        Checks if the model was fitted before. Throws an error otherwise.
+
+        Returns
+        -------
+        None
+        """
+        if not hasattr(self, "coef_") or self.coef_ is None:
+            raise AssertionError("The model has not been fitted yet. Call .fit() first.")
+
+
+class SimpleLinearModel(LinearModel):
+    def __init__(self,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=5e-2 if not fixed_step_len else fixed_step_len)
+        oracle = LinearOracle(None, prior=prior)
+        regularizer = DummyRegularizer()
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         logger_keys=logger_keys)
+
+
+class SimpleLinearModelSR3(LinearModel):
+    def __init__(self,
+                 el: float = 1.,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        el: float
+            constant for SR3 relaxation. Bigger values correspond to tighter relaxation.
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        fixed_step_len = (1 if el == 0 else 1 / el) if not fixed_step_len else fixed_step_len
+        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                           fixed_step_len=fixed_step_len)
+        oracle = LinearOracleSR3(None, lam=el, prior=prior)
+        regularizer = DummyRegularizer()
+        super().__init__(oracle=oracle,
+                         solver=solver,
+                         regularizer=regularizer,
+                         logger_keys=logger_keys)
+
+
+class LinearL1Model(SimpleLinearModel):
+    def __init__(self,
+                 lam: float = 1,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        lam: float
+            strength of LASSO prior
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.regularizer = L1Regularizer(lam=lam)
+
+
+class LinearCADModel(SimpleLinearModel):
+    def __init__(self,
+                 lam: float = 1.,
+                 rho: float = 1.,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        lam: float
+            strength of CAD regularizer
+        rho: float
+            cut-off amplitude above which the coefficients are not penalized
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.regularizer = CADRegularizer(lam=lam, rho=rho)
+
+
+class LinearSCADModel(SimpleLinearModel):
+    def __init__(self,
+                 lam: float = 1.,
+                 rho: float = 1.,
+                 sigma: float = 1.,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        lam: float
+            strength of SCAD regularizer
+        rho: float, rho > 1
+            first knot of the SCAD spline
+        sigma: float,
+            a positive constant such that sigma*rho is the second knot of the SCAD spline
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.regularizer = SCADRegularizer(lam=lam, rho=rho, sigma=sigma)
+
+
+class LinearL1ModelSR3(SimpleLinearModelSR3):
+    def __init__(self,
+                 lam: float = 1.,
+                 el: float = 1.,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        lam: float
+            strength of LASSO regularizer
+        el: float
+            constant for SR3 relaxation. Bigger values correspond to tighter relaxation.
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(el=el,
+                         tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.regularizer = L1Regularizer(lam=lam)
+
+
+class LinearCADModelSR3(SimpleLinearModelSR3):
+    def __init__(self,
+                 lam: float = 1.,
+                 rho: float = 1.,
+                 el: float = 1.,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        lam: float
+            strength of CAD regularizer
+        rho: float
+            cut-off amplitude above which the coefficients are not penalized
+        el: float
+            constant for SR3 relaxation. Bigger values correspond to tighter relaxation.
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(el=el,
+                         tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.regularizer = CADRegularizer(lam=lam, rho=rho)
+
+
+class LinearSCADModelSR3(SimpleLinearModelSR3):
+    def __init__(self,
+                 lam: float = 1.,
+                 rho: float = 2.,
+                 sigma: float = 1.,
+                 el: float = 1.,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        lam: float
+            strength of SCAD regularizer
+        rho: float, rho > 1
+            first knot of the SCAD spline
+        sigma: float,
+            a positive constant such that sigma*rho is the second knot of the SCAD spline
+        el: float
+            constant for SR3 relaxation. Bigger values correspond to tighter relaxation.
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(el=el,
+                         tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.regularizer = SCADRegularizer(lam=lam, rho=rho, sigma=sigma)
