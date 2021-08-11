@@ -95,7 +95,7 @@ class LinearOracleSR3:
 
         while np.linalg.norm(x - x_prev) > tol and iteration < max_iter:
             x_prev = x
-            y = self.h_inv(self.ab + self.lam * self.problem.c.T.dot(x))
+            y = self.h_inv.dot(self.ab + self.lam * self.problem.c.T.dot(x))
             x = regularizer.prox(y, step_len)
             iteration += 1
 

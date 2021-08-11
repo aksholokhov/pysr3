@@ -4,7 +4,7 @@ Implements general purpose numerical solvers, like PGD
 
 import numpy as np
 
-from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
+from skmixed.lme.oracles import LinearLMEOracle
 from skmixed.logger import Logger
 from skmixed.regularizers import Regularizer
 
@@ -108,7 +108,7 @@ class FakePGDSolver:
     updated together with the original ones inside of the oracle's subroutine.
     """
 
-    def __init__(self, fixed_step_len=1, update_prox_every=1):
+    def __init__(self, tol=1e-4, max_iter=1000, fixed_step_len=1, update_prox_every=1):
         """
         Initializes the solver
 
@@ -121,8 +121,10 @@ class FakePGDSolver:
         """
         self.fixed_step_len = fixed_step_len
         self.update_prox_every = update_prox_every
+        self.tol = tol
+        self.max_iter = max_iter
 
-    def optimize(self, x0, oracle: LinearLMEOracleSR3 = None, regularizer: Regularizer = None, logger: Logger = None,
+    def optimize(self, x0, oracle=None, regularizer: Regularizer = None, logger: Logger = None,
                  **kwargs):
         """
         Solves the optimization problem for
@@ -150,7 +152,11 @@ class FakePGDSolver:
         if not regularizer:
             raise ValueError("regularizer can't be None")
 
-        x = oracle.find_optimal_parameters(x0, regularizer=regularizer, prox_step_len=self.fixed_step_len,
+        x = oracle.find_optimal_parameters(x0,
+                                           regularizer=regularizer,
+                                           tol=self.tol,
+                                           max_iter=self.max_iter,
+                                           prox_step_len=self.fixed_step_len,
                                            update_prox_every=self.update_prox_every,
                                            **kwargs)
 

@@ -6,7 +6,7 @@ from skmixed.linear.oracles import LinearOracle, LinearOracleSR3
 from skmixed.linear.problems import LinearProblem
 from skmixed.logger import Logger
 from skmixed.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer
-from skmixed.solvers import PGDSolver
+from skmixed.solvers import PGDSolver, FakePGDSolver
 
 
 class LinearModel:
@@ -125,7 +125,7 @@ class LinearModel:
         self.coef_ = {
             "x": optimal_x,
         }
-
+        self.oracle.forget()
         return self
 
     def predict(self, x, **kwargs):
@@ -248,6 +248,7 @@ class SimpleLinearModelSR3(LinearModel):
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
+                 practical=False,
                  **kwargs):
         """
         Initializes the model
@@ -275,8 +276,11 @@ class SimpleLinearModelSR3(LinearModel):
             for passing debugging info
         """
         fixed_step_len = (1 if el == 0 else 1 / el) if not fixed_step_len else fixed_step_len
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=fixed_step_len)
+        if practical:
+            solver = FakePGDSolver(tol=tol_solver, max_iter=max_iter_solver, fixed_step_len=fixed_step_len)
+        else:
+            solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+                               fixed_step_len=fixed_step_len)
         oracle = LinearOracleSR3(None, lam=el, prior=prior)
         regularizer = DummyRegularizer()
         super().__init__(oracle=oracle,
@@ -436,6 +440,7 @@ class LinearL1ModelSR3(SimpleLinearModelSR3):
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
+                 practical=False,
                  **kwargs):
         """
         Initializes the model
@@ -470,7 +475,8 @@ class LinearL1ModelSR3(SimpleLinearModelSR3):
                          stepping=stepping,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
-                         prior=prior)
+                         prior=prior,
+                         practical=practical)
         self.regularizer = L1Regularizer(lam=lam)
 
 
@@ -485,6 +491,7 @@ class LinearCADModelSR3(SimpleLinearModelSR3):
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
+                 practical=False,
                  **kwargs):
         """
         Initializes the model
@@ -521,7 +528,8 @@ class LinearCADModelSR3(SimpleLinearModelSR3):
                          stepping=stepping,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
-                         prior=prior)
+                         prior=prior,
+                         practical=practical)
         self.regularizer = CADRegularizer(lam=lam, rho=rho)
 
 
@@ -537,6 +545,7 @@ class LinearSCADModelSR3(SimpleLinearModelSR3):
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
+                 practical=False,
                  **kwargs):
         """
         Initializes the model
@@ -575,5 +584,6 @@ class LinearSCADModelSR3(SimpleLinearModelSR3):
                          stepping=stepping,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
-                         prior=prior)
+                         prior=prior,
+                         practical=practical)
         self.regularizer = SCADRegularizer(lam=lam, rho=rho, sigma=sigma)

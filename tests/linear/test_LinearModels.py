@@ -81,8 +81,11 @@ class TestLinearModels(unittest.TestCase):
             "CAD": (LinearCADModel, {"rho": 0.5}),
             "SCAD": (LinearSCADModel, {"lam": 1, "rho": 3.7, "sigma": 2.5}),
             "L1_SR3": (LinearL1ModelSR3, {"lam": 0.1}),
+            "L1_SR3P": (LinearL1ModelSR3, {"lam": 0.1, "practical": True}),
             "CAD_SR3": (LinearCADModelSR3, {"rho": 0.5}),
-            "SCAD_SR3": (LinearSCADModelSR3, {"lam": 0.2, "rho": 3.7, "sigma": 0.5})
+            "CAD_SR3P": (LinearCADModelSR3, {"rho": 0.5, "practical": True}),
+            "SCAD_SR3": (LinearSCADModelSR3, {"lam": 0.2, "rho": 3.7, "sigma": 0.5}),
+            "SCAD_SR3P": (LinearSCADModelSR3, {"lam": 0.2, "rho": 3.7, "sigma": 0.5, "practical": True})
         }
         trials = 5
 

@@ -246,6 +246,14 @@ class TestLinearLMEOracle(TestCase):
             ys_optimal_hat = hat_matrix.dot(ys_true)
             assert np.allclose(ys_optimal_true, ys_optimal_hat)
 
+    def test_flip_probabilities(self):
+        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                             features_labels=[3, 3],
+                                                             random_intercept=True,
+                                                             obs_std=0.1)
+        oracle = LinearLMEOracle(problem)
+        flip_probabilities = oracle.flip_probabilities_beta(**true_parameters)
+        self.assertTrue((0 <= flip_probabilities).all() and (flip_probabilities <= 1).all())
 
 if __name__ == '__main__':
     unittest.main()
