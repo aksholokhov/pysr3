@@ -7,8 +7,6 @@ from skmixed.priors import Prior, NonInformativePrior
 class LinearOracle:
 
     def __init__(self, problem: LinearProblem = None, prior: Prior = None):
-        if problem:
-            assert problem.c is None, "non-trivial C is not supported by a LinearOracle. Use LinearOralceSR3 instead."
         self.problem = problem
         self.prior = prior if prior else NonInformativePrior()
 
@@ -34,6 +32,14 @@ class LinearOracle:
 
     def gradient_value_function(self, x):
         return self.gradient(x)
+
+    def aic(self, x):
+        p = sum(x != 0)
+        return self.loss(x) + 2 * p
+
+    def bic(self, x):
+        p = sum(x != 0)
+        return self.loss(x) + np.log(self.problem.num_objects) * p
 
 
 class LinearOracleSR3:
@@ -100,3 +106,13 @@ class LinearOracleSR3:
             iteration += 1
 
         return x
+
+    def aic(self, x):
+        p = sum(x != 0)
+        oracle = LinearOracle(self.problem, self.prior)
+        return oracle.loss(x) + 2 * p
+
+    def bic(self, x):
+        p = sum(x != 0)
+        oracle = LinearOracle(self.problem, self.prior)
+        return oracle.loss(x) + np.log(self.problem.num_objects) * p
