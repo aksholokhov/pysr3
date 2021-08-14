@@ -117,7 +117,7 @@ class TestLmeModels(unittest.TestCase):
             "initializer": "EM",
             "lam": 5,
             "rho": 0.3,
-            "stepping": "line-search",
+            # "stepping": "line-search",
             "logger_keys": ('converged', 'loss',),
             "tol_oracle": 1e-4,
             "tol_solver": 1e-5,

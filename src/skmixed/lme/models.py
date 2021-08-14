@@ -916,7 +916,7 @@ class CADLmeModel(SimpleLMEModel):
         return oracle, regularizer, solver
 
 
-class CADLmeModelSR3(SimpleLMEModel):
+class CADLmeModelSR3(SimpleLMEModelSR3):
     """
     Implements a CAD-regularized SR3-relaxed Linear Mixed-Effect Model
     """
