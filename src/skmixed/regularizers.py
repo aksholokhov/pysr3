@@ -80,7 +80,6 @@ class L0Regularizer(Regularizer):
                  nnz_tbeta=1,
                  nnz_tgamma=1,
                  independent_beta_and_gamma=False,
-                 participation_in_selection=None,
                  oracle: LinearLMEOracle = None):
         """
         Create the regularizer.
@@ -94,23 +93,19 @@ class L0Regularizer(Regularizer):
         independent_beta_and_gamma: bool
             If true then we only can set an element of gamma as non-zero when the respective
             element of beta is non-zero too.
-        participation_in_selection: ndarray
-            Array of boolean values telling whether the regularizer should be applied to the respective
-            coordinate.
         oracle: LinearLMEOracle
             class that encompasses the information about the problem
         """
         self.nnz_tbeta = nnz_tbeta
         self.nnz_tgamma = nnz_tgamma
         self.oracle = oracle
-        self.participation_in_selection = participation_in_selection
         self.independent_beta_and_gamma = independent_beta_and_gamma
         self.beta_weights = None
         self.gamma_weights = None
         self.beta_participation_in_selection = None
         self.gamma_participation_in_selection = None
 
-    def instantiate(self, weights):
+    def instantiate(self, weights, **kwargs):
         """
         Attaches weights to the regularizer.
 
@@ -284,7 +279,7 @@ class L1Regularizer(Regularizer):
         self.lam = lam
         self.weights = None
 
-    def instantiate(self, weights):
+    def instantiate(self, weights, **kwargs):
         """
         Attach regularization weights
 
@@ -368,7 +363,7 @@ class CADRegularizer(Regularizer):
         self.lam = lam
         self.weights = None
 
-    def instantiate(self, weights=None):
+    def instantiate(self, weights=None, **kwargs):
         """
         Attach regularization weights
 
@@ -457,7 +452,7 @@ class SCADRegularizer(Regularizer):
         self.lam = lam
         self.weights = None
 
-    def instantiate(self, weights=None):
+    def instantiate(self, weights=None, **kwargs):
         """
         Attach regularization weights
 
@@ -580,7 +575,7 @@ class PositiveQuadrantRegularizer(Regularizer):
         self.other_regularizer = other_regularizer
         self.positive_coordinates = None
 
-    def instantiate(self, weights, oracle, **kwargs):
+    def instantiate(self, weights, oracle=None, **kwargs):
         self.positive_coordinates = ([False] * oracle.problem.num_fixed_effects +
                                      [True] * oracle.problem.num_random_effects)
         if self.other_regularizer:

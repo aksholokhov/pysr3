@@ -9,9 +9,8 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 import yaml
-
 from skmixed.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
-from skmixed.lme.models import Sr3L0LmeModel, SR3L1LmeModel, SR3CADLmeModel, SR3SCADLmeModel
+from skmixed.lme.models import L0LmeModelSR3, L1LmeModelSR3, CADLmeModelSR3, SCADLmeModelSR3
 from skmixed.lme.problems import LinearLMEProblem
 
 MODELS_NAMES = ("L0", "L1", "CAD", "SCAD", "L0_SR3", "L1_SR3", "CAD_SR3", "SCAD_SR3")
@@ -126,20 +125,20 @@ def get_model(model: str, problem: LinearLMEProblem):
     if model == "L0" or model == "SR3_L0":
         selection_spectrum = [{"nnz_tbeta": p, "nnz_tgamma": q} for p in range(1, problem.num_fixed_effects) for q in
                               range(1, problem.num_random_effects) if p >= q]
-        return lambda params: L0LmeModel(**params) if model == "L0" else Sr3L0LmeModel(**params), selection_spectrum
+        return lambda params: L0LmeModel(**params) if model == "L0" else L0LmeModelSR3(**params), selection_spectrum
 
     selection_spectrum = [{"lam": lam} for lam in np.logspace(start=-4, stop=5, num=100)]
     if model == "L1":
         return lambda params: L1LmeModel(**params), selection_spectrum
     elif model == "L1_SR3":
-        return lambda params: SR3L1LmeModel(**params), selection_spectrum
+        return lambda params: L1LmeModelSR3(**params), selection_spectrum
     elif model == "CAD":
         return lambda params: CADLmeModel(**params), selection_spectrum
     elif model == "CAD_SR3":
-        return lambda params: SR3CADLmeModel(**params), selection_spectrum
+        return lambda params: CADLmeModelSR3(**params), selection_spectrum
     elif model == "SCAD":
         return lambda params: SCADLmeModel(**params), selection_spectrum
     elif model == "SCAD_SR3":
-        return lambda params: SR3SCADLmeModel(**params), selection_spectrum
+        return lambda params: SCADLmeModelSR3(**params), selection_spectrum
     else:
         raise ValueError(f"Model name is not recognized: {model}. Should be one of: {MODELS_NAMES}")

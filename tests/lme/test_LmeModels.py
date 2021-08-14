@@ -2,10 +2,9 @@ import unittest
 
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
-
 from skmixed.helpers import random_effects_to_matrix
-from skmixed.lme.models import Sr3L0LmeModel, L0LmeModel, L1LmeModel, SR3L1LmeModel, CADLmeModel, SR3CADLmeModel, \
-    SCADLmeModel, SR3SCADLmeModel
+from skmixed.lme.models import L0LmeModelSR3, L0LmeModel, L1LmeModel, L1LmeModelSR3, CADLmeModel, CADLmeModelSR3, \
+    SCADLmeModel, SCADLmeModelSR3
 from skmixed.lme.problems import LinearLMEProblem
 
 
@@ -18,10 +17,10 @@ class TestLmeModels(unittest.TestCase):
             "L1": (L1LmeModel, {}),
             "CAD": (CADLmeModel, {}),
             "SCAD": (SCADLmeModel, {"rho": 3.7, "sigma": 2.5}),
-            "L0SR3": (Sr3L0LmeModel, {}),
-            "L1SR3": (SR3L1LmeModel, {}),
-            "CADSR3": (SR3CADLmeModel, {}),
-            "SCADSR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 2.5})
+            "L0SR3": (L0LmeModelSR3, {}),
+            "L1SR3": (L1LmeModelSR3, {}),
+            "CADSR3": (CADLmeModelSR3, {}),
+            "SCADSR3": (SCADLmeModelSR3, {"rho": 3.7, "sigma": 2.5})
         }
 
         trials = 3
@@ -40,8 +39,7 @@ class TestLmeModels(unittest.TestCase):
         default_params = {
             "nnz_tbeta": 4,
             "nnz_tgamma": 4,
-            "lb": 1,
-            "lg": 1,
+            "ell": 1,
             "rho": 0.1,
             "lam": 0.0,  # we expect the answers to be dense so the regularizers are small
             # "stepping": "line-search",
@@ -99,10 +97,10 @@ class TestLmeModels(unittest.TestCase):
             "L1": (L1LmeModel, {"stepping": "line-search"}),
             "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
             "SCAD": (SCADLmeModel, {"rho": 3.7, "sigma": 0.5, "lam": 15, "stepping": "line-search"}),
-            "L0_SR3": (Sr3L0LmeModel, {}),
-            "L1_SR3": (SR3L1LmeModel, {}),
-            "CAD_SR3": (SR3CADLmeModel, {}),
-            "SCAD_SR3": (SR3SCADLmeModel, {"rho": 3.7, "sigma": 0.5})
+            "L0_SR3": (L0LmeModelSR3, {}),
+            "L1_SR3": (L1LmeModelSR3, {}),
+            "CAD_SR3": (CADLmeModelSR3, {"rho": 0.3}),
+            "SCAD_SR3": (SCADLmeModelSR3, {"rho": 3.7, "sigma": 0.5})
         }
 
         trials = 5
@@ -115,14 +113,14 @@ class TestLmeModels(unittest.TestCase):
         }
 
         default_params = {
-            "lb": 40,
-            "lg": 40,
+            "ell": 40,
             "initializer": "EM",
             "lam": 5,
             "rho": 0.3,
+            "stepping": "line-search",
             "logger_keys": ('converged', 'loss',),
-            "tol_oracle": 1e-5,
-            "tol_solver": 1e-6,
+            "tol_oracle": 1e-4,
+            "tol_solver": 1e-5,
             "max_iter_oracle": 1000,
             "max_iter_solver": 5000
         }
@@ -185,8 +183,8 @@ class TestLmeModels(unittest.TestCase):
         models_to_test = {
             "L0": L0LmeModel,
             "L1": L1LmeModel,
-            "L0SR3": Sr3L0LmeModel,
-            "L1SR3": SR3L1LmeModel,
+            "L0SR3": L0LmeModelSR3,
+            "L1SR3": L1LmeModelSR3,
         }
         problem_parameters = {
             "groups_sizes": [20, 5, 10, 50],

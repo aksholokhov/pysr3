@@ -18,12 +18,13 @@
 Linear Mixed-Effects Models (simple, relaxed, and regularized)
 """
 
-from typing import Set
+import warnings
+from typing import Set, Optional, Tuple
 
 import numpy as np
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator, RegressorMixin, check_X_y, check_array
+from sklearn.exceptions import DataConversionWarning, NotFittedError
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
-
 from skmixed.helpers import get_per_group_coefficients
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 from skmixed.lme.problems import LinearLMEProblem
@@ -54,12 +55,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
     See the paper for more details.
     """
 
-    def __init__(self,
-                 solver=None,
-                 oracle=None,
-                 regularizer=None,
-                 initializer: str = "None",
-                 logger_keys: Set = ('converged',)):
+    def __init__(self, logger_keys: Set = ('converged',), initializer: str = "None"):
         """
         Initializes the model
 
@@ -76,13 +72,11 @@ class LMEModel(BaseEstimator, RegressorMixin):
         logger_keys: Optional[Set[str]]
             list of values for the logger to track.
         """
-        self.regularizer = regularizer
-        self.oracle = oracle
-        self.solver = solver
-        self.initializer = initializer
         self.logger_keys = logger_keys
-        self.coef_ = None
-        self.logger_ = None
+        self.initializer = initializer
+
+    def instantiate(self) -> Tuple[Optional[LinearLMEOracle], Optional[Regularizer], Optional[PGDSolver]]:
+        raise NotImplementedError("LinearModel is a base abstract class that should be used only for inheritance.")
 
     def fit(self,
             x: np.ndarray,
@@ -136,6 +130,12 @@ class LMEModel(BaseEstimator, RegressorMixin):
                 self : LinearLMESparseModel
                     Fitted regression model.
                 """
+        check_X_y(x, y)
+        x = np.array(x)
+        y = np.array(y)
+        if len(y.shape) > 1:
+            warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
+            y = y[:, 0]
 
         problem = LinearLMEProblem.from_x_y(x, y, columns_labels, random_intercept=random_intercept, **kwargs)
         return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
@@ -172,12 +172,12 @@ class LMEModel(BaseEstimator, RegressorMixin):
         -------
             self
         """
+        oracle, regularizer, solver = self.instantiate()
 
-        self.oracle.instantiate(problem)
-        if self.regularizer:
-            self.regularizer.instantiate(weights=self.oracle.beta_gamma_to_x(beta=problem.fe_regularization_weights,
-                                                                             gamma=problem.re_regularization_weights),
-                                         oracle=self.oracle)
+        oracle.instantiate(problem)
+        regularizer.instantiate(weights=oracle.beta_gamma_to_x(beta=problem.fe_regularization_weights,
+                                                               gamma=problem.re_regularization_weights),
+                                oracle=oracle)
 
         num_fixed_effects = problem.num_fixed_effects
         num_random_effects = problem.num_random_effects
@@ -193,17 +193,17 @@ class LMEModel(BaseEstimator, RegressorMixin):
             gamma = initial_parameters.get("gamma", np.ones(num_random_effects))
 
         if self.initializer == "EM":
-            beta = self.oracle.optimal_beta(gamma, tbeta=beta, beta=beta)
-            us = self.oracle.optimal_random_effects(beta, gamma)
-            gamma = np.sum(us ** 2, axis=0) / self.oracle.problem.num_groups
+            beta = oracle.optimal_beta(gamma, tbeta=beta, beta=beta)
+            us = oracle.optimal_random_effects(beta, gamma)
+            gamma = np.sum(us ** 2, axis=0) / oracle.problem.num_groups
 
         self.logger_ = Logger(self.logger_keys)
 
-        x = self.oracle.beta_gamma_to_x(beta, gamma)
-        optimal_x = self.solver.optimize(x, oracle=self.oracle, regularizer=self.regularizer, logger=self.logger_)
-        beta, gamma = self.oracle.x_to_beta_gamma(optimal_x)
+        x = oracle.beta_gamma_to_x(beta, gamma)
+        optimal_x = solver.optimize(x, oracle=oracle, regularizer=regularizer, logger=self.logger_)
+        beta, gamma = oracle.x_to_beta_gamma(optimal_x)
 
-        us = self.oracle.optimal_random_effects(beta, gamma)
+        us = oracle.optimal_random_effects(beta, gamma)
 
         per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
 
@@ -215,7 +215,16 @@ class LMEModel(BaseEstimator, RegressorMixin):
             "per_group_coefficients": per_group_coefficients,
         }
 
-        # self.oracle.forget()
+        if "vaida_aic" in self.logger_.keys:
+            self.logger_.add("aic", oracle.vaida2005aic(beta, gamma))
+        if "jones_bic" in self.logger_.keys:
+            self.logger_.add("bic", oracle.jones2010bic(beta, gamma))
+        if "jones_bic" in self.logger_.keys:
+            self.logger_.add("bic", oracle.muller2018ic(beta, gamma))
+        if "flip_probabilities_beta" in self.logger_.keys:
+            self.logger_.add("flip_probabilities_beta", oracle.flip_probabilities_beta(beta, gamma))
+
+        self.n_features_in_ = {"fixed": problem.num_fixed_effects, "random": problem.num_random_effects}
 
         return self
 
@@ -245,6 +254,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
             Models predictions.
         """
         self.check_is_fitted()
+        check_array(x)
+        x = np.array(x)
         problem = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
         return self.predict_problem(problem, **kwargs)
 
@@ -339,54 +350,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
         None
         """
         if not hasattr(self, "coef_") or self.coef_ is None:
-            raise AssertionError("The model has not been fitted yet. Call .fit() first.")
-
-    def muller2018ic(self):
-        """
-        Implements Information Criterion (IC) from (Muller, 2018)
-
-        Returns
-        -------
-        Value of Mueller's IC
-        """
-
-        self.check_is_fitted()
-        return self.oracle.muller2018ic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
-
-    def vaida2005aic(self):
-        """
-        Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
-
-        Returns
-        -------
-        Value for Vaida AIC
-        """
-        self.check_is_fitted()
-        return self.oracle.vaida2005aic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
-
-    def jones2010bic(self):
-        """
-        Implements Bayes Information Criterion (BIC) from (Jones, 2010)
-        # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
-
-        Returns
-        -------
-        Value of Jones's BIC
-        """
-        self.check_is_fitted()
-        return self.oracle.jones2010bic(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
-
-    def flip_probabilities(self):
-        """
-        Estimates the probabilities of coordinates in beta to flip their signs
-        under the normal posterior.
-
-        Returns
-        -------
-        probabilities each coordinates of beta, as ndarray.
-        """
-        self.check_is_fitted()
-        return self.oracle.flip_probabilities_beta(beta=self.coef_['beta'], gamma=self.coef_['gamma'])
+            raise NotFittedError("The model has not been fitted yet. Call .fit() first.")
 
 
 class SimpleLMEModel(LMEModel):
@@ -430,18 +394,135 @@ class SimpleLMEModel(LMEModel):
         kwargs:
             for passing debugging info
         """
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=5e-2 if not fixed_step_len else fixed_step_len)
-        oracle = LinearLMEOracle(None, prior=prior)
+        super().__init__(initializer=initializer, logger_keys=logger_keys)
+        self.tol_solver = tol_solver
+        self.max_iter_solver = max_iter_solver
+        self.stepping = stepping
+        self.logger_keys = logger_keys
+        self.fixed_step_len = fixed_step_len
+        self.prior = prior
+
+    def instantiate(self):
+        oracle = LinearLMEOracle(None, prior=self.prior)
         regularizer = DummyRegularizer()
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
-                         initializer=initializer,
-                         logger_keys=logger_keys)
+        solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
+                           fixed_step_len=5e-2 if not self.fixed_step_len else self.fixed_step_len)
+
+        return oracle, regularizer, solver
 
 
-class L0LmeModel(LMEModel):
+class SimpleLMEModelSR3(LMEModel):
+    """
+    Implements Regularized Linear Mixed-Effects Model functional for given problem::
+
+        Y_i = X_i*β + Z_i*u_i + 𝜺_i,
+
+        where
+
+        β ~ 𝒩(tb, 1/lb),
+
+        ||tβ||_0 = nnz(β) <= nnz_tbeta,
+
+        u_i ~ 𝒩(0, diag(𝛄)),
+
+        𝛄 ~ 𝒩(t𝛄, 1/lg),
+
+        ||t𝛄||_0 = nnz(t𝛄) <= nnz_tgamma,
+
+        𝜺_i ~ 𝒩(0, Λ)
+
+    Here tβ and t𝛄 are single variables, not multiplications (e.g. not t*β). This oracle is designed for
+    a solver (LinearLMESparseModel) which searches for a sparse solution (tβ, t𝛄) with at most k and j <= k non-zero
+    elements respectively. For more details, see the documentation for LinearLMESparseModel.
+
+    The problem should be provided as LinearLMEProblem.
+
+    """
+
+    def __init__(self,
+                 tol_oracle: float = 1e-5,
+                 tol_solver: float = 1e-5,
+                 initializer: str = "None",
+                 max_iter_oracle: int = 10000,
+                 max_iter_solver: int = 10000,
+                 stepping: str = "fixed",
+                 ell: float = 40,
+                 logger_keys: Set = ('converged',),
+                 warm_start=True,
+                 practical=False,
+                 update_prox_every=1,
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        tol_oracle: float
+            tolerance for SR3 oracle's internal numerical subroutines
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        initializer: str
+            pre-initialization. Can be "None", in which case the algorithm starts with
+            "all-ones" starting parameters, or "EM", in which case the algorithm does
+            one step of EM algorithm
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        ell: float
+            level of SR3-relaxation
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        warm_start: bool
+            if fitting should be started from the current model's coefficients.
+            Used for fine-tuning and iterative fitting.
+        practical: bool
+            whether to use SR3-Practical method, which works faster at the expense of accuracy
+        update_prox_every: int
+            how often update the relaxed variables. Only if practical=True
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(initializer=initializer, logger_keys=logger_keys)
+        self.tol_oracle = tol_oracle
+        self.tol_solver = tol_solver
+        self.max_iter_oracle = max_iter_oracle
+        self.max_iter_solver = max_iter_solver
+        self.stepping = stepping
+        self.logger_keys = logger_keys
+        self.fixed_step_len = fixed_step_len
+        self.warm_start = warm_start
+        self.prior = prior
+        self.ell = ell
+        self.practical = practical
+        self.update_prox_every = update_prox_every
+
+    def instantiate(self):
+        if not self.fixed_step_len:
+            self.fixed_step_len = 1 if self.ell == 0 else 1 / self.ell
+        if self.practical:
+            solver = FakePGDSolver(update_prox_every=self.update_prox_every)
+        else:
+            solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
+                               fixed_step_len=self.fixed_step_len)
+        oracle = LinearLMEOracleSR3(None, lb=self.ell, lg=self.ell, tol_inner=self.tol_oracle,
+                                    n_iter_inner=self.max_iter_oracle,
+                                    warm_start=self.warm_start, prior=self.prior)
+        dummy_regularizer = DummyRegularizer()
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
+        return oracle, regularizer, solver
+
+
+class L0LmeModel(SimpleLMEModel):
     """
     Implements an L0-regularized Linear Mixed-Effect Model. It allows specifying the maximal number of
     non-zero fixed and random effects in your model
@@ -450,11 +531,10 @@ class L0LmeModel(LMEModel):
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
-                 max_iter_solver: int = 1000,
+                 max_iter_solver: int = 10000,
                  stepping: str = "line-search",
                  nnz_tbeta: int = 1,
                  nnz_tgamma: int = 1,
-                 participation_in_selection=None,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -478,8 +558,6 @@ class L0LmeModel(LMEModel):
             the maximal number of non-zero fixed effects in your model
         nnz_tgamma : int
             the maximal number of non-zero random effects in your model
-        participation_in_selection: ndarray of int
-            0 if the feature should be affected by the regularizer, 0 otherwise
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
         fixed_step_len: float
@@ -492,22 +570,26 @@ class L0LmeModel(LMEModel):
         kwargs:
             for passing debugging info
         """
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=1 if not fixed_step_len else fixed_step_len)
-        oracle = LinearLMEOracle(None, prior=prior)
-        l0_regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
-                                       nnz_tgamma=nnz_tgamma,
-                                       participation_in_selection=participation_in_selection,
+        super().__init__(tol_solver=tol_solver,
+                         initializer=initializer,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.nnz_tbeta = nnz_tbeta
+        self.nnz_tgamma = nnz_tgamma
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        l0_regularizer = L0Regularizer(nnz_tbeta=self.nnz_tbeta,
+                                       nnz_tgamma=self.nnz_tgamma,
                                        oracle=oracle)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=l0_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
-                         initializer=initializer,
-                         logger_keys=logger_keys)
+        return oracle, regularizer, solver
 
 
-class Sr3L0LmeModel(LMEModel):
+class L0LmeModelSR3(SimpleLMEModelSR3):
     """
     Implements Regularized Linear Mixed-Effects Model functional for given problem::
 
@@ -540,13 +622,11 @@ class Sr3L0LmeModel(LMEModel):
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
                  max_iter_oracle: int = 1000,
-                 max_iter_solver: int = 20,
+                 max_iter_solver: int = 1000,
                  stepping: str = "fixed",
-                 lb: float = 40,
-                 lg: float = 40,
+                 ell: float = 40,
                  nnz_tbeta: int = 1,
                  nnz_tgamma: int = 1,
-                 participation_in_selection=None,
                  logger_keys: Set = ('converged',),
                  warm_start=True,
                  practical=False,
@@ -579,8 +659,6 @@ class Sr3L0LmeModel(LMEModel):
             the maximal number of non-zero fixed effects in your model
         nnz_tgamma : int
             the maximal number of non-zero random effects in your model
-        participation_in_selection: ndarray of int
-            0 if the feature should be affected by the regularizer, 0 otherwise
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
         warm_start: bool
@@ -600,25 +678,33 @@ class Sr3L0LmeModel(LMEModel):
         kwargs:
             for passing debugging info
         """
-        solver = FakePGDSolver(update_prox_every=update_prox_every) if practical \
-            else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=(
-                               1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len)
-        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start, prior=prior)
-        l0_regularizer = L0Regularizer(nnz_tbeta=nnz_tbeta,
-                                       nnz_tgamma=nnz_tgamma,
-                                       participation_in_selection=participation_in_selection,
+
+        super().__init__(tol_oracle=tol_oracle,
+                         tol_solver=tol_solver,
+                         initializer=initializer,
+                         max_iter_oracle=max_iter_oracle,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         warm_start=warm_start,
+                         practical=practical,
+                         update_prox_every=update_prox_every,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         ell=ell,
+                         prior=prior)
+        self.nnz_tbeta = nnz_tbeta
+        self.nnz_tgamma = nnz_tgamma
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        l0_regularizer = L0Regularizer(nnz_tbeta=self.nnz_tbeta,
+                                       nnz_tgamma=self.nnz_tgamma,
                                        oracle=oracle)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=l0_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
-                         initializer=initializer,
-                         logger_keys=logger_keys)
+        return oracle, regularizer, solver
 
 
-class L1LmeModel(LMEModel):
+class L1LmeModel(SimpleLMEModel):
     """
     Implements a LASSO-regularized Linear Mixed-Effect Model
     """
@@ -626,7 +712,7 @@ class L1LmeModel(LMEModel):
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
-                 max_iter_solver: int = 1000,
+                 max_iter_solver: int = 10000,
                  stepping: str = "line-search",
                  lam: float = 1,
                  logger_keys: Set = ('converged',),
@@ -662,19 +748,24 @@ class L1LmeModel(LMEModel):
         kwargs:
             for passing debugging info
         """
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
-        oracle = LinearLMEOracle(None, prior=prior)
-        l1_regularizer = L1Regularizer(lam=lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
+        super().__init__(tol_solver=tol_solver,
                          initializer=initializer,
-                         logger_keys=logger_keys)
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.lam = lam
+        self.fixed_step_len = 1 / (lam + 1)
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        l1_regularizer = L1Regularizer(lam=self.lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
+        return oracle, regularizer, solver
 
 
-class SR3L1LmeModel(LMEModel):
+class L1LmeModelSR3(SimpleLMEModelSR3):
     """
     Implements an SR3-relaxed LASSO-regularized Linear Mixed-Effect Model
     """
@@ -683,11 +774,10 @@ class SR3L1LmeModel(LMEModel):
                  tol_oracle: float = 1e-5,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
-                 max_iter_oracle: int = 1000,
-                 max_iter_solver: int = 20,
+                 max_iter_oracle: int = 10000,
+                 max_iter_solver: int = 10000,
                  stepping: str = "fixed",
-                 lb: float = 40,
-                 lg: float = 40,
+                 ell: float = 40,
                  lam: float = 1,
                  logger_keys: Set = ('converged',),
                  warm_start=True,
@@ -713,10 +803,8 @@ class SR3L1LmeModel(LMEModel):
             maximal number of iterations for PGD solver
         stepping: str
             step-size policy for PGD. Can be either "line-search" or "fixed"
-        lb: float
-            level of SR3-relaxation for fixed effects
-        lg: float
-            level of SR3-relaxation for random effects
+        ell: float
+            level of SR3-relaxation
         lam: float
             strength of LASSO regularizer
         participation_in_selection: ndarray of int
@@ -741,22 +829,29 @@ class SR3L1LmeModel(LMEModel):
             for passing debugging info
         """
 
-        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
-        solver = FakePGDSolver(fixed_step_len=fixed_step_len, update_prox_every=update_prox_every) if practical \
-            else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=fixed_step_len)
-        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start, prior=prior)
-        l1_regularizer = L1Regularizer(lam=lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
+        super().__init__(tol_oracle=tol_oracle,
+                         tol_solver=tol_solver,
                          initializer=initializer,
-                         logger_keys=logger_keys)
+                         max_iter_oracle=max_iter_oracle,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         warm_start=warm_start,
+                         practical=practical,
+                         update_prox_every=update_prox_every,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         ell=ell,
+                         prior=prior)
+        self.lam = lam
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        l1_regularizer = L1Regularizer(lam=self.lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
+        return oracle, regularizer, solver
 
 
-class CADLmeModel(LMEModel):
+class CADLmeModel(SimpleLMEModel):
     """
     Implements a CAD-regularized Linear Mixed-Effects Model
     """
@@ -764,7 +859,7 @@ class CADLmeModel(LMEModel):
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
-                 max_iter_solver: int = 1000,
+                 max_iter_solver: int = 10000,
                  stepping: str = "line-search",
                  rho: float = 0.30,
                  lam: float = 1.0,
@@ -803,19 +898,25 @@ class CADLmeModel(LMEModel):
         kwargs:
             for passing debugging info
         """
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
-        oracle = LinearLMEOracle(None, prior=prior)
-        cad_regularizer = CADRegularizer(rho=rho, lam=lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
+        super().__init__(tol_solver=tol_solver,
                          initializer=initializer,
-                         logger_keys=logger_keys)
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.lam = lam
+        self.rho = rho
+        self.fixed_step_len = 1 / (lam + 1) if not fixed_step_len else fixed_step_len
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
+        return oracle, regularizer, solver
 
 
-class SR3CADLmeModel(LMEModel):
+class CADLmeModelSR3(SimpleLMEModel):
     """
     Implements a CAD-regularized SR3-relaxed Linear Mixed-Effect Model
     """
@@ -824,12 +925,11 @@ class SR3CADLmeModel(LMEModel):
                  tol_oracle: float = 1e-5,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
-                 max_iter_oracle: int = 1000,
-                 max_iter_solver: int = 20,
+                 max_iter_oracle: int = 10000,
+                 max_iter_solver: int = 10000,
                  stepping: str = "fixed",
-                 lb: float = 40.0,
-                 lg: float = 40.0,
-                 rho: float = 1.0,
+                 ell: float = 40.0,
+                 rho: float = 0.3,
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
                  warm_start=True,
@@ -855,10 +955,8 @@ class SR3CADLmeModel(LMEModel):
             maximal number of iterations for PGD solver
         stepping: str
             step-size policy for PGD. Can be either "line-search" or "fixed"
-        lb: float
-            level of SR3-relaxation for fixed effects
-        lg: float
-            level of SR3-relaxation for random effects
+        ell: float
+            level of SR3-relaxation
         lam: float
             strength of CAD regularizer
         rho: float
@@ -885,22 +983,30 @@ class SR3CADLmeModel(LMEModel):
             for passing debugging info
         """
 
-        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
-        solver = FakePGDSolver(update_prox_every=update_prox_every, fixed_step_len=fixed_step_len) if practical \
-            else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=fixed_step_len)
-        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start, prior=prior)
-        cad_regularizer = CADRegularizer(rho=rho, lam=lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
+        super().__init__(tol_oracle=tol_oracle,
+                         tol_solver=tol_solver,
                          initializer=initializer,
-                         logger_keys=logger_keys)
+                         max_iter_oracle=max_iter_oracle,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         warm_start=warm_start,
+                         practical=practical,
+                         update_prox_every=update_prox_every,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         ell=ell,
+                         prior=prior)
+        self.lam = lam
+        self.rho = rho
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
+        return oracle, regularizer, solver
 
 
-class SCADLmeModel(LMEModel):
+class SCADLmeModel(SimpleLMEModel):
     """
     Implements SCAD-regularized Linear Mixed-Effect Model
     """
@@ -908,10 +1014,10 @@ class SCADLmeModel(LMEModel):
     def __init__(self,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
-                 max_iter_solver: int = 1000,
+                 max_iter_solver: int = 10000,
                  stepping: str = "line-search",
                  rho: float = 3.7,  # as per recommendation from (Fan, Li, 2001), p. 1351
-                 sigma: float = 1.6,  # same
+                 sigma: float = 0.5,  # same
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
@@ -950,19 +1056,26 @@ class SCADLmeModel(LMEModel):
         kwargs:
             for passing debugging info
         """
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=1 / (lam + 1) if not fixed_step_len else fixed_step_len)
-        oracle = LinearLMEOracle(None, prior=prior)
-        scad_regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
+        super().__init__(tol_solver=tol_solver,
                          initializer=initializer,
-                         logger_keys=logger_keys)
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.lam = lam
+        self.rho = rho
+        self.sigma = sigma
+        self.fixed_step_len = 1 / (lam + 1)
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
+        return oracle, regularizer, solver
 
 
-class SR3SCADLmeModel(LMEModel):
+class SCADLmeModelSR3(SimpleLMEModelSR3):
     """
     Implements SCAD-regularized SR3-relaxed Linear Mixed-Effects Model
     """
@@ -971,13 +1084,12 @@ class SR3SCADLmeModel(LMEModel):
                  tol_oracle: float = 1e-5,
                  tol_solver: float = 1e-5,
                  initializer: str = "None",
-                 max_iter_oracle: int = 1000,
-                 max_iter_solver: int = 20,
+                 max_iter_oracle: int = 10000,
+                 max_iter_solver: int = 10000,
                  stepping: str = "fixed",
-                 lb: float = 40.0,
-                 lg: float = 40.0,
+                 ell: float = 40.0,
                  rho: float = 3.7,  # as per recommendation from (Fan, Li, 2001), p. 1351
-                 sigma: float = 1.6,  # same
+                 sigma: float = 0.5,  # same
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
                  warm_start=True,
@@ -1003,10 +1115,8 @@ class SR3SCADLmeModel(LMEModel):
             maximal number of iterations for PGD solver
         stepping: str
             step-size policy for PGD. Can be either "line-search" or "fixed"
-        lb: float
-            level of SR3-relaxation for fixed effects
-        lg: float
-            level of SR3-relaxation for random effects
+        ell: float
+            level of SR3-relaxation
         lam: float
             strength of SCAD regularizer
         rho: float, rho > 1
@@ -1035,19 +1145,28 @@ class SR3SCADLmeModel(LMEModel):
             for passing debugging info
         """
 
-        fixed_step_len = (1 if max(lb, lg) == 0 else 1 / max(lb, lg)) if not fixed_step_len else fixed_step_len
-        solver = FakePGDSolver(update_prox_every=update_prox_every, fixed_step_len=fixed_step_len) if practical \
-            else PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=fixed_step_len)
-        oracle = LinearLMEOracleSR3(None, lb=lb, lg=lg, tol_inner=tol_oracle, n_iter_inner=max_iter_oracle,
-                                    warm_start=warm_start, prior=prior)
-        scad_regularizer = SCADRegularizer(rho=rho, sigma=sigma, lam=lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
+        super().__init__(tol_oracle=tol_oracle,
+                         tol_solver=tol_solver,
                          initializer=initializer,
-                         logger_keys=logger_keys)
+                         max_iter_oracle=max_iter_oracle,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         warm_start=warm_start,
+                         practical=practical,
+                         update_prox_every=update_prox_every,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         ell=ell,
+                         prior=prior)
+        self.lam = lam
+        self.rho = rho
+        self.sigma = sigma
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
+        return oracle, regularizer, solver
 
 
 def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=None):

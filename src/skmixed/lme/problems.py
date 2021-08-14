@@ -599,6 +599,8 @@ class LinearLMEProblem(LMEProblem):
             # if no labels were provided we assume the first row of X is column labels
             columns_labels = list(x[0, :].astype(int))
             x = x[1:, :]  # drop the first row to remove the column labels
+            # if x.shape[0] == y.shape[0] - 1:
+            #     y = y[1:]
 
         if y is not None:
             x, y = check_X_y(x, y)
