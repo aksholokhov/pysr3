@@ -1,41 +1,26 @@
-from typing import Set
+import warnings
+from typing import Set, Optional, Tuple
 
 import numpy as np
-
+from sklearn.base import BaseEstimator, RegressorMixin, check_X_y, check_array
+from sklearn.exceptions import DataConversionWarning, NotFittedError
 from skmixed.linear.oracles import LinearOracle, LinearOracleSR3
 from skmixed.linear.problems import LinearProblem
 from skmixed.logger import Logger
-from skmixed.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer
+from skmixed.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer, Regularizer
 from skmixed.solvers import PGDSolver, FakePGDSolver
 
 
-class LinearModel:
+class LinearModel(BaseEstimator, RegressorMixin):
 
-    def __init__(self,
-                 solver=None,
-                 oracle=None,
-                 regularizer=None,
-                 logger_keys: Set = ('converged',)):
-        """
-        Initializes the model
-
-        Parameters
-        ----------
-        solver: PGDSolver
-            an instance of PGDSolver
-        oracle: LinearLMEOracle
-            an instance of LinearLMEOracle
-        regularizer: Regularizer
-            an instance of Regularizer
-        logger_keys: Optional[Set[str]]
-            list of values for the logger to track.
-        """
-        self.regularizer = regularizer
-        self.oracle = oracle
-        self.solver = solver
+    def __init__(self, logger_keys=None):
         self.logger_keys = logger_keys
-        self.coef_ = None
-        self.logger_ = None
+
+    def instantiate(self) -> Tuple[Optional[LinearOracle], Optional[Regularizer], Optional[PGDSolver]]:
+        raise NotImplementedError("LinearModel is a base abstract class that should be used only for inheritance.")
+
+    def forget(self):
+        pass
 
     def fit(self,
             x: np.ndarray,
@@ -72,7 +57,12 @@ class LinearModel:
                 self : LinearLMESparseModel
                     Fitted regression model.
                 """
-
+        check_X_y(x, y)
+        x = np.array(x)
+        y = np.array(y)
+        if len(y.shape) > 1:
+            warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
+            y = y[:, 0]
         problem = LinearProblem.from_x_y(x=x, y=y)
         return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
 
@@ -106,10 +96,9 @@ class LinearModel:
         -------
             self
         """
-
-        self.oracle.instantiate(problem)
-        if self.regularizer:
-            self.regularizer.instantiate(weights=problem.regularization_weights)
+        oracle, regularizer, solver = self.instantiate()
+        oracle.instantiate(problem)
+        regularizer.instantiate(weights=problem.regularization_weights)
 
         if initial_parameters is None:
             initial_parameters = {}
@@ -120,12 +109,17 @@ class LinearModel:
 
         self.logger_ = Logger(self.logger_keys)
 
-        optimal_x = self.solver.optimize(x, oracle=self.oracle, regularizer=self.regularizer, logger=self.logger_)
+        optimal_x = solver.optimize(x, oracle=oracle, regularizer=regularizer, logger=self.logger_)
 
         self.coef_ = {
             "x": optimal_x,
         }
-        self.oracle.forget()
+        if "aic" in self.logger_.keys:
+            self.logger_.add("aic", oracle.aic(optimal_x))
+        if "bic" in self.logger_.keys:
+            self.logger_.add("bic", oracle.bic(optimal_x))
+        self.n_features_in_ = problem.num_features
+
         return self
 
     def predict(self, x, **kwargs):
@@ -154,6 +148,8 @@ class LinearModel:
             Models predictions.
         """
         self.check_is_fitted()
+        check_array(x)
+        x = np.array(x)
         problem = LinearProblem.from_x_y(x, y=None)
         return self.predict_problem(problem, **kwargs)
 
@@ -194,7 +190,7 @@ class LinearModel:
         None
         """
         if not hasattr(self, "coef_") or self.coef_ is None:
-            raise AssertionError("The model has not been fitted yet. Call .fit() first.")
+            raise NotFittedError("The model has not been fitted yet. Call .fit() first.")
 
 
 class SimpleLinearModel(LinearModel):
@@ -229,14 +225,22 @@ class SimpleLinearModel(LinearModel):
         kwargs:
             for passing debugging info
         """
-        solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
-                           fixed_step_len=5e-2 if not fixed_step_len else fixed_step_len)
-        oracle = LinearOracle(None, prior=prior)
+        super().__init__()
+        self.tol_solver = tol_solver
+        self.max_iter_solver = max_iter_solver
+        self.stepping = stepping
+        self.logger_keys = logger_keys
+        self.fixed_step_len = fixed_step_len
+        self.prior = prior
+
+    def instantiate(self):
+        oracle = LinearOracle(None, prior=self.prior)
         regularizer = DummyRegularizer()
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
-                         logger_keys=logger_keys)
+        solver = PGDSolver(tol=self.tol_solver,
+                           max_iter=self.max_iter_solver,
+                           stepping=self.stepping,
+                           fixed_step_len=5e-2 if not self.fixed_step_len else self.fixed_step_len)
+        return oracle, regularizer, solver
 
 
 class SimpleLinearModelSR3(LinearModel):
@@ -272,21 +276,37 @@ class SimpleLinearModelSR3(LinearModel):
             as fixed_step_len=1/L.
         prior: Optional[Prior]
             an instance of Prior class. If None then a non-informative prior is used.
+        practical: bool
+            whether to use a direct efficient value function evaluation method
         kwargs:
             for passing debugging info
         """
-        fixed_step_len = (1 if el == 0 else 1 / el) if not fixed_step_len else fixed_step_len
-        if practical:
-            solver = FakePGDSolver(tol=tol_solver, max_iter=max_iter_solver, fixed_step_len=fixed_step_len)
+        super().__init__()
+        self.el = el
+        self.tol_solver = tol_solver
+        self.max_iter_solver = max_iter_solver
+        self.stepping = stepping
+        self.logger_keys = logger_keys
+        self.fixed_step_len = (1 if el == 0 else 1 / el) if not fixed_step_len else fixed_step_len
+        self.practical = practical
+        self.prior = prior
+
+    def instantiate(self):
+        fixed_step_len = (1 if self.el == 0 else 1 / self.el) if not self.fixed_step_len else self.fixed_step_len
+        if self.practical:
+            solver = FakePGDSolver(tol=self.tol_solver,
+                                   max_iter=self.max_iter_solver,
+                                   fixed_step_len=fixed_step_len)
         else:
-            solver = PGDSolver(tol=tol_solver, max_iter=max_iter_solver, stepping=stepping,
+            solver = PGDSolver(tol=self.tol_solver,
+                               max_iter=self.max_iter_solver,
+                               stepping=self.stepping,
                                fixed_step_len=fixed_step_len)
-        oracle = LinearOracleSR3(None, lam=el, prior=prior)
+        oracle = LinearOracleSR3(None,
+                                 lam=self.el,
+                                 prior=self.prior)
         regularizer = DummyRegularizer()
-        super().__init__(oracle=oracle,
-                         solver=solver,
-                         regularizer=regularizer,
-                         logger_keys=logger_keys)
+        return oracle, regularizer, solver
 
 
 class LinearL1Model(SimpleLinearModel):
@@ -330,7 +350,12 @@ class LinearL1Model(SimpleLinearModel):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
-        self.regularizer = L1Regularizer(lam=lam)
+        self.lam = lam
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = L1Regularizer(lam=self.lam)
+        return oracle, regularizer, solver
 
 
 class LinearCADModel(SimpleLinearModel):
@@ -377,7 +402,13 @@ class LinearCADModel(SimpleLinearModel):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
-        self.regularizer = CADRegularizer(lam=lam, rho=rho)
+        self.lam = lam
+        self.rho = rho
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
+        return oracle, regularizer, solver
 
 
 class LinearSCADModel(SimpleLinearModel):
@@ -427,7 +458,14 @@ class LinearSCADModel(SimpleLinearModel):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
-        self.regularizer = SCADRegularizer(lam=lam, rho=rho, sigma=sigma)
+        self.lam = lam
+        self.rho = rho
+        self.sigma = sigma
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
+        return oracle, regularizer, solver
 
 
 class LinearL1ModelSR3(SimpleLinearModelSR3):
@@ -477,7 +515,12 @@ class LinearL1ModelSR3(SimpleLinearModelSR3):
                          fixed_step_len=fixed_step_len,
                          prior=prior,
                          practical=practical)
-        self.regularizer = L1Regularizer(lam=lam)
+        self.lam = lam
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = L1Regularizer(lam=self.lam)
+        return oracle, regularizer, solver
 
 
 class LinearCADModelSR3(SimpleLinearModelSR3):
@@ -530,7 +573,13 @@ class LinearCADModelSR3(SimpleLinearModelSR3):
                          fixed_step_len=fixed_step_len,
                          prior=prior,
                          practical=practical)
-        self.regularizer = CADRegularizer(lam=lam, rho=rho)
+        self.lam = lam
+        self.rho = rho
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
+        return oracle, regularizer, solver
 
 
 class LinearSCADModelSR3(SimpleLinearModelSR3):
@@ -586,4 +635,11 @@ class LinearSCADModelSR3(SimpleLinearModelSR3):
                          fixed_step_len=fixed_step_len,
                          prior=prior,
                          practical=practical)
-        self.regularizer = SCADRegularizer(lam=lam, rho=rho, sigma=sigma)
+        self.lam = lam
+        self.rho = rho
+        self.sigma = sigma
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
+        return oracle, regularizer, solver
