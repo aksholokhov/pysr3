@@ -98,7 +98,11 @@ class LinearModel(BaseEstimator, RegressorMixin):
         """
         oracle, regularizer, solver = self.instantiate()
         oracle.instantiate(problem)
-        regularizer.instantiate(weights=problem.regularization_weights)
+        if problem.regularization_weights is None:
+            regularization_weights = np.ones(problem.num_features)
+        else:
+            regularization_weights = problem.regularization_weights
+        regularizer.instantiate(weights=regularization_weights)
 
         if initial_parameters is None:
             initial_parameters = {}
@@ -287,7 +291,7 @@ class SimpleLinearModelSR3(LinearModel):
         self.max_iter_solver = max_iter_solver
         self.stepping = stepping
         self.logger_keys = logger_keys
-        self.fixed_step_len = (1 if el == 0 else 1 / el) if not fixed_step_len else fixed_step_len
+        self.fixed_step_len = fixed_step_len
         self.practical = practical
         self.prior = prior
 
@@ -311,7 +315,7 @@ class SimpleLinearModelSR3(LinearModel):
 
 class LinearL1Model(SimpleLinearModel):
     def __init__(self,
-                 lam: float = 1,
+                 lam: float = 0,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
                  stepping: str = "line-search",
@@ -360,7 +364,7 @@ class LinearL1Model(SimpleLinearModel):
 
 class LinearCADModel(SimpleLinearModel):
     def __init__(self,
-                 lam: float = 1.,
+                 lam: float = 0.,
                  rho: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
@@ -413,8 +417,8 @@ class LinearCADModel(SimpleLinearModel):
 
 class LinearSCADModel(SimpleLinearModel):
     def __init__(self,
-                 lam: float = 1.,
-                 rho: float = 1.,
+                 lam: float = 0.,
+                 rho: float = 3.7,
                  sigma: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
@@ -470,7 +474,7 @@ class LinearSCADModel(SimpleLinearModel):
 
 class LinearL1ModelSR3(SimpleLinearModelSR3):
     def __init__(self,
-                 lam: float = 1.,
+                 lam: float = 0.,
                  el: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
@@ -525,7 +529,7 @@ class LinearL1ModelSR3(SimpleLinearModelSR3):
 
 class LinearCADModelSR3(SimpleLinearModelSR3):
     def __init__(self,
-                 lam: float = 1.,
+                 lam: float = 0.,
                  rho: float = 1.,
                  el: float = 1.,
                  tol_solver: float = 1e-5,
@@ -584,7 +588,7 @@ class LinearCADModelSR3(SimpleLinearModelSR3):
 
 class LinearSCADModelSR3(SimpleLinearModelSR3):
     def __init__(self,
-                 lam: float = 1.,
+                 lam: float = 0.,
                  rho: float = 2.,
                  sigma: float = 1.,
                  el: float = 1.,

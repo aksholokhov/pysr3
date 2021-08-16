@@ -2,13 +2,27 @@ import unittest
 
 import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
-
+from sklearn.utils.estimator_checks import check_estimator
 from skmixed.linear.models import SimpleLinearModel, SimpleLinearModelSR3, LinearL1Model, LinearL1ModelSR3, \
     LinearCADModel, LinearCADModelSR3, LinearSCADModel, LinearSCADModelSR3
 from skmixed.linear.problems import LinearProblem
 
 
 class TestLinearModels(unittest.TestCase):
+
+    def test_meeting_sklearn_standards(self):
+        models_to_test = {
+            "Simple": (SimpleLinearModel, {}),
+            "L1": (LinearL1Model, {}),
+            "CAD": (LinearCADModel, {"rho": 0.5}),
+            "SCAD": (LinearSCADModel, {"rho": 3.7, "sigma": 2.5}),
+            "Simple_SR3": (SimpleLinearModelSR3, {}),
+            "L1_SR3": (LinearL1ModelSR3, {}),
+            "CAD_SR3": (LinearCADModelSR3, {"rho": 0.5}),
+            "SCAD_SR3": (LinearSCADModelSR3, {"rho": 3.7, "sigma": 2.5})
+        }
+        for _, (model, _) in models_to_test.items():
+            check_estimator(model)
 
     def test_solving_dense_problem(self):
 

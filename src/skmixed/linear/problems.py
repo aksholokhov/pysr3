@@ -12,8 +12,8 @@ class LinearProblem:
                  c=None,
                  obs_std=None,
                  regularization_weights=None):
-        self.a = a
-        self.b = b
+        self.a = np.array(a, dtype='float64')
+        self.b = np.array(b, dtype='float64')
         self.num_objects = a.shape[0]
         self.num_features = a.shape[1]
         self.c = c if c else np.eye(self.num_features)
