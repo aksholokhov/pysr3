@@ -131,8 +131,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
                     Fitted regression model.
                 """
         check_X_y(x, y)
-        x = np.array(x)
-        y = np.array(y)
+        x = np.array(x, dtype='float64')
+        y = np.array(y, dtype='float64')
         if len(y.shape) > 1:
             warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
             y = y[:, 0]
@@ -224,7 +224,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
         if "flip_probabilities_beta" in self.logger_.keys:
             self.logger_.add("flip_probabilities_beta", oracle.flip_probabilities_beta(beta, gamma))
 
-        self.n_features_in_ = {"fixed": problem.num_fixed_effects, "random": problem.num_random_effects}
+        self.n_features_in_ = problem.num_effects
 
         return self
 
@@ -305,7 +305,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
             answers.append(y)
         return np.concatenate(answers)
 
-    def score(self, x, y, sample_weight=None):
+    def score(self, x, y, columns_labels=None, sample_weight=None):
         """
         Returns the coefficient of determination R^2 of the prediction.
 
@@ -326,6 +326,9 @@ class LMEModel(BaseEstimator, RegressorMixin):
         y : np.ndarray
             Answers, real-valued array.
 
+        columns_labels: np.ndarray
+            Labels for columns of x
+
         sample_weight : array_like, Optional
             Weights of samples for calculating the R^2 statistics.
 
@@ -336,7 +339,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         """
 
-        y_pred = self.predict(x)
+        y_pred = self.predict(x, columns_labels=columns_labels)
         u = ((y - y_pred) ** 2).sum()
         v = ((y - y.mean()) ** 2).sum()
         return 1 - u / v
@@ -404,7 +407,8 @@ class SimpleLMEModel(LMEModel):
 
     def instantiate(self):
         oracle = LinearLMEOracle(None, prior=self.prior)
-        regularizer = DummyRegularizer()
+        dummy_regularizer = DummyRegularizer()
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
                            fixed_step_len=5e-2 if not self.fixed_step_len else self.fixed_step_len)
 
