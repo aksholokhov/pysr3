@@ -7,6 +7,6 @@ pip install dist/skmixed-*.tar.gz
 cd docs || exit
 make clean
 rm -rf source/*
-sphinx-apidoc -o source/ ../src/skmixed
+sphinx-apidoc --separate -f -o source/ ../src/skmixed
 make html
 
