@@ -4,6 +4,7 @@ from typing import Set, Optional, Tuple
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, check_X_y, check_array
 from sklearn.exceptions import DataConversionWarning, NotFittedError
+
 from skmixed.linear.oracles import LinearOracle, LinearOracleSR3
 from skmixed.linear.problems import LinearProblem
 from skmixed.logger import Logger
@@ -163,8 +164,8 @@ class LinearModel(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        problem : LinearLMEProblem
-            An instance of LinearLMEProblem. Should have the same format as the data
+        problem : LMEProblem
+            An instance of LMEProblem. Should have the same format as the data
             which was used for fitting the model. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
 
