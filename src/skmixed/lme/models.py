@@ -19,15 +19,16 @@ Linear Mixed-Effects Models (simple, relaxed, and regularized)
 """
 
 import warnings
-from typing import Set, Optional, Tuple
+from typing import Set, Optional, Tuple, List
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, check_X_y, check_array
 from sklearn.exceptions import DataConversionWarning, NotFittedError
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
-from skmixed.helpers import get_per_group_coefficients
+
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
-from skmixed.lme.problems import LinearLMEProblem
+from skmixed.lme.problems import LMEProblem
+from skmixed.lme.problems import get_per_group_coefficients
 from skmixed.logger import Logger
 from skmixed.regularizers import Regularizer, L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
     DummyRegularizer, PositiveQuadrantRegularizer
@@ -50,7 +51,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         β ~ 𝒩(tβ, 1/lb)
 
-        𝜺_i ~ 𝒩(0, diag(obs_std)
+        𝜺_i ~ 𝒩(0, diag(obs_var)
 
     See the paper for more details.
     """
@@ -84,13 +85,15 @@ class LMEModel(BaseEstimator, RegressorMixin):
             columns_labels: np.ndarray = None,
             initial_parameters: dict = None,
             warm_start=False,
-            random_intercept=True,
+            fit_fixed_intercept=False,
+            fit_random_intercept=False,
             **kwargs):
         """
                 Fits a Linear Model with Linear Mixed-Effects to the given data.
 
                 Parameters
                 ----------
+
                 x : np.ndarray
                     Data. If columns_labels = None then it's assumed that columns_labels are in the first row of x.
 
@@ -120,7 +123,10 @@ class LMEModel(BaseEstimator, RegressorMixin):
                     Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
                     Throws NotFittedError if set to True when not fitted.
 
-                random_intercept : bool, default = True
+                fit_fixed_intercept : bool, default = False
+                    Whether to add the intercept to the model
+
+                fit_random_intercept : bool, default = False
                     Whether treat the intercept as a random effect.
                 kwargs :
                     Not used currently, left here for passing debugging parameters.
@@ -137,11 +143,12 @@ class LMEModel(BaseEstimator, RegressorMixin):
             warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
             y = y[:, 0]
 
-        problem = LinearLMEProblem.from_x_y(x, y, columns_labels, random_intercept=random_intercept, **kwargs)
+        problem = LMEProblem.from_x_y(x, y, columns_labels=columns_labels, fit_fixed_intercept=fit_fixed_intercept,
+                                      fit_random_intercept=fit_random_intercept, **kwargs)
         return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
 
     def fit_problem(self,
-                    problem: LinearLMEProblem,
+                    problem: LMEProblem,
                     initial_parameters: dict = None,
                     warm_start=False,
                     **kwargs):
@@ -150,7 +157,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        problem: LinearLMEProblem
+        problem: LMEProblem
             an instance of LinearLMEProblem that contains all data-dependent information
 
         initial_parameters : np.ndarray
@@ -179,8 +186,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
                                                                gamma=problem.re_regularization_weights),
                                 oracle=oracle)
 
-        num_fixed_effects = problem.num_fixed_effects
-        num_random_effects = problem.num_random_effects
+        num_fixed_effects = problem.num_fixed_features
+        num_random_effects = problem.num_random_features
 
         if initial_parameters is None:
             initial_parameters = {}
@@ -216,19 +223,21 @@ class LMEModel(BaseEstimator, RegressorMixin):
         }
 
         if "vaida_aic" in self.logger_.keys:
-            self.logger_.add("aic", oracle.vaida2005aic(beta, gamma))
+            self.logger_.add("vaida_aic", oracle.vaida2005aic(beta, gamma))
         if "jones_bic" in self.logger_.keys:
-            self.logger_.add("bic", oracle.jones2010bic(beta, gamma))
-        if "jones_bic" in self.logger_.keys:
-            self.logger_.add("bic", oracle.muller2018ic(beta, gamma))
+            self.logger_.add("jones_bic", oracle.jones2010bic(beta, gamma))
+        if "muller_ic" in self.logger_.keys:
+            self.logger_.add("muller_ic", oracle.muller2018ic(beta, gamma))
         if "flip_probabilities_beta" in self.logger_.keys:
             self.logger_.add("flip_probabilities_beta", oracle.flip_probabilities_beta(beta, gamma))
 
-        self.n_features_in_ = problem.num_effects
+        self.n_features_in_ = problem.num_features
 
         return self
 
-    def predict(self, x, columns_labels=None, **kwargs):
+    def predict(self, x, columns_labels: Optional[List[str]] = None,
+                fit_fixed_intercept=False, fit_random_intercept=False,
+                **kwargs):
         """
         Makes a prediction if .fit(X, y) was called before and throws an error otherwise.
 
@@ -238,7 +247,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
             Data matrix. Should have the same format as the data which was used for fitting the model:
             the number of columns and the columns' labels should be the same. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
-        columns_labels : Optional[List[int]]
+
+        columns_labels : Optional[List[str]]
             List of column labels. There shall be only one column of group labels and answers STDs,
             and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
 
@@ -248,6 +258,13 @@ class LMEModel(BaseEstimator, RegressorMixin):
                 - 0 : groups labels
                 - 4 : answers standard deviations
 
+        fit_fixed_intercept: bool, default = True
+            Whether to add an intercept as a fixed feature
+
+        fit_random_intercept: bool, default = True
+            Whether to add an intercept as a random feature.
+
+
         Returns
         -------
         y : np.ndarray
@@ -256,7 +273,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
         self.check_is_fitted()
         check_array(x)
         x = np.array(x)
-        problem = LinearLMEProblem.from_x_y(x, y=None, columns_labels=columns_labels)
+        problem = LMEProblem.from_x_y(x, y=None, columns_labels=columns_labels, fit_fixed_intercept=fit_fixed_intercept,
+                                      fit_random_intercept=fit_random_intercept)
         return self.predict_problem(problem, **kwargs)
 
     def predict_problem(self, problem, **kwargs):
@@ -265,7 +283,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        problem : LinearLMEProblem
+        problem : LMEProblem
             An instance of LinearLMEProblem. Should have the same format as the data
             which was used for fitting the model. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
@@ -283,11 +301,12 @@ class LMEModel(BaseEstimator, RegressorMixin):
         beta = self.coef_['beta']
         us = self.coef_['random_effects']
 
-        assert problem.num_fixed_effects == beta.shape[0], \
+        assert problem.num_fixed_features == beta.shape[0], \
             "Number of fixed effects is not the same to what it was in the train data."
 
-        assert problem.num_random_effects == us[0].shape[0], \
-            "Number of random effects is not the same to what it was in the train data."
+        if len(us) > 0:
+            assert problem.num_random_features == us[0].shape[0], \
+                "Number of random effects is not the same to what it was in the train data."
 
         group_labels = self.coef_['group_labels']
         answers = []
@@ -297,7 +316,9 @@ class LMEModel(BaseEstimator, RegressorMixin):
             assert len(idx_of_this_label_in_train) <= 1, "Group labels of the classifier contain duplicates."
             if len(idx_of_this_label_in_train) == 1:
                 idx_of_this_label_in_train = idx_of_this_label_in_train[0]
-                y = x.dot(beta) + z.dot(us[idx_of_this_label_in_train][0])
+                y = x.dot(beta)
+                if problem.num_random_features > 0:
+                    y += z.dot(us[idx_of_this_label_in_train].flatten())
             else:
                 # If we have not seen this group (so we don't have inferred random effects for this)
                 # then we make a prediction with "expected" (e.g. zero) random effects
@@ -305,7 +326,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
             answers.append(y)
         return np.concatenate(answers)
 
-    def score(self, x, y, columns_labels=None, sample_weight=None):
+    def score(self, x, y, columns_labels=None, fit_fixed_intercept=False, fit_random_intercept=False,
+              sample_weight=None):
         """
         Returns the coefficient of determination R^2 of the prediction.
 
@@ -339,7 +361,9 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         """
 
-        y_pred = self.predict(x, columns_labels=columns_labels)
+        y_pred = self.predict(x, columns_labels=columns_labels,
+                              fit_fixed_intercept=fit_fixed_intercept,
+                              fit_random_intercept=fit_random_intercept, )
         u = ((y - y_pred) ** 2).sum()
         v = ((y - y.mean()) ** 2).sum()
         return 1 - u / v
@@ -409,10 +433,25 @@ class SimpleLMEModel(LMEModel):
         oracle = LinearLMEOracle(None, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
         regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
+        fixed_step_len = 5e-2 if not self.fixed_step_len else self.fixed_step_len
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
-                           fixed_step_len=5e-2 if not self.fixed_step_len else self.fixed_step_len)
+                           fixed_step_len=fixed_step_len)
 
         return oracle, regularizer, solver
+
+    def get_information_criterion(self, x, y, columns_labels=None, ic="muller_ic"):
+        self.check_is_fitted()
+        problem = LMEProblem.from_x_y(x, y, columns_labels=columns_labels)
+        oracle = LinearLMEOracle(problem)
+        oracle.instantiate(problem)
+        if ic == "muller_ic":
+            return oracle.muller2018ic(**self.coef_)
+        elif ic == "vaida_aic":
+            return oracle.vaida2005aic(**self.coef_)
+        elif ic == "jones_bic":
+            return oracle.jones2010bic(**self.coef_)
+        else:
+            raise ValueError(f"Unknown ic: {ic}")
 
 
 class SimpleLMEModelSR3(LMEModel):
@@ -439,7 +478,7 @@ class SimpleLMEModelSR3(LMEModel):
     a solver (LinearLMESparseModel) which searches for a sparse solution (tβ, t𝛄) with at most k and j <= k non-zero
     elements respectively. For more details, see the documentation for LinearLMESparseModel.
 
-    The problem should be provided as LinearLMEProblem.
+    The problem should be provided as LMEProblem.
 
     """
 
@@ -512,18 +551,34 @@ class SimpleLMEModelSR3(LMEModel):
 
     def instantiate(self):
         if not self.fixed_step_len:
-            self.fixed_step_len = 1 if self.ell == 0 else 1 / self.ell
+            fixed_step_len = 1 if self.ell == 0 else 1 / self.ell
+        else:
+            fixed_step_len = self.fixed_step_len
         if self.practical:
             solver = FakePGDSolver(update_prox_every=self.update_prox_every)
         else:
             solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
-                               fixed_step_len=self.fixed_step_len)
+                               fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=self.ell, lg=self.ell, tol_inner=self.tol_oracle,
                                     n_iter_inner=self.max_iter_oracle,
                                     warm_start=self.warm_start, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
         regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
         return oracle, regularizer, solver
+
+    def get_information_criterion(self, x, y, columns_labels=None, ic="muller_ic"):
+        self.check_is_fitted()
+        problem = LMEProblem.from_x_y(x, y, columns_labels=columns_labels)
+        oracle = LinearLMEOracleSR3(problem)
+        oracle.instantiate(problem)
+        if ic == "muller_ic":
+            return oracle.muller2018ic(**self.coef_)
+        elif ic == "vaida_aic":
+            return oracle.vaida2005aic(**self.coef_)
+        elif ic == "jones_bic":
+            return oracle.jones2010bic(**self.coef_)
+        else:
+            raise ValueError(f"Unknown ic: {ic}")
 
 
 class L0LmeModel(SimpleLMEModel):
@@ -537,8 +592,8 @@ class L0LmeModel(SimpleLMEModel):
                  initializer: str = "None",
                  max_iter_solver: int = 10000,
                  stepping: str = "line-search",
-                 nnz_tbeta: int = 1,
-                 nnz_tgamma: int = 1,
+                 nnz_tbeta: int = None,
+                 nnz_tgamma: int = None,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -617,7 +672,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
     a solver (LinearLMESparseModel) which searches for a sparse solution (tβ, t𝛄) with at most k and j <= k non-zero
     elements respectively. For more details, see the documentation for LinearLMESparseModel.
 
-    The problem should be provided as LinearLMEProblem.
+    The problem should be provided as LMEProblem.
 
     """
 
@@ -718,7 +773,7 @@ class L1LmeModel(SimpleLMEModel):
                  initializer: str = "None",
                  max_iter_solver: int = 10000,
                  stepping: str = "line-search",
-                 lam: float = 1,
+                 lam: float = 0,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -760,10 +815,12 @@ class L1LmeModel(SimpleLMEModel):
                          fixed_step_len=fixed_step_len,
                          prior=prior)
         self.lam = lam
-        self.fixed_step_len = 1 / (lam + 1)
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
+        fixed_step_len = 1 / (self.lam + 1) if not self.fixed_step_len else self.fixed_step_len
+        solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
+                           fixed_step_len=fixed_step_len)
         l1_regularizer = L1Regularizer(lam=self.lam)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
         return oracle, regularizer, solver
@@ -911,10 +968,12 @@ class CADLmeModel(SimpleLMEModel):
                          prior=prior)
         self.lam = lam
         self.rho = rho
-        self.fixed_step_len = 1 / (lam + 1) if not fixed_step_len else fixed_step_len
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
+        fixed_step_len = 1 / (self.lam + 1) if not self.fixed_step_len else self.fixed_step_len
+        solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
+                           fixed_step_len=fixed_step_len)
         cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
         return oracle, regularizer, solver
@@ -1070,10 +1129,12 @@ class SCADLmeModel(SimpleLMEModel):
         self.lam = lam
         self.rho = rho
         self.sigma = sigma
-        self.fixed_step_len = 1 / (lam + 1)
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
+        fixed_step_len = 1 / (self.lam + 1) if not self.fixed_step_len else self.fixed_step_len
+        solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
+                           fixed_step_len=fixed_step_len)
         scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
         return oracle, regularizer, solver
@@ -1179,7 +1240,7 @@ def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=
 
     Parameters
     ----------
-    problem : LinearLMEProblem
+    problem : LMEProblem
         The problem which contains data
     beta : array-like, shape = [n], Optional
         Vector of fixed effects
@@ -1196,8 +1257,8 @@ def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=
             None if all the checks are passed, otherwise raises an exception
     """
 
-    num_features = problem.num_fixed_effects
-    num_random_effects = problem.num_random_effects
+    num_features = problem.num_fixed_features
+    num_random_effects = problem.num_random_features
     if beta is not None:
         if tbeta is not None:
             check_consistent_length(beta, tbeta)

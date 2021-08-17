@@ -6,7 +6,7 @@ from typing import Dict
 
 import numpy as np
 
-from skmixed.lme.problems import LinearLMEProblem
+from skmixed.lme.problems import LMEProblem
 
 
 class Prior:
@@ -41,7 +41,7 @@ class GaussianPrior:
 
         Parameters
         ----------
-        problem: LinearLMEProblem
+        problem: LMEProblem
             problem to fit
 
         Returns
@@ -149,7 +149,7 @@ class NonInformativePrior(Prior):
 
         Parameters
         ----------
-        problem: LinearLMEProblem
+        problem: LMEProblem
 
         Returns
         -------

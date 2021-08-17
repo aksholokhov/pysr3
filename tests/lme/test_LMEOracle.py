@@ -4,9 +4,9 @@ from unittest import TestCase
 import numpy as np
 from numpy import allclose
 
-from skmixed.helpers import random_effects_to_matrix
 from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
-from skmixed.lme.problems import LinearLMEProblem
+from skmixed.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
+from skmixed.lme.problems import random_effects_to_matrix
 
 
 class TestLinearLMEOracle(TestCase):
@@ -17,14 +17,14 @@ class TestLinearLMEOracle(TestCase):
         r = 1e-6
         rtol = 1e-4
         atol = 1e-5
-        problem, true_parameters = LinearLMEProblem.generate(seed=random_seed)
+        problem, true_parameters = LMEProblem.generate(seed=random_seed)
         oracle = LinearLMEOracle(problem)
         np.random.seed(random_seed)
         for j in range(trials):
             with self.subTest(j=j):
-                beta = np.random.rand(problem.num_fixed_effects)
-                gamma = np.random.rand(problem.num_random_effects)
-                db = np.random.rand(problem.num_fixed_effects)
+                beta = np.random.rand(problem.num_fixed_features)
+                gamma = np.random.rand(problem.num_random_features)
+                db = np.random.rand(problem.num_fixed_features)
                 gradient_beta = oracle.gradient_beta(beta, gamma)
                 maybe_dir = gradient_beta.dot(db)
                 true_dir = (oracle.loss(beta + r * db, gamma)
@@ -32,7 +32,7 @@ class TestLinearLMEOracle(TestCase):
                             ) / (2 * r)
                 self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
                                 msg="Gradient beta does not look right")
-                dg = np.random.rand(problem.num_random_effects)
+                dg = np.random.rand(problem.num_random_features)
                 gradient_gamma = oracle.gradient_gamma(beta, gamma)
                 maybe_dir = gradient_gamma.dot(dg)
                 true_dir = (oracle.loss(beta, gamma + r * dg)
@@ -47,17 +47,21 @@ class TestLinearLMEOracle(TestCase):
         r = 1e-5
         rtol = 1e-4
         atol = 1e-4
-        problem, true_parameters = LinearLMEProblem.generate(seed=random_seed, random_intercept=True)
+        problem, true_parameters = LMEProblem.generate(groups_sizes=[5, 8, 10],
+                                                       features_labels=[FIXED_RANDOM, FIXED, RANDOM],
+                                                       seed=random_seed,
+                                                       fit_fixed_intercept=True,
+                                                       fit_random_intercept=True)
         oracle = LinearLMEOracle(problem)
 
         for j in range(trials):
             with self.subTest(j=j):
                 np.random.seed(random_seed + j)
 
-                beta = np.random.rand(problem.num_fixed_effects)
-                gamma = np.random.rand(problem.num_random_effects)
+                beta = np.random.rand(problem.num_fixed_features)
+                gamma = np.random.rand(problem.num_random_features)
 
-                db = np.random.rand(problem.num_fixed_effects)
+                db = np.random.rand(problem.num_fixed_features)
                 hess = oracle.hessian_beta(beta, gamma)
                 maybe_dir = hess.dot(db)
                 true_dir = (oracle.gradient_beta(beta + r * db, gamma)
@@ -66,7 +70,7 @@ class TestLinearLMEOracle(TestCase):
                 self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
                                 msg="Hessian beta does not look right")
 
-                dg = np.random.rand(problem.num_random_effects)
+                dg = np.random.rand(problem.num_random_features)
                 hess = oracle.hessian_gamma(beta, gamma)
                 maybe_dir = hess.dot(dg)
                 true_dir = (oracle.gradient_gamma(beta, gamma + r * dg)
@@ -75,7 +79,7 @@ class TestLinearLMEOracle(TestCase):
                 self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
                                 msg="Hessian gamma does not look right")
 
-                db = np.random.rand(problem.num_fixed_effects)
+                db = np.random.rand(problem.num_fixed_features)
                 hess = oracle.hessian_beta_gamma(beta, gamma)
                 maybe_dir = hess.T.dot(db)
                 true_dir = (oracle.gradient_gamma(beta + r * db, gamma)
@@ -84,7 +88,7 @@ class TestLinearLMEOracle(TestCase):
                 self.assertTrue(allclose(maybe_dir, true_dir, rtol=rtol, atol=atol),
                                 msg="Hessian gamma-beta does not look right")
 
-                dg = np.random.rand(problem.num_random_effects)
+                dg = np.random.rand(problem.num_random_features)
                 hess = oracle.hessian_beta_gamma(beta, gamma)
                 maybe_dir = hess.dot(dg)
                 true_dir = (oracle.gradient_beta(beta, gamma + r * dg)
@@ -99,10 +103,14 @@ class TestLinearLMEOracle(TestCase):
         atol = 1e-2
         for j in range(trials):
             with self.subTest(j=j):
-                problem, true_parameters = LinearLMEProblem.generate(seed=j+42, random_intercept=True, features_labels=[3])
+                problem, true_parameters = LMEProblem.generate(seed=j + 42,
+                                                               groups_sizes=[5, 10, 5],
+                                                               fit_fixed_intercept=True,
+                                                               fit_random_intercept=True,
+                                                               features_labels=[FIXED_RANDOM])
                 oracle = LinearLMEOracle(problem, n_iter_inner=1000)
-                beta = np.random.rand(problem.num_fixed_effects)
-                gamma = np.random.rand(problem.num_random_effects)
+                beta = np.random.rand(problem.num_fixed_features)
+                gamma = np.random.rand(problem.num_random_features)
                 optimal_gamma_pgd = oracle.optimal_gamma(beta, gamma, method="pgd", log_progress=False)
                 # pgd_log = np.array(oracle.logger)
                 optimal_gamma_ip = oracle.optimal_gamma(beta, gamma, method="ip", log_progress=False)
@@ -120,10 +128,11 @@ class TestLinearLMEOracle(TestCase):
 
     def test_no_data_problem(self):
         random_seed = 43
-        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[10, 10, 10],
-                                                             features_labels=[],
-                                                             random_intercept=True,
-                                                             seed=random_seed)
+        problem, true_parameters = LMEProblem.generate(groups_sizes=[10, 10, 10],
+                                                       features_labels=[],
+                                                       fit_fixed_intercept=True,
+                                                       fit_random_intercept=True,
+                                                       seed=random_seed)
         beta = true_parameters['beta']
         us = random_effects_to_matrix(true_parameters['random_effects'])
         empirical_gamma = np.sum(us ** 2, axis=0) / problem.num_groups
@@ -140,11 +149,15 @@ class TestLinearLMEOracle(TestCase):
     def test_non_regularized_oracle_is_zero_regularized_oracle(self):
         num_fixed_effects = 4
         num_random_effects = 3
-        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
-                                                             features_labels=[3, 3, 1, 2],
-                                                             random_intercept=False,
-                                                             obs_std=0.1,
-                                                             seed=42)
+        problem, true_parameters = LMEProblem.generate(groups_sizes=[4, 5, 10],
+                                                       features_labels=[FIXED_RANDOM,
+                                                                        FIXED_RANDOM,
+                                                                        FIXED,
+                                                                        RANDOM],
+                                                       fit_fixed_intercept=True,
+                                                       fit_random_intercept=False,
+                                                       obs_var=0.1,
+                                                       seed=42)
         # when both regularization coefficients are zero, these two oracles should be exactly equivalent
         oracle_non_regularized = LinearLMEOracle(problem)
         oracle_regularized = LinearLMEOracleSR3(problem, lg=0, lb=0)
@@ -169,7 +182,7 @@ class TestLinearLMEOracle(TestCase):
             hessian2 = oracle_non_regularized.hessian_gamma(random_beta, random_gamma)
             self.assertTrue(allclose(hessian1, hessian2, rtol=100 * rtol, atol=100 * atol),
                             msg="Hessian w.r.t. gamma of zero-regularized and non-regularized oracles are different")
-            beta1 = oracle_regularized.optimal_beta(random_gamma)
+            beta1 = oracle_regularized.optimal_beta(random_gamma, tbeta=random_beta)
             beta2 = oracle_non_regularized.optimal_beta(random_gamma)
             self.assertTrue(allclose(beta1, beta2, rtol=rtol, atol=atol),
                             msg="Optimal betas of zero-regularized and non-regularized oracles are different")
@@ -180,11 +193,18 @@ class TestLinearLMEOracle(TestCase):
         return None
 
     def test_beta_to_gamma_map(self):
-        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[4, 5, 10],
-                                                             features_labels=[3, 3, 1, 2, 3, 1, 2],
-                                                             random_intercept=False,
-                                                             obs_std=0.1,
-                                                             seed=42)
+        problem, true_parameters = LMEProblem.generate(groups_sizes=[4, 5, 10],
+                                                       features_labels=[FIXED_RANDOM,
+                                                                        FIXED_RANDOM,
+                                                                        FIXED,
+                                                                        RANDOM,
+                                                                        FIXED_RANDOM,
+                                                                        FIXED,
+                                                                        RANDOM],
+                                                       fit_fixed_intercept=True,
+                                                       fit_random_intercept=False,
+                                                       obs_var=0.1,
+                                                       seed=42)
         oracle = LinearLMEOracle(problem)
         true_beta_to_gamma_map = np.array([-1, 0, 1, -1, 3, -1])
         for e1, e2 in zip(true_beta_to_gamma_map, oracle.beta_to_gamma_map):
@@ -198,11 +218,12 @@ class TestLinearLMEOracle(TestCase):
         # in case of a random intercept model the n_eff can be represented through intraclass correlation rho.
         # See original Jones2010 paper for more details.
         for seed in range(10):
-            problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
-                                                                 features_labels=[],
-                                                                 random_intercept=True,
-                                                                 obs_std=0.1,
-                                                                 seed=seed)
+            problem, true_parameters = LMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                           features_labels=[],
+                                                           fit_fixed_intercept=True,
+                                                           fit_random_intercept=True,
+                                                           obs_var=0.1,
+                                                           seed=seed)
             oracle = LinearLMEOracle(problem)
             gamma = true_parameters['gamma']
             rho = gamma / (gamma + 0.1)
@@ -213,11 +234,11 @@ class TestLinearLMEOracle(TestCase):
     def test_hodges2001ddf(self):
         # From here:
         # https://www.jstor.org/stable/2673485?seq=1
-        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
-                                                             features_labels=[3, 3, 3],
-                                                             random_intercept=True,
-                                                             obs_std=0.1,
-                                                             seed=42)
+        problem, true_parameters = LMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                       features_labels=[FIXED_RANDOM] * 3,
+                                                       fit_random_intercept=True,
+                                                       obs_var=0.1,
+                                                       seed=42)
         oracle = LinearLMEOracle(problem)
         true_gamma = true_parameters['gamma']
         ddf = oracle._hodges2001ddf(true_gamma)
@@ -226,11 +247,11 @@ class TestLinearLMEOracle(TestCase):
 
     def test_hat_matrix(self):
         for seed in range(10):
-            problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
-                                                                 features_labels=[3, 3],
-                                                                 random_intercept=True,
-                                                                 obs_std=0.1,
-                                                                 seed=seed)
+            problem, true_parameters = LMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                           features_labels=[FIXED_RANDOM] * 3,
+                                                           fit_random_intercept=True,
+                                                           obs_var=0.1,
+                                                           seed=seed)
             oracle = LinearLMEOracle(problem)
             gamma = true_parameters['gamma']
             optimal_beta = oracle.optimal_beta(gamma)
@@ -247,13 +268,14 @@ class TestLinearLMEOracle(TestCase):
             assert np.allclose(ys_optimal_true, ys_optimal_hat)
 
     def test_flip_probabilities(self):
-        problem, true_parameters = LinearLMEProblem.generate(groups_sizes=[40, 30, 50],
-                                                             features_labels=[3, 3],
-                                                             random_intercept=True,
-                                                             obs_std=0.1)
+        problem, true_parameters = LMEProblem.generate(groups_sizes=[40, 30, 50],
+                                                       features_labels=[FIXED_RANDOM] * 2,
+                                                       fit_random_intercept=True,
+                                                       obs_var=0.1)
         oracle = LinearLMEOracle(problem)
         flip_probabilities = oracle.flip_probabilities_beta(**true_parameters)
         self.assertTrue((0 <= flip_probabilities).all() and (flip_probabilities <= 1).all())
+
 
 if __name__ == '__main__':
     unittest.main()

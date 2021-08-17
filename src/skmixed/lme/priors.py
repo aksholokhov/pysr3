@@ -1,6 +1,6 @@
 from typing import Dict
 
-from skmixed.lme.problems import LinearLMEProblem
+from skmixed.lme.problems import LMEProblem
 from skmixed.priors import Prior, GaussianPrior
 
 
@@ -26,27 +26,27 @@ class GaussianPriorLME:
         self.beta_prior = GaussianPrior(params=fe_params)
         self.gamma_prior = GaussianPrior(params=re_params)
 
-    def instantiate(self, problem: LinearLMEProblem):
+    def instantiate(self, problem: LMEProblem):
         """
         Instantiates a Gaussian prior with problem-dependent quantities
 
         Parameters
         ----------
-        problem: LinearLMEProblem
+        problem: LMEProblem
             problem to fit
 
         Returns
         -------
         None
         """
-        assert problem.fe_columns and problem.re_columns, "Problem does not have column names attached"
-        assert all(key in problem.fe_columns for key in self.fe_params.keys()), \
-            F"Some keys are listed in the prior for FE but not listed in the prolem's column labels: {[key for key in self.fe_params.keys() if key not in problem.fe_columns]}"
-        assert all(key in problem.fe_columns for key in self.fe_params.keys()), \
-            F"Some keys are listed in the prior for RE but not listed in the prolem's column labels: {[key for key in self.re_params.keys() if key not in problem.re_columns]}"
+        assert problem.fixed_features_columns and problem.random_features_columns, "Problem does not have column names attached"
+        assert all(key in problem.fixed_features_columns for key in self.fe_params.keys()), \
+            F"Some keys are listed in the prior for FE but not listed in the prolem's column labels: {[key for key in self.fe_params.keys() if key not in problem.fixed_features_columns]}"
+        assert all(key in problem.fixed_features_columns for key in self.fe_params.keys()), \
+            F"Some keys are listed in the prior for RE but not listed in the prolem's column labels: {[key for key in self.re_params.keys() if key not in problem.random_features_columns]}"
 
-        self.beta_prior.instantiate(problem_columns=problem.fe_columns)
-        self.gamma_prior.instantiate(problem_columns=problem.re_columns)
+        self.beta_prior.instantiate(problem_columns=problem.fixed_features_columns)
+        self.gamma_prior.instantiate(problem_columns=problem.random_features_columns)
 
     def forget(self):
         """
@@ -184,7 +184,7 @@ class NonInformativePriorLME(Prior):
 
         Parameters
         ----------
-        problem: LinearLMEProblem
+        problem: LMEProblem
 
         Returns
         -------

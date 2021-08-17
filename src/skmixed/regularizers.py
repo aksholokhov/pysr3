@@ -77,8 +77,8 @@ class L0Regularizer(Regularizer):
     """
 
     def __init__(self,
-                 nnz_tbeta=1,
-                 nnz_tgamma=1,
+                 nnz_tbeta=None,
+                 nnz_tgamma=None,
                  independent_beta_and_gamma=False,
                  oracle: LinearLMEOracle = None):
         """
@@ -124,6 +124,10 @@ class L0Regularizer(Regularizer):
         self.gamma_weights = gamma_weights
         self.beta_participation_in_selection = beta_weights.astype(bool)
         self.gamma_participation_in_selection = gamma_weights.astype(bool)
+        if self.nnz_tbeta is None:
+            self.nnz_tbeta = len(beta_weights)
+        if self.nnz_tgamma is None:
+            self.nnz_tgamma = len(gamma_weights)
 
     def forget(self):
         """
@@ -576,8 +580,8 @@ class PositiveQuadrantRegularizer(Regularizer):
         self.positive_coordinates = None
 
     def instantiate(self, weights, oracle=None, **kwargs):
-        self.positive_coordinates = ([False] * oracle.problem.num_fixed_effects +
-                                     [True] * oracle.problem.num_random_effects)
+        self.positive_coordinates = ([False] * oracle.problem.num_fixed_features +
+                                     [True] * oracle.problem.num_random_features)
         if self.other_regularizer:
             self.other_regularizer.instantiate(weights=weights, **kwargs)
 
