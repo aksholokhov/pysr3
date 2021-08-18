@@ -29,9 +29,10 @@ jobs:
         sphinx-apidoc --separate -f -o source/ ../src/skmixed
         make clean
         make html
+        cd ..
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         BRANCH: gh-pages # The branch the action should deploy to.
-        FOLDER: docs/build/_html # The folder the action should deploy.
+        FOLDER: docs/_build/html # The folder the action should deploy.
