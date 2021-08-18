@@ -1,0 +1,37 @@
+name: Convert Jupyter README
+
+on:
+  push:
+    branches:
+      - sr3
+
+jobs:
+  release:
+    if: github.actor == 'aksholokhov' && startsWith(github.event.head_commit.message, 'Update README')
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies & Convert README.ipynb
+        run: |
+          python -m pip install --upgrade pip
+          pip install nbconvert nbformat
+          jupyter nbconvert --to markdown --output ../README.md examples/quickstart.ipynb
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "Convert README.ipynb to README.md" -a
+      - name: Push changes
+        if: success()
+        uses: ad-m/github-push-action@master
+        with:
+          branch: main
+          github_token: ${{ secrets.ACCESS_TOKEN }}

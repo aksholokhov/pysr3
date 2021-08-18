@@ -18,6 +18,8 @@ if __name__ == "__main__":
 
     doc_requirements = [
         'sphinx',
+        'nbconvert',
+        'nbformat'
     ]
 
     setup(
