@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies & Convert README
       run: |
         python -m pip install --upgrade pip
-        pip install nbconvert pandoc nbformat
+        pip install jupyter nbconvert nbformat
         jupyter nbconvert --to rst --output ../docs/README.rst examples/quickstart.ipynb
 
     - name: Move README.rst & Build sphinx documentation
