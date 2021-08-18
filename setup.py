@@ -18,6 +18,7 @@ if __name__ == "__main__":
 
     doc_requirements = [
         'sphinx',
+        'sphinx-rtd-theme'
         'nbconvert',
         'nbformat'
     ]

@@ -13,8 +13,6 @@
 import os
 import sys
 
-import sphinxbootstrap4theme
-
 sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
@@ -28,7 +26,6 @@ release = '0.2.0'
 
 # -- General configuration ------------------------------------------------
 master_doc = 'index'
-html_theme_path = [sphinxbootstrap4theme.get_path()]
 autoclass_content = "both"  # include both class docstring and __init__
 autodoc_default_flags = [
         # Make sure that any autodoc declarations show the right members
