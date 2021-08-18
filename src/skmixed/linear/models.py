@@ -247,6 +247,18 @@ class SimpleLinearModel(LinearModel):
                            fixed_step_len=5e-2 if not self.fixed_step_len else self.fixed_step_len)
         return oracle, regularizer, solver
 
+    def get_information_criterion(self, x, y, ic="bic"):
+        self.check_is_fitted()
+        problem = LinearProblem.from_x_y(x, y)
+        oracle = LinearOracle(problem)
+        oracle.instantiate(problem)
+        if ic == "aic":
+            return oracle.aic(**self.coef_)
+        elif ic == "bic":
+            return oracle.bic(**self.coef_)
+        else:
+            raise ValueError(f"Unknown ic: {ic}")
+
 
 class SimpleLinearModelSR3(LinearModel):
     def __init__(self,
@@ -312,6 +324,18 @@ class SimpleLinearModelSR3(LinearModel):
                                  prior=self.prior)
         regularizer = DummyRegularizer()
         return oracle, regularizer, solver
+
+    def get_information_criterion(self, x, y, ic="bic"):
+        self.check_is_fitted()
+        problem = LinearProblem.from_x_y(x, y)
+        oracle = LinearOracleSR3(problem)
+        oracle.instantiate(problem)
+        if ic == "aic":
+            return oracle.aic(**self.coef_)
+        elif ic == "bic":
+            return oracle.bic(**self.coef_)
+        else:
+            raise ValueError(f"Unknown ic: {ic}")
 
 
 class LinearL1Model(SimpleLinearModel):
