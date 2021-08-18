@@ -54,7 +54,7 @@ Linear Models
 A simple example of using SR3-empowered LASSO for feature selection is
 shown below.
 
-.. code-block:: python
+.. code::
 
     import numpy as np
     
