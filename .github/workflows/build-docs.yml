@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v1
+    - uses: actions/checkout@v1
     - uses: r-lib/actions/setup-pandoc@v1
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
@@ -21,11 +21,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install jupyter nbconvert nbformat
 
-      - name: Create README.rst & Build sphinx documentation
-        run: |
-          jupyter nbconvert --to rst --output ../docs/README.rst examples/quickstart.ipynb
-          cd docs
-          make html
+    - name: Create README.rst & Build sphinx documentation
+      run: |
+        jupyter nbconvert --to rst --output ../docs/README.rst examples/quickstart.ipynb
+        cd docs
+        make html
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
