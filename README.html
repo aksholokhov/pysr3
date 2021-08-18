@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>SR3: Features Selection with Relaxed Regularization Framework. &mdash; skmixed 0.2.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Models Overview" href="models_overview.html" />
+    <link rel="prev" title="Welcome to skmixed’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> skmixed
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SR3: Features Selection with Relaxed Regularization Framework.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quickstart">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linear-models">Linear Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linear-mixed-effects-models">Linear Mixed-Effects Models</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Models Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="community_guidelines.html">Community Guidelines</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">skmixed</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>SR3: Features Selection with Relaxed Regularization Framework.</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/README.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <p><img alt="image0" src="https://img.shields.io/pypi/l/skmixed" /> <img alt="image1" src="https://img.shields.io/pypi/v/skmixed" /> <img alt="image2" src="https://img.shields.io/github/workflow/status/aksholokhov/skmixed/Testing%20and%20Coverage/sr3" /> <img alt="image3" src="https://img.shields.io/readthedocs/skmixed" /> <img alt="image4" src="https://img.shields.io/codecov/c/github/aksholokhov/skmixed/sr3?flag=unittests" /> <a class="reference external" href="https://www.codacy.com/gh/aksholokhov/skmixed/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/skmixed&amp;utm_campaign=Badge_Grade"><img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b" /></a></p>
+<div class="section" id="sr3-features-selection-with-relaxed-regularization-framework">
+<h1>SR3: Features Selection with Relaxed Regularization Framework.<a class="headerlink" href="#sr3-features-selection-with-relaxed-regularization-framework" title="Permalink to this headline">¶</a></h1>
+</div>
+<div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>SR3 is a relaxation method designed for accurate feature selection. It
+currently supports:</p>
+<ul class="simple">
+<li><p>Linear Models (LASSO, A-LASSO, CAD, SCAD)</p></li>
+<li><p>Linear Mixed-Effect Models (L0, LASSO, A-LASSO, CAD, SCAD)</p></li>
+</ul>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>skmixed can be installed via</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install skmixed
+</pre></div>
+</div>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>Make sure that Python 3.6 or higher is installed. The package has the
+following dependencies, as listed in requirements.txt:</p>
+<ul class="simple">
+<li><p>numpy&gt;=1.21.1</p></li>
+<li><p>pandas&gt;=1.3.1</p></li>
+<li><p>scipy&gt;=1.7.1</p></li>
+<li><p>PyYAML&gt;=5.4.1</p></li>
+<li><p>scikit_learn&gt;=0.24.2</p></li>
+</ul>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>skmixed models are fully compatible to <a class="reference external" href="https://scikit-learn.org/stable/developers/develop.html">sklearn
+standards</a>,
+so you can use them as you normally would use a sklearn model.</p>
+<div class="section" id="linear-models">
+<h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline">¶</a></h3>
+<p>A simple example of using SR3-empowered LASSO for feature selection is
+shown below.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">skmixed.linear.problems</span> <span class="kn">import</span> <span class="n">LinearProblem</span>
+
+<span class="c1"># Create a sample dataset</span>
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="n">num_objects</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">num_features</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+<span class="c1"># create a vector of true model&#39;s coefficients</span>
+<span class="n">true_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">num_features</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]))</span>
+<span class="c1"># create sample data</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_objects</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">true_x</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_objects</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The dataset has </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> objects and </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> features; </span><span class="se">\n</span><span class="s2">&quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;The vector of true parameters contains </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">true_x</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> non-zero elements out of </span><span class="si">{</span><span class="n">num_features</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">dataset</span> <span class="n">has</span> <span class="mi">300</span> <span class="n">objects</span> <span class="ow">and</span> <span class="mi">500</span> <span class="n">features</span><span class="p">;</span>
+<span class="n">The</span> <span class="n">vector</span> <span class="n">of</span> <span class="n">true</span> <span class="n">parameters</span> <span class="n">contains</span> <span class="mi">55</span> <span class="n">non</span><span class="o">-</span><span class="n">zero</span> <span class="n">elements</span> <span class="n">out</span> <span class="n">of</span> <span class="mf">500.</span>
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Automatic features selection using information criterion</span>
+<span class="kn">from</span> <span class="nn">skmixed.linear.models</span> <span class="kn">import</span> <span class="n">LinearL1ModelSR3</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">confusion_matrix</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">RandomizedSearchCV</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.fixes</span> <span class="kn">import</span> <span class="n">loguniform</span>
+
+<span class="c1"># Here we use SR3-empowered LASSO, but many other popular regularizers are also available</span>
+<span class="c1"># See the glossary of models for more details.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">LinearL1ModelSR3</span><span class="p">()</span>
+<span class="c1"># We will search for the best model over the range of strengths for the regularizer</span>
+<span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="n">loguniform</span><span class="p">(</span><span class="mf">1e-1</span><span class="p">,</span> <span class="mf">1e2</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">selector</span> <span class="o">=</span> <span class="n">RandomizedSearchCV</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                              <span class="n">param_distributions</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                              <span class="n">n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                              <span class="c1"># The function below evaluates an information criterion</span>
+                              <span class="c1"># on the test portion of CV-splits.</span>
+                              <span class="n">scoring</span><span class="o">=</span><span class="k">lambda</span> <span class="n">clf</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="o">-</span><span class="n">clf</span><span class="o">.</span><span class="n">get_information_criterion</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ic</span><span class="o">=</span><span class="s1">&#39;bic&#39;</span><span class="p">))</span>
+
+<span class="n">selector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">maybe_x</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+<span class="n">tn</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">true_x</span><span class="p">,</span> <span class="n">maybe_x</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The model found </span><span class="si">{</span><span class="n">tp</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fn</span><span class="si">}</span><span class="s2"> features correctly, but also chose </span><span class="si">{</span><span class="n">fp</span><span class="si">}</span><span class="s2"> extra irrelevant features. </span><span class="se">\n</span><span class="s2">&quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;The best parameter is </span><span class="si">{</span><span class="n">selector</span><span class="o">.</span><span class="n">best_params_</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">model</span> <span class="n">found</span> <span class="mi">55</span> <span class="n">out</span> <span class="n">of</span> <span class="mi">55</span> <span class="n">features</span> <span class="n">correctly</span><span class="p">,</span> <span class="n">but</span> <span class="n">also</span> <span class="n">chose</span> <span class="mi">2</span> <span class="n">extra</span> <span class="n">irrelevant</span> <span class="n">features</span><span class="o">.</span>
+<span class="n">The</span> <span class="n">best</span> <span class="n">parameter</span> <span class="ow">is</span> <span class="p">{</span><span class="s1">&#39;lam&#39;</span><span class="p">:</span> <span class="mf">0.15055187290939537</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="linear-mixed-effects-models">
+<h3>Linear Mixed-Effects Models<a class="headerlink" href="#linear-mixed-effects-models" title="Permalink to this headline">¶</a></h3>
+<p>Below we show how to use Linear Mixed-Effects (LME) models for
+simultaneous selection of fixed and random effects.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skmixed.lme.models</span> <span class="kn">import</span> <span class="n">L1LmeModelSR3</span>
+<span class="kn">from</span> <span class="nn">skmixed.lme.problems</span> <span class="kn">import</span> <span class="n">LMEProblem</span><span class="p">,</span> <span class="n">LMEStratifiedShuffleSplit</span>
+
+<span class="n">problem</span><span class="p">,</span> <span class="n">true_parameters</span> <span class="o">=</span> <span class="n">LMEProblem</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+    <span class="n">groups_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span>  <span class="c1"># 6 groups, 10 objects each</span>
+    <span class="n">features_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fixed+random&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>  <span class="c1"># 20 features, each one having both fixed and random components</span>
+    <span class="n">beta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">),</span>  <span class="c1"># True beta (fixed effects) has every other coefficient active</span>
+    <span class="n">gamma</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">),</span>  <span class="c1"># True gamma (variances of random effects) has every fourth coefficient active</span>
+    <span class="n">obs_var</span><span class="o">=</span><span class="mf">0.1</span>  <span class="c1"># The errors have standard errors of sqrt(0.1) ~= 0.33</span>
+
+<span class="p">)</span>
+
+<span class="c1"># LMEProblem provides a very convenient representation</span>
+<span class="c1"># of the problem. See the documentation for more details.</span>
+
+<span class="c1"># It also can be converted to a more familiar representation</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">columns_labels</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">to_x_y</span><span class="p">()</span>
+<span class="c1"># columns_labels describe the roles of the columns in x:</span>
+<span class="c1"># fixed effect, random effect, or both of those, as well as</span>
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># We use SR3-empowered LASSO model, but many other popular models are also available.</span>
+<span class="c1"># See the glossary of models for more details.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">L1LmeModelSR3</span><span class="p">()</span>
+
+<span class="c1"># We&#39;re going to select features by varying the strength of the prior</span>
+<span class="c1"># and choosing the model that yields the best information criterion</span>
+<span class="c1"># on the validation set.</span>
+<span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="n">loguniform</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="c1"># We use standard functionality of sklearn to perform grid-search.</span>
+<span class="n">selector</span> <span class="o">=</span> <span class="n">RandomizedSearchCV</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                              <span class="n">param_distributions</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                              <span class="n">n_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># number of points from parameters space to sample</span>
+                              <span class="c1"># the class below implements CV-splits for LME models</span>
+                              <span class="n">cv</span><span class="o">=</span><span class="n">LMEStratifiedShuffleSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                                                           <span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+                                                           <span class="n">columns_labels</span><span class="o">=</span><span class="n">columns_labels</span><span class="p">),</span>
+                              <span class="c1"># The function below will evaluate the information criterion</span>
+                              <span class="c1"># on the test-sets during cross-validation.</span>
+                              <span class="c1"># We use IC from Muller2018, but other options (AIC, BIC) are also available</span>
+                              <span class="n">scoring</span><span class="o">=</span><span class="k">lambda</span> <span class="n">clf</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="o">-</span><span class="n">clf</span><span class="o">.</span><span class="n">get_information_criterion</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                                                                                       <span class="n">y</span><span class="p">,</span>
+                                                                                       <span class="n">columns_labels</span><span class="o">=</span><span class="n">columns_labels</span><span class="p">,</span>
+                                                                                       <span class="n">ic</span><span class="o">=</span><span class="s2">&quot;muller_ic&quot;</span><span class="p">),</span>
+                              <span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+                              <span class="n">n_jobs</span><span class="o">=</span><span class="mi">20</span>
+                              <span class="p">)</span>
+<span class="n">selector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">columns_labels</span><span class="o">=</span><span class="n">columns_labels</span><span class="p">)</span>
+<span class="n">best_model</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">best_estimator_</span>
+
+<span class="n">maybe_beta</span> <span class="o">=</span> <span class="n">best_model</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span>
+<span class="n">maybe_gamma</span> <span class="o">=</span> <span class="n">best_model</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span>
+<span class="n">ftn</span><span class="p">,</span> <span class="n">ffp</span><span class="p">,</span> <span class="n">ffn</span><span class="p">,</span> <span class="n">ftp</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">true_parameters</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">],</span> <span class="nb">abs</span><span class="p">(</span><span class="n">maybe_beta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-2</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+<span class="n">rtn</span><span class="p">,</span> <span class="n">rfp</span><span class="p">,</span> <span class="n">rfn</span><span class="p">,</span> <span class="n">rtp</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">true_parameters</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">],</span> <span class="nb">abs</span><span class="p">(</span><span class="n">maybe_gamma</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-2</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;The model found </span><span class="si">{</span><span class="n">ftp</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">ftp</span> <span class="o">+</span> <span class="n">ffn</span><span class="si">}</span><span class="s2"> correct fixed features, and also chose </span><span class="si">{</span><span class="n">ffp</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">ftn</span> <span class="o">+</span> <span class="n">ffn</span><span class="si">}</span><span class="s2"> extra irrelevant fixed features. </span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;It also identified </span><span class="si">{</span><span class="n">rtp</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">rtp</span> <span class="o">+</span> <span class="n">rfn</span><span class="si">}</span><span class="s2"> random effects correctly, and got </span><span class="si">{</span><span class="n">rfp</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">rtn</span> <span class="o">+</span> <span class="n">rfn</span><span class="si">}</span><span class="s2"> non-present random effects. </span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;The best sparsity parameter is </span><span class="si">{</span><span class="n">selector</span><span class="o">.</span><span class="n">best_params_</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">model</span> <span class="n">found</span> <span class="mi">9</span> <span class="n">out</span> <span class="n">of</span> <span class="mi">10</span> <span class="n">correct</span> <span class="n">fixed</span> <span class="n">features</span><span class="p">,</span> <span class="ow">and</span> <span class="n">also</span> <span class="n">chose</span> <span class="mi">2</span> <span class="n">out</span> <span class="n">of</span> <span class="mi">9</span> <span class="n">extra</span> <span class="n">irrelevant</span> <span class="n">fixed</span> <span class="n">features</span><span class="o">.</span>
+<span class="n">It</span> <span class="n">also</span> <span class="n">identified</span> <span class="mi">5</span> <span class="n">out</span> <span class="n">of</span> <span class="mi">5</span> <span class="n">random</span> <span class="n">effects</span> <span class="n">correctly</span><span class="p">,</span> <span class="ow">and</span> <span class="n">got</span> <span class="mi">0</span> <span class="n">out</span> <span class="n">of</span> <span class="mi">15</span> <span class="n">non</span><span class="o">-</span><span class="n">present</span> <span class="n">random</span> <span class="n">effects</span><span class="o">.</span>
+<span class="n">The</span> <span class="n">best</span> <span class="n">sparsity</span> <span class="n">parameter</span> <span class="ow">is</span> <span class="p">{</span><span class="s1">&#39;lam&#39;</span><span class="p">:</span> <span class="mf">4.0428727350273315</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="models_overview.html" class="btn btn-neutral float-right" title="Models Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to skmixed’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Aleksei Sholokhov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
