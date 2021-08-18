@@ -54,7 +54,7 @@ Linear Models
 A simple example of using SR3-empowered LASSO for feature selection is
 shown below.
 
-.. code::
+.. code:: ipython3
 
     import numpy as np
     
@@ -81,7 +81,7 @@ shown below.
     The vector of true parameters contains 55 non-zero elements out of 500.
 
 
-.. code-block:: python
+.. code:: ipython3
 
     # Automatic features selection using information criterion
     from skmixed.linear.models import LinearL1ModelSR3
@@ -123,7 +123,7 @@ Linear Mixed-Effects Models
 Below we show how to use Linear Mixed-Effects (LME) models for
 simultaneous selection of fixed and random effects.
 
-.. code-block:: python
+.. code:: ipython3
 
     from skmixed.lme.models import L1LmeModelSR3
     from skmixed.lme.problems import LMEProblem, LMEStratifiedShuffleSplit
@@ -145,7 +145,7 @@ simultaneous selection of fixed and random effects.
     # columns_labels describe the roles of the columns in x:
     # fixed effect, random effect, or both of those, as well as
 
-.. code-block:: python
+.. code:: ipython3
 
     # We use SR3-empowered LASSO model, but many other popular models are also available.
     # See the glossary of models for more details.
