@@ -13,23 +13,25 @@
 import os
 import sys
 
+from skmixed.__about__ import __author__, __version__, __title__
+
 sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'skmixed'
-copyright = '2021, Aleksei Sholokhov'
-author = 'Aleksei Sholokhov'
+project = __title__
+copyright = f'2021, {__author__}'
+author = __author__
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.0'
+release = __version__
 
 # -- General configuration ------------------------------------------------
 master_doc = 'index'
 autoclass_content = "both"  # include both class docstring and __init__
 autodoc_default_flags = [
-        # Make sure that any autodoc declarations show the right members
-        "members",
+    # Make sure that any autodoc declarations show the right members
+    "members",
         "inherited-members",
         "private-members",
         "show-inheritance",
