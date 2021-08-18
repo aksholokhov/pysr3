@@ -9,7 +9,8 @@
 
 # Quickstart
 
-SR3 is a relaxation method designed for accurate feature selection. It currently supports:
+SR3 is a relaxation method designed for accurate feature selection.
+It currently supports:
 
 * Linear Models (LASSO, A-LASSO, CAD, SCAD)
 * Linear Mixed-Effect Models (L0, LASSO, A-LASSO, CAD, SCAD)
@@ -17,15 +18,13 @@ SR3 is a relaxation method designed for accurate feature selection. It currently
 ## Installation
 
 skmixed can be installed via
-
 ```bash
  pip install skmixed
 ```
 
 ## Requirements
-
-Make sure that Python 3.6 or higher is installed. The package has the following dependencies, as listed in
-requirements.txt:
+Make sure that Python 3.6 or higher is installed. The package has the following
+dependencies, as listed in requirements.txt:
 
 * numpy>=1.21.1
 * pandas>=1.3.1
@@ -34,13 +33,12 @@ requirements.txt:
 * scikit_learn>=0.24.2
 
 ## Usage
-
-skmixed models are fully compatible to [sklearn standards](https://scikit-learn.org/stable/developers/develop.html), so
-you can use them as you normally would use a sklearn model.
+skmixed models are fully compatible to [sklearn standards](https://scikit-learn.org/stable/developers/develop.html),
+so you can use them as you normally would use a sklearn model.
 
 ### Linear Models
-
 A simple example of using SR3-empowered LASSO for feature selection is shown below.
+
 
 ```python
 import numpy as np
@@ -64,6 +62,8 @@ print(f"The dataset has {a.shape[0]} objects and {a.shape[1]} features; \n"
 
     The dataset has 300 objects and 500 features; 
     The vector of true parameters contains 55 non-zero elements out of 500.
+
+
 
 ```python
 # Automatic features selection using information criterion
@@ -97,9 +97,12 @@ print(f"The model found {tp} out of {tp + fn} features correctly, but also chose
     The model found 55 out of 55 features correctly, but also chose 2 extra irrelevant features. 
     The best parameter is {'lam': 0.15055187290939537}
 
+
 ### Linear Mixed-Effects Models
 
-Below we show how to use Linear Mixed-Effects (LME) models for simultaneous selection of fixed and random effects.
+Below we show how to use Linear Mixed-Effects (LME) models for simultaneous selection
+of fixed and random effects.
+
 
 ```python
 from skmixed.lme.models import L1LmeModelSR3
@@ -122,6 +125,7 @@ x, y, columns_labels = problem.to_x_y()
 # columns_labels describe the roles of the columns in x:
 # fixed effect, random effect, or both of those, as well as
 ```
+
 
 ```python
 # We use SR3-empowered LASSO model, but many other popular models are also available.
@@ -169,6 +173,8 @@ print(
     The model found 9 out of 10 correct fixed features, and also chose 2 out of 9 extra irrelevant fixed features. 
     It also identified 5 out of 5 random effects correctly, and got 0 out of 15 non-present random effects. 
     The best sparsity parameter is {'lam': 4.0428727350273315}
+
+
 
 ```python
 
