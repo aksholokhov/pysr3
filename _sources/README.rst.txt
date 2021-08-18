@@ -195,4 +195,3 @@ simultaneous selection of fixed and random effects.
     It also identified 5 out of 5 random effects correctly, and got 0 out of 15 non-present random effects. 
     The best sparsity parameter is {'lam': 4.0428727350273315}
 
-
