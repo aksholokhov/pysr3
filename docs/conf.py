@@ -41,7 +41,8 @@ autodoc_default_flags = [
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.coverage',
               'sphinx.ext.napoleon',
-              'sphinx.ext.autosummary'
+              'sphinx.ext.autosummary',
+              'IPython.sphinxext.ipython_console_highlighting'
               ]
 
 autosummary_generate = True  # Make _autosummary files and include them
