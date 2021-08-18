@@ -1,8 +1,6 @@
 name: Build & Publish Docs with Sphinx
 
-on:
-  release:
-    types: [published]
+on: [ push ]
 
 
 jobs:
