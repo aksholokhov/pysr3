@@ -18,7 +18,6 @@ if __name__ == "__main__":
 
     doc_requirements = [
         'sphinx',
-        'sphinxbootstrap4theme'
     ]
 
     setup(
