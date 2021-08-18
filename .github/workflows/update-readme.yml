@@ -30,7 +30,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add README.md
-          git commit -m "Convert README.ipynb to README.md" -a
+          git add docs/README.rst
+          git commit -m "Convert README.ipynb to README.md, update docs/README.rst" -a
       - name: Push changes
         if: success()
         uses: ad-m/github-push-action@master
