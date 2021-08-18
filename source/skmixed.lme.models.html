@@ -104,7 +104,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="skmixed.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-contents">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-skmixed">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -182,8 +182,648 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="skmixed-lme-models-module">
-<h1>skmixed.lme.models module<a class="headerlink" href="#skmixed-lme-models-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-skmixed.lme.models">
+<span id="skmixed-lme-models-module"></span><h1>skmixed.lme.models module<a class="headerlink" href="#module-skmixed.lme.models" title="Permalink to this headline">¶</a></h1>
+<p>Linear Mixed-Effects Models (simple, relaxed, and regularized)</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.CADLmeModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">CADLmeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'line-search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.CADLmeModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModel" title="skmixed.lme.models.SimpleLMEModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModel</span></code></a></p>
+<p>Implements a CAD-regularized Linear Mixed-Effects Model</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – strength of CAD regularizer</p></li>
+<li><p><strong>rho</strong> (<em>float</em>) – cut-off amplitude above which the coefficients are not penalized</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.CADLmeModel.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.CADLmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.CADLmeModelSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">CADLmeModelSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'fixed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">40.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.CADLmeModelSR3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModelSR3" title="skmixed.lme.models.SimpleLMEModelSR3"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModelSR3</span></code></a></p>
+<p>Implements a CAD-regularized SR3-relaxed Linear Mixed-Effect Model</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_oracle</strong> (<em>float</em>) – tolerance for SR3 oracle’s internal numerical subroutines</p></li>
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>ell</strong> (<em>float</em>) – level of SR3-relaxation</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – strength of CAD regularizer</p></li>
+<li><p><strong>rho</strong> (<em>float</em>) – cut-off amplitude above which the coefficients are not penalized</p></li>
+<li><p><strong>participation_in_selection</strong> (<em>ndarray of int</em>) – 0 if the feature should be affected by the regularizer, 0 otherwise</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>warm_start</strong> (<em>bool</em>) – if fitting should be started from the current model’s coefficients.
+Used for fine-tuning and iterative fitting.</p></li>
+<li><p><strong>practical</strong> (<em>bool</em>) – whether to use SR3-Practical method, which works faster at the expense of accuracy</p></li>
+<li><p><strong>update_prox_every</strong> (<em>int</em>) – how often update the relaxed variables. Only if practical=True</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.CADLmeModelSR3.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.CADLmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.L0LmeModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">L0LmeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'line-search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnz_tbeta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnz_tgamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L0LmeModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModel" title="skmixed.lme.models.SimpleLMEModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModel</span></code></a></p>
+<p>Implements an L0-regularized Linear Mixed-Effect Model. It allows specifying the maximal number of
+non-zero fixed and random effects in your model</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>nnz_tbeta</strong> (<em>int</em>) – the maximal number of non-zero fixed effects in your model</p></li>
+<li><p><strong>nnz_tgamma</strong> (<em>int</em>) – the maximal number of non-zero random effects in your model</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.L0LmeModel.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L0LmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.L0LmeModelSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">L0LmeModelSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'fixed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnz_tbeta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnz_tgamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L0LmeModelSR3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModelSR3" title="skmixed.lme.models.SimpleLMEModelSR3"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModelSR3</span></code></a></p>
+<p>Implements Regularized Linear Mixed-Effects Model functional for given problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Y_i</span> <span class="o">=</span> <span class="n">X_i</span><span class="o">*</span><span class="n">β</span> <span class="o">+</span> <span class="n">Z_i</span><span class="o">*</span><span class="n">u_i</span> <span class="o">+</span> <span class="n">𝜺_i</span><span class="p">,</span>
+
+<span class="n">where</span>
+
+<span class="n">β</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="n">tb</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">lb</span><span class="p">),</span>
+
+<span class="o">||</span><span class="n">tβ</span><span class="o">||</span><span class="n">_0</span> <span class="o">=</span> <span class="n">nnz</span><span class="p">(</span><span class="n">β</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">nnz_tbeta</span><span class="p">,</span>
+
+<span class="n">u_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diag</span><span class="p">(</span><span class="n">𝛄</span><span class="p">)),</span>
+
+<span class="n">𝛄</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="n">t𝛄</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">lg</span><span class="p">),</span>
+
+<span class="o">||</span><span class="n">t𝛄</span><span class="o">||</span><span class="n">_0</span> <span class="o">=</span> <span class="n">nnz</span><span class="p">(</span><span class="n">t𝛄</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">nnz_tgamma</span><span class="p">,</span>
+
+<span class="n">𝜺_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Λ</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here tβ and t𝛄 are single variables, not multiplications (e.g. not t*β). This oracle is designed for
+a solver (LinearLMESparseModel) which searches for a sparse solution (tβ, t𝛄) with at most k and j &lt;= k non-zero
+elements respectively. For more details, see the documentation for LinearLMESparseModel.</p>
+<p>The problem should be provided as LMEProblem.</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_oracle</strong> (<em>float</em>) – tolerance for SR3 oracle’s internal numerical subroutines</p></li>
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>lb</strong> (<em>float</em>) – level of SR3-relaxation for fixed effects</p></li>
+<li><p><strong>lg</strong> (<em>float</em>) – level of SR3-relaxation for random effects</p></li>
+<li><p><strong>nnz_tbeta</strong> (<em>int</em>) – the maximal number of non-zero fixed effects in your model</p></li>
+<li><p><strong>nnz_tgamma</strong> (<em>int</em>) – the maximal number of non-zero random effects in your model</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>warm_start</strong> (<em>bool</em>) – if fitting should be started from the current model’s coefficients.
+Used for fine-tuning and iterative fitting.</p></li>
+<li><p><strong>practical</strong> (<em>bool</em>) – whether to use SR3-Practical method, which works faster at the expense of accuracy</p></li>
+<li><p><strong>update_prox_every</strong> (<em>int</em>) – how often update the relaxed variables. Only if practical=True</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.L0LmeModelSR3.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L0LmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.L1LmeModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">L1LmeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'line-search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L1LmeModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModel" title="skmixed.lme.models.SimpleLMEModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModel</span></code></a></p>
+<p>Implements a LASSO-regularized Linear Mixed-Effect Model</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – strength of LASSO regularizer</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.L1LmeModel.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L1LmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.L1LmeModelSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">L1LmeModelSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'fixed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L1LmeModelSR3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModelSR3" title="skmixed.lme.models.SimpleLMEModelSR3"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModelSR3</span></code></a></p>
+<p>Implements an SR3-relaxed LASSO-regularized Linear Mixed-Effect Model</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_oracle</strong> (<em>float</em>) – tolerance for SR3 oracle’s internal numerical subroutines</p></li>
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>ell</strong> (<em>float</em>) – level of SR3-relaxation</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – strength of LASSO regularizer</p></li>
+<li><p><strong>participation_in_selection</strong> (<em>ndarray of int</em>) – 0 if the feature should be affected by the regularizer, 0 otherwise</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>warm_start</strong> (<em>bool</em>) – if fitting should be started from the current model’s coefficients.
+Used for fine-tuning and iterative fitting.</p></li>
+<li><p><strong>practical</strong> (<em>bool</em>) – whether to use SR3-Practical method, which works faster at the expense of accuracy</p></li>
+<li><p><strong>update_prox_every</strong> (<em>int</em>) – how often update the relaxed variables. Only if practical=True</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.L1LmeModelSR3.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.L1LmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">LMEModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.LMEModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.RegressorMixin</span></code></p>
+<p>Solve Linear Mixed Effects problem with projected gradient descent method.</p>
+<p>The original statistical model which this loss is based on is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Y_i</span> <span class="o">=</span> <span class="n">X_i</span><span class="o">*</span><span class="n">β</span> <span class="o">+</span> <span class="n">Z_i</span><span class="o">*</span><span class="n">u_i</span> <span class="o">+</span> <span class="n">𝜺_i</span><span class="p">,</span>
+
+<span class="n">where</span>
+
+<span class="n">u_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diag</span><span class="p">(</span><span class="n">𝛄</span><span class="p">)),</span>
+
+<span class="n">𝛄</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="n">t𝛄</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">lg</span><span class="p">)</span>
+
+<span class="n">β</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="n">tβ</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">lb</span><span class="p">)</span>
+
+<span class="n">𝜺_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diag</span><span class="p">(</span><span class="n">obs_var</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the paper for more details.</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solver</strong> (<em>PGDSolver</em>) – an instance of PGDSolver</p></li>
+<li><p><strong>oracle</strong> (<em>LinearLMEOracle</em>) – an instance of LinearLMEOracle</p></li>
+<li><p><strong>regularizer</strong> (<em>Regularizer</em>) – an instance of Regularizer</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – “EM” or “None”</p></li>
+<li><p><strong>logger_keys</strong> (<em>Optional[Set[str]]</em>) – list of values for the logger to track.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel.check_is_fitted">
+<span class="sig-name descname"><span class="pre">check_is_fitted</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.LMEModel.check_is_fitted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the model was fitted before. Throws an error otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_fixed_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_random_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.LMEModel.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a Linear Model with Linear Mixed-Effects to the given data.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – Data. If columns_labels = None then it’s assumed that columns_labels are in the first row of x.</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – Answers, real-valued array.</p></li>
+<li><p><strong>columns_labels</strong> (<em>np.ndarray</em>) – List of column labels. There shall be only one column of group labels and answers STDs,
+and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1 : fixed effect</p></li>
+<li><p>2 : random effect</p></li>
+<li><p>3 : both fixed and random,</p></li>
+<li><p>0 : groups labels</p></li>
+<li><p>4 : answers standard deviations</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>initial_parameters</strong> (<em>np.ndarray</em>) –</p>
+<p>Dict with possible fields:</p>
+<blockquote>
+<div><ul>
+<li><div class="line-block">
+<div class="line">‘beta0’ : np.ndarray, shape = [n],</div>
+<div class="line">Initial estimate of fixed effects. If None then it defaults to an all-ones vector.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line">‘gamma0’ : np.ndarray, shape = [k],</div>
+<div class="line">Initial estimate of random effects covariances.</div>
+<div class="line">If None then it defaults to an all-ones vector.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>warm_start</strong> (<em>bool, default is False</em>) – Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
+Throws NotFittedError if set to True when not fitted.</p></li>
+<li><p><strong>fit_fixed_intercept</strong> (<em>bool, default = False</em>) – Whether to add the intercept to the model</p></li>
+<li><p><strong>fit_random_intercept</strong> (<em>bool, default = False</em>) – Whether treat the intercept as a random effect.</p></li>
+<li><p><strong>kwargs</strong> – Not used currently, left here for passing debugging parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> (<em>LinearLMESparseModel</em>) – Fitted regression model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel.fit_problem">
+<span class="sig-name descname"><span class="pre">fit_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="skmixed.lme.problems.html#skmixed.lme.problems.LMEProblem" title="skmixed.lme.problems.LMEProblem"><span class="pre">skmixed.lme.problems.LMEProblem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.LMEModel.fit_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits the model to a provided problem</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>problem</strong> (<em>LMEProblem</em>) – an instance of LinearLMEProblem that contains all data-dependent information</p></li>
+<li><p><strong>initial_parameters</strong> (<em>np.ndarray</em>) –</p>
+<p>Dict with possible fields:</p>
+<blockquote>
+<div><ul>
+<li><div class="line-block">
+<div class="line">‘beta0’ : np.ndarray, shape = [n],</div>
+<div class="line">Initial estimate of fixed effects. If None then it defaults to an all-ones vector.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line">‘gamma0’ : np.ndarray, shape = [k],</div>
+<div class="line">Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>warm_start</strong> (<em>bool, default is False</em>) – Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
+Throws NotFittedError if set to True when not fitted.</p></li>
+<li><p><strong>kwargs</strong> – Not used currently, left here for passing debugging parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.lme.oracles.html#skmixed.lme.oracles.LinearLMEOracle" title="skmixed.lme.oracles.LinearLMEOracle"><span class="pre">skmixed.lme.oracles.LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.regularizers.html#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><span class="pre">skmixed.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.solvers.html#skmixed.solvers.PGDSolver" title="skmixed.solvers.PGDSolver"><span class="pre">skmixed.solvers.PGDSolver</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#skmixed.lme.models.LMEModel.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_fixed_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_random_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.LMEModel.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a prediction if .fit(X, y) was called before and throws an error otherwise.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – Data matrix. Should have the same format as the data which was used for fitting the model:
+the number of columns and the columns’ labels should be the same. It may contain new groups, in which case
+the prediction will be formed using the fixed effects only.</p></li>
+<li><p><strong>columns_labels</strong> (<em>Optional[List[str]]</em>) – List of column labels. There shall be only one column of group labels and answers STDs,
+and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1 : fixed effect</p></li>
+<li><p>2 : random effect</p></li>
+<li><p>3 : both fixed and random,</p></li>
+<li><p>0 : groups labels</p></li>
+<li><p>4 : answers standard deviations</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>fit_fixed_intercept</strong> (<em>bool, default = True</em>) – Whether to add an intercept as a fixed feature</p></li>
+<li><p><strong>fit_random_intercept</strong> (<em>bool, default = True</em>) – Whether to add an intercept as a random feature.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y</strong> (<em>np.ndarray</em>) – Models predictions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel.predict_problem">
+<span class="sig-name descname"><span class="pre">predict_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.LMEModel.predict_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a prediction if .fit was called before and throws an error otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> (<em>LMEProblem</em>) – An instance of LinearLMEProblem. Should have the same format as the data
+which was used for fitting the model. It may contain new groups, in which case
+the prediction will be formed using the fixed effects only.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y</strong> (<em>np.ndarray</em>) – Models predictions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.LMEModel.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_fixed_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_random_intercept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.LMEModel.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the coefficient of determination R^2 of the prediction.</p>
+<p>The coefficient R^2 is defined as (1 - u/v), where u is the residual sum
+of squares ((y_true - y_pred) ** 2).sum() and v is the
+total sum of squares ((y_true - y_true.mean()) ** 2).sum().
+The best possible score is 1.0 and it can be negative (because the model can be arbitrarily worse).
+A constant model that always predicts the expected value of y,
+disregarding the input features, would get a R^2 score of 0.0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – Data matrix. Should have the same format as the data which was used for fitting the model:
+the number of columns and the columns’ labels should be the same. It may contain new groups, in which case
+the prediction will be formed using the fixed effects only.</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – Answers, real-valued array.</p></li>
+<li><p><strong>columns_labels</strong> (<em>np.ndarray</em>) – Labels for columns of x</p></li>
+<li><p><strong>sample_weight</strong> (<em>array_like, Optional</em>) – Weights of samples for calculating the R^2 statistics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>r2_score</strong> (<em>float</em>) – R^2 score</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.SCADLmeModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">SCADLmeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'line-search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SCADLmeModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModel" title="skmixed.lme.models.SimpleLMEModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModel</span></code></a></p>
+<p>Implements SCAD-regularized Linear Mixed-Effect Model</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – strength of SCAD regularizer</p></li>
+<li><p><strong>rho</strong> (<em>float, rho &gt; 1</em>) – first knot of the SCAD spline</p></li>
+<li><p><strong>sigma</strong> (<em>float,</em>) – a positive constant such that sigma*rho is the second knot of the SCAD spline</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.SCADLmeModel.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SCADLmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.SCADLmeModelSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">SCADLmeModelSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'fixed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">40.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SCADLmeModelSR3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.SimpleLMEModelSR3" title="skmixed.lme.models.SimpleLMEModelSR3"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.SimpleLMEModelSR3</span></code></a></p>
+<p>Implements SCAD-regularized SR3-relaxed Linear Mixed-Effects Model</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_oracle</strong> (<em>float</em>) – tolerance for SR3 oracle’s internal numerical subroutines</p></li>
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>ell</strong> (<em>float</em>) – level of SR3-relaxation</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – strength of SCAD regularizer</p></li>
+<li><p><strong>rho</strong> (<em>float, rho &gt; 1</em>) – first knot of the SCAD spline</p></li>
+<li><p><strong>sigma</strong> (<em>float, sigma &gt; 1</em>) – a positive constant such that sigma*rho is the second knot of the SCAD spline</p></li>
+<li><p><strong>participation_in_selection</strong> (<em>ndarray of int</em>) – 0 if the feature should be affected by the regularizer, 0 otherwise</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>warm_start</strong> (<em>bool</em>) – if fitting should be started from the current model’s coefficients.
+Used for fine-tuning and iterative fitting.</p></li>
+<li><p><strong>practical</strong> (<em>bool</em>) – whether to use SR3-Practical method, which works faster at the expense of accuracy</p></li>
+<li><p><strong>update_prox_every</strong> (<em>int</em>) – how often update the relaxed variables. Only if practical=True</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.SCADLmeModelSR3.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SCADLmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.SimpleLMEModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">SimpleLMEModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'line-search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SimpleLMEModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.LMEModel" title="skmixed.lme.models.LMEModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.LMEModel</span></code></a></p>
+<p>Implements a standard Linear Mixed-Effects Model.</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.SimpleLMEModel.get_information_criterion">
+<span class="sig-name descname"><span class="pre">get_information_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'muller_ic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SimpleLMEModel.get_information_criterion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.SimpleLMEModel.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SimpleLMEModel.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.lme.models.SimpleLMEModelSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.lme.models.</span></span><span class="sig-name descname"><span class="pre">SimpleLMEModelSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'None'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'fixed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SimpleLMEModelSR3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.lme.models.LMEModel" title="skmixed.lme.models.LMEModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.lme.models.LMEModel</span></code></a></p>
+<p>Implements Regularized Linear Mixed-Effects Model functional for given problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Y_i</span> <span class="o">=</span> <span class="n">X_i</span><span class="o">*</span><span class="n">β</span> <span class="o">+</span> <span class="n">Z_i</span><span class="o">*</span><span class="n">u_i</span> <span class="o">+</span> <span class="n">𝜺_i</span><span class="p">,</span>
+
+<span class="n">where</span>
+
+<span class="n">β</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="n">tb</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">lb</span><span class="p">),</span>
+
+<span class="o">||</span><span class="n">tβ</span><span class="o">||</span><span class="n">_0</span> <span class="o">=</span> <span class="n">nnz</span><span class="p">(</span><span class="n">β</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">nnz_tbeta</span><span class="p">,</span>
+
+<span class="n">u_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diag</span><span class="p">(</span><span class="n">𝛄</span><span class="p">)),</span>
+
+<span class="n">𝛄</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="n">t𝛄</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">lg</span><span class="p">),</span>
+
+<span class="o">||</span><span class="n">t𝛄</span><span class="o">||</span><span class="n">_0</span> <span class="o">=</span> <span class="n">nnz</span><span class="p">(</span><span class="n">t𝛄</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">nnz_tgamma</span><span class="p">,</span>
+
+<span class="n">𝜺_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Λ</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here tβ and t𝛄 are single variables, not multiplications (e.g. not t*β). This oracle is designed for
+a solver (LinearLMESparseModel) which searches for a sparse solution (tβ, t𝛄) with at most k and j &lt;= k non-zero
+elements respectively. For more details, see the documentation for LinearLMESparseModel.</p>
+<p>The problem should be provided as LMEProblem.</p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol_oracle</strong> (<em>float</em>) – tolerance for SR3 oracle’s internal numerical subroutines</p></li>
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>initializer</strong> (<em>str</em>) – pre-initialization. Can be “None”, in which case the algorithm starts with
+“all-ones” starting parameters, or “EM”, in which case the algorithm does
+one step of EM algorithm</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>ell</strong> (<em>float</em>) – level of SR3-relaxation</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>warm_start</strong> (<em>bool</em>) – if fitting should be started from the current model’s coefficients.
+Used for fine-tuning and iterative fitting.</p></li>
+<li><p><strong>practical</strong> (<em>bool</em>) – whether to use SR3-Practical method, which works faster at the expense of accuracy</p></li>
+<li><p><strong>update_prox_every</strong> (<em>int</em>) – how often update the relaxed variables. Only if practical=True</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.SimpleLMEModelSR3.get_information_criterion">
+<span class="sig-name descname"><span class="pre">get_information_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'muller_ic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SimpleLMEModelSR3.get_information_criterion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.models.SimpleLMEModelSR3.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.models.SimpleLMEModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 
 

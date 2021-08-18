@@ -105,7 +105,7 @@
 <li class="toctree-l4 current"><a class="current reference internal" href="#">skmixed.solvers module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-contents">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-skmixed">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -181,8 +181,87 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="skmixed-solvers-module">
-<h1>skmixed.solvers module<a class="headerlink" href="#skmixed-solvers-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-skmixed.solvers">
+<span id="skmixed-solvers-module"></span><h1>skmixed.solvers module<a class="headerlink" href="#module-skmixed.solvers" title="Permalink to this headline">¶</a></h1>
+<p>Implements general purpose numerical solvers, like PGD</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.solvers.FakePGDSolver">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.solvers.</span></span><span class="sig-name descname"><span class="pre">FakePGDSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.solvers.FakePGDSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class is designed for the situations where the oracle can provide the optimal
+solution by itself, e.g. when it’s accessible analytically.
+It’s also used for PracticalSR3 methods, when the relaxed variables are
+updated together with the original ones inside of the oracle’s subroutine.</p>
+<p>Initializes the solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size</p></li>
+<li><p><strong>update_prox_every</strong> (<em>int</em>) – how often should the oracle update the relaxed variable (every X steps).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.solvers.FakePGDSolver.optimize">
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.regularizers.html#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><span class="pre">skmixed.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.logger.html#skmixed.logger.Logger" title="skmixed.logger.Logger"><span class="pre">skmixed.logger.Logger</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.solvers.FakePGDSolver.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the optimization problem for</p>
+<p>Loss(x) = oracle(x) + regularizer(x)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x0</strong> (<em>ndarray</em>) – starting point of the optimizer.</p></li>
+<li><p><strong>oracle</strong> (<em>LinearLMEOracle</em>) – provides the value and the gradient of the smooth part of the loss.</p></li>
+<li><p><strong>regularizer</strong> (<em>Regularizer</em>) – provides the value and the proximal operator of the non-smooth part of the loss.</p></li>
+<li><p><strong>logger</strong> (<em>Logger</em>) – logs the progress (loss, convergence, etc).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> (<em>ndarray</em>) – the minimum.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.solvers.PGDSolver">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.solvers.</span></span><span class="sig-name descname"><span class="pre">PGDSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fixed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.solvers.PGDSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements a general Proximal Gradient Descent solver.</p>
+<p>Creates an instance of the solver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> (<em>float</em>) – Tolerance for the stop-criterion: norm(x - x0) is less than tol.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Maximum number of iterations that the solver is allowed to make.</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – Stepping policy. Can be either “line-search” or “fixed”.</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – Length of the step size. If stepping=”fixed” then this step-size is always used.
+If stepping=”line-search” then the line-search starts shrinking the step from this step size.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.solvers.PGDSolver.optimize">
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.lme.oracles.html#skmixed.lme.oracles.LinearLMEOracle" title="skmixed.lme.oracles.LinearLMEOracle"><span class="pre">skmixed.lme.oracles.LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.regularizers.html#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><span class="pre">skmixed.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.logger.html#skmixed.logger.Logger" title="skmixed.logger.Logger"><span class="pre">skmixed.logger.Logger</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.solvers.PGDSolver.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the optimization problem for</p>
+<p>Loss(x) = oracle(x) + regularizer(x)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x0</strong> (<em>ndarray</em>) – starting point of the optimizer.</p></li>
+<li><p><strong>oracle</strong> (<em>LinearLMEOracle</em>) – provides the value and the gradient of the smooth part of the loss.</p></li>
+<li><p><strong>regularizer</strong> (<em>Regularizer</em>) – provides the value and the proximal operator of the non-smooth part of the loss.</p></li>
+<li><p><strong>logger</strong> (<em>Logger</em>) – logs the progress (loss, convergence, etc).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> (<em>ndarray</em>) – the minimum.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

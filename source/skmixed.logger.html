@@ -106,7 +106,7 @@
 <li class="toctree-l4"><a class="reference internal" href="skmixed.solvers.html">skmixed.solvers module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-contents">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-skmixed">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -182,8 +182,81 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="skmixed-logger-module">
-<h1>skmixed.logger module<a class="headerlink" href="#skmixed-logger-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-skmixed.logger">
+<span id="skmixed-logger-module"></span><h1>skmixed.logger module<a class="headerlink" href="#module-skmixed.logger" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.logger.Logger">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.logger.</span></span><span class="sig-name descname"><span class="pre">Logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Helper class for logging the progress of iterative methods.</p>
+<p>Initializes the logger</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>list_of_keys</strong> (<em>set[str]</em>) – list of keys for the logger</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.logger.Logger.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a key-value pair to the logger</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – key</p></li>
+<li><p><strong>value</strong> (<em>Any</em>) – value for this key</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.logger.Logger.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds value to what’s already stored in the logger. If no such key then it starts with 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – key</p></li>
+<li><p><strong>value</strong> (<em>Any additive</em>) – value to add</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.logger.Logger.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value by key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – key</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>value for this key</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.logger.Logger.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records all values of parameters which keys are already in the logger.
+Ignores the rest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>parameters</strong> (<em>dict</em>) – dictionary with parameters to record.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

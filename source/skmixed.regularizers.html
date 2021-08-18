@@ -106,7 +106,7 @@
 <li class="toctree-l4"><a class="reference internal" href="skmixed.solvers.html">skmixed.solvers module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-contents">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-skmixed">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -182,8 +182,488 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="skmixed-regularizers-module">
-<h1>skmixed.regularizers module<a class="headerlink" href="#skmixed-regularizers-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-skmixed.regularizers">
+<span id="skmixed-regularizers-module"></span><h1>skmixed.regularizers module<a class="headerlink" href="#module-skmixed.regularizers" title="Permalink to this headline">¶</a></h1>
+<p>Various regularizers (L0, LASSO, CAD, SCAD, etc)</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.regularizers.CADRegularizer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.regularizers.</span></span><span class="sig-name descname"><span class="pre">CADRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.CADRegularizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.regularizers.Regularizer</span></code></a></p>
+<p>Implement Clipped Absolute Deviation (CAD) regularizer</p>
+<p>Creates CAD regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rho</strong> (<em>float</em>) – constant that prevents values larger than it from being penalized.</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – strength of the regularizer</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.CADRegularizer.forget">
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.CADRegularizer.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlinks all problem-dependent information from the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.CADRegularizer.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.CADRegularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach regularization weights</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>weights</strong> (<em>ndarray</em>) – individual weights for the regularizer’s coordinates.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.CADRegularizer.prox">
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.CADRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
+<li><p><strong>alpha</strong> – step parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.CADRegularizer.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.CADRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the regularizer at the point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the regularizer</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.regularizers.DummyRegularizer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.regularizers.</span></span><span class="sig-name descname"><span class="pre">DummyRegularizer</span></span><a class="headerlink" href="#skmixed.regularizers.DummyRegularizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.regularizers.Regularizer</span></code></a></p>
+<p>Fake regularizer that has no effect.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.DummyRegularizer.prox">
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.DummyRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
+<li><p><strong>alpha</strong> – step parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.DummyRegularizer.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.DummyRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the regularizer at the point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the regularizer</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.regularizers.L0Regularizer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.regularizers.</span></span><span class="sig-name descname"><span class="pre">L0Regularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nnz_tbeta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnz_tgamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_beta_and_gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="skmixed.lme.oracles.html#skmixed.lme.oracles.LinearLMEOracle" title="skmixed.lme.oracles.LinearLMEOracle"><span class="pre">skmixed.lme.oracles.LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L0Regularizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.regularizers.Regularizer</span></code></a></p>
+<p>Implements an L0-type regularizer, where the desired number of non-zero coordinates for
+fixed and random effects is given</p>
+<p>Create the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nnz_tbeta</strong> (<em>int</em>) – desired number of non-zero fixed effects</p></li>
+<li><p><strong>nnz_tgamma</strong> (<em>int</em>) – desired number of non-zero random effects</p></li>
+<li><p><strong>independent_beta_and_gamma</strong> (<em>bool</em>) – If true then we only can set an element of gamma as non-zero when the respective
+element of beta is non-zero too.</p></li>
+<li><p><strong>oracle</strong> (<em>LinearLMEOracle</em>) – class that encompasses the information about the problem</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L0Regularizer.forget">
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L0Regularizer.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlinks all problem-dependent information from the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L0Regularizer.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L0Regularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches weights to the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>weights</strong> – regularization weights</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L0Regularizer.optimal_tbeta">
+<span class="sig-name descname"><span class="pre">optimal_tbeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L0Regularizer.optimal_tbeta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns tbeta which minimizes the loss function with all other variables fixed.</p>
+<p>It is a projection of beta on the sparse subspace with no more than k elements, which can be constructed by
+taking k largest elements from beta and setting the rest to be 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>tbeta</strong> (<em>np.ndarray, shape = [n]</em>) – Minimizer of the loss function w.r.t tbeta with other arguments fixed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L0Regularizer.optimal_tgamma">
+<span class="sig-name descname"><span class="pre">optimal_tgamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tbeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L0Regularizer.optimal_tgamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns tgamma which minimizes the loss function with all other variables fixed.</p>
+<p>It is a projection of gamma on the sparse subspace with no more than nnz_gamma elements,
+which can be constructed by taking nnz_gamma largest elements from gamma and setting the rest to be 0.
+In addition, it preserves that for all the elements where tbeta = 0 it implies that tgamma = 0 as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tbeta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of (nnz_beta)-sparse estimates for fixed parameters.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of covariance estimates of random effects.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>tgamma</strong> (<em>np.ndarray, shape = [k]</em>) – Minimizer of the loss function w.r.t tgamma with other arguments fixed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L0Regularizer.prox">
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L0Regularizer.prox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
+<li><p><strong>alpha</strong> – step parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L0Regularizer.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L0Regularizer.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the regularizer at the point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the regularizer</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.regularizers.L1Regularizer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.regularizers.</span></span><span class="sig-name descname"><span class="pre">L1Regularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L1Regularizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.regularizers.Regularizer</span></code></a></p>
+<p>Implements an L1-regularizer, a.k.a. LASSO.
+N.B. Adaptive LASSO is implemented by providing custom weights.</p>
+<p>Creates LASSO regularizer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lam</strong> (<em>float</em>) – strength of the regularizer</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L1Regularizer.forget">
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L1Regularizer.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlinks all problem-dependent information from the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L1Regularizer.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L1Regularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach regularization weights</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>weights</strong> (<em>ndarray</em>) – individual weights for the regularizer’s coordinates.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L1Regularizer.prox">
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L1Regularizer.prox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
+<li><p><strong>alpha</strong> – step parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.L1Regularizer.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.L1Regularizer.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the regularizer at the point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the regularizer</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.regularizers.PositiveQuadrantRegularizer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.regularizers.</span></span><span class="sig-name descname"><span class="pre">PositiveQuadrantRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_regularizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><span class="pre">skmixed.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.PositiveQuadrantRegularizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.regularizers.Regularizer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.PositiveQuadrantRegularizer.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.PositiveQuadrantRegularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches weights to the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – whatever is needed for the regularizer to work</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.PositiveQuadrantRegularizer.prox">
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.PositiveQuadrantRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
+<li><p><strong>alpha</strong> – step parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.PositiveQuadrantRegularizer.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.PositiveQuadrantRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the regularizer at the point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the regularizer</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.regularizers.Regularizer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.regularizers.</span></span><span class="sig-name descname"><span class="pre">Regularizer</span></span><a class="headerlink" href="#skmixed.regularizers.Regularizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Template class for regularizers</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.Regularizer.forget">
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.Regularizer.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlinks all problem-dependent information from the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.Regularizer.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.Regularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches weights to the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – whatever is needed for the regularizer to work</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.Regularizer.prox">
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.Regularizer.prox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
+<li><p><strong>alpha</strong> – step parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.Regularizer.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#skmixed.regularizers.Regularizer.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the regularizer at the point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the regularizer</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="skmixed.regularizers.SCADRegularizer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.regularizers.</span></span><span class="sig-name descname"><span class="pre">SCADRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.SCADRegularizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#skmixed.regularizers.Regularizer" title="skmixed.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmixed.regularizers.Regularizer</span></code></a></p>
+<p>Implements Smoothly Clipped Absolute Deviations (SCAD) regularizer.</p>
+<p>Creates SCAD regularizer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rho</strong> (<em>float, rho &gt; 1</em>) – first knot of the spline</p></li>
+<li><p><strong>sigma</strong> (<em>float, sigma &gt; 1</em>) – sigma*rho is the second knot of the spline</p></li>
+<li><p><strong>lam</strong> (<em>float, lambda &gt; 1</em>) – strength of the regularizer</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.SCADRegularizer.forget">
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.SCADRegularizer.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlinks all problem-dependent information from the regularizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.SCADRegularizer.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.SCADRegularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach regularization weights</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>weights</strong> (<em>ndarray</em>) – individual weights for the regularizer’s coordinates.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.SCADRegularizer.prox">
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.SCADRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
+<li><p><strong>alpha</strong> – step parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.regularizers.SCADRegularizer.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.regularizers.SCADRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the regularizer at the point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the regularizer</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
