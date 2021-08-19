@@ -10,7 +10,7 @@ currently supports:
 .. toctree::
    :caption: Getting Started
 
-   Installation & Examples <README>
+   Quickstart <quickstart>
    Models Overview <models_overview>
 
 .. toctree::
