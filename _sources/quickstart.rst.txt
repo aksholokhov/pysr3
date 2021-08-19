@@ -3,7 +3,8 @@
 .. |image0| image:: https://img.shields.io/pypi/l/skmixed
 .. |image1| image:: https://img.shields.io/pypi/v/skmixed
 .. |image2| image:: https://img.shields.io/github/workflow/status/aksholokhov/skmixed/Testing%20and%20Coverage/sr3
-.. |image3| image:: https://img.shields.io/readthedocs/skmixed
+.. |image3| image:: https://img.shields.io/badge/docs-up-green
+   :target: https://aksholokhov.github.io/skmixed/
 .. |image4| image:: https://img.shields.io/codecov/c/github/aksholokhov/skmixed/sr3?flag=unittests
 .. |Codacy Badge| image:: https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b
    :target: https://www.codacy.com/gh/aksholokhov/skmixed/dashboard?utm_source=github.com&utm_medium=referral&utm_content=aksholokhov/skmixed&utm_campaign=Badge_Grade
