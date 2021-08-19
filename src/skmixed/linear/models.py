@@ -28,6 +28,7 @@ class LinearModel(BaseEstimator, RegressorMixin):
             y: np.ndarray,
             initial_parameters: dict = None,
             warm_start=False,
+            regularization_weights=None,
             **kwargs):
         """
                 Fits a Linear Model to the given data.
@@ -65,12 +66,14 @@ class LinearModel(BaseEstimator, RegressorMixin):
             warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
             y = y[:, 0]
         problem = LinearProblem.from_x_y(x=x, y=y)
-        return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
+        return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start,
+                                regularization_weights=regularization_weights, **kwargs)
 
     def fit_problem(self,
                     problem: LinearProblem,
                     initial_parameters: dict = None,
                     warm_start=False,
+                    regularization_weights=None,
                     **kwargs):
         """
         Fits the model to a provided problem
@@ -99,10 +102,8 @@ class LinearModel(BaseEstimator, RegressorMixin):
         """
         oracle, regularizer, solver = self.instantiate()
         oracle.instantiate(problem)
-        if problem.regularization_weights is None:
+        if regularization_weights is None:
             regularization_weights = np.ones(problem.num_features)
-        else:
-            regularization_weights = problem.regularization_weights
         regularizer.instantiate(weights=regularization_weights)
 
         if initial_parameters is None:

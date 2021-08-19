@@ -87,6 +87,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
             warm_start=False,
             fit_fixed_intercept=False,
             fit_random_intercept=False,
+            fe_regularization_weights=None,
+            re_regularization_weights=None,
             **kwargs):
         """
                 Fits a Linear Model with Linear Mixed-Effects to the given data.
@@ -145,12 +147,16 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         problem = LMEProblem.from_x_y(x, y, columns_labels=columns_labels, fit_fixed_intercept=fit_fixed_intercept,
                                       fit_random_intercept=fit_random_intercept, **kwargs)
-        return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
+        return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start,
+                                fe_regularization_weights=fe_regularization_weights,
+                                re_regularization_weights=re_regularization_weights, **kwargs)
 
     def fit_problem(self,
                     problem: LMEProblem,
                     initial_parameters: dict = None,
                     warm_start=False,
+                    fe_regularization_weights=None,
+                    re_regularization_weights=None,
                     **kwargs):
         """
         Fits the model to a provided problem
@@ -182,8 +188,11 @@ class LMEModel(BaseEstimator, RegressorMixin):
         oracle, regularizer, solver = self.instantiate()
 
         oracle.instantiate(problem)
-        regularizer.instantiate(weights=oracle.beta_gamma_to_x(beta=problem.fe_regularization_weights,
-                                                               gamma=problem.re_regularization_weights),
+        if not fe_regularization_weights:
+            fe_regularization_weights = np.ones(problem.num_fixed_features)
+            re_regularization_weights = np.ones(problem.num_random_features)
+        regularizer.instantiate(weights=oracle.beta_gamma_to_x(beta=fe_regularization_weights,
+                                                               gamma=re_regularization_weights),
                                 oracle=oracle)
 
         num_fixed_effects = problem.num_fixed_features

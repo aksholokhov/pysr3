@@ -323,7 +323,7 @@ class L1Regularizer(Regularizer):
         """
         if self.weights is not None:
             return self.weights.dot(np.abs(x))
-        return self.lam * np.linalg.norm(x, 1)
+        return self.lam * np.abs(x).sum()
 
     def prox(self, x, alpha):
         """
@@ -424,11 +424,16 @@ class CADRegularizer(Regularizer):
         -------
         result of the application of the proximal operator to x
         """
+        x = np.atleast_1d(x)
         v = np.copy(x)
         idx_small = np.where((np.abs(x) <= self.rho) & (self.weights > 0 if self.weights is not None else True))
-        v[idx_small] = (x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0, None) - (
-                - x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0,
-                                                                                  None)
+        if self.weights is not None:
+            v[idx_small] = (x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0, None) - (
+                    - x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0,
+                                                                                      None)
+        else:
+            v[idx_small] = (x[idx_small] - alpha * self.lam).clip(0, None) - (
+                    - x[idx_small] - alpha * self.lam).clip(0, None)
         return v
 
 
@@ -496,6 +501,7 @@ class SCADRegularizer(Regularizer):
         the value of the regularizer
         """
         total = 0
+        x = np.atleast_1d(x)
         for x_i, w in zip(x, self.weights if self.weights is not None else np.ones(x.shape)):
             if abs(x_i) < self.sigma:
                 total += w * self.sigma * abs(x_i)
@@ -520,6 +526,7 @@ class SCADRegularizer(Regularizer):
         -------
         result of the application of the proximal operator to x
         """
+        x = np.atleast_1d(x)
         v = np.zeros(x.shape)
         for i, w in enumerate(self.weights if self.weights is not None else np.ones(x.shape)):
             alpha_eff = alpha * self.lam * w
