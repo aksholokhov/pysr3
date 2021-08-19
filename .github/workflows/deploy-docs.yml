@@ -25,7 +25,7 @@ jobs:
           jupyter nbconvert --to rst quickstart.ipynb
           jupyter nbconvert --to rst models_overview.ipynb
           jupyter nbconvert --to rst community_guidelines.ipynb
-          cd ...
+          cd ..
       - name: Generate API docs & Build sphinx documentation
         run: |
           cd docs
