@@ -1,8 +1,5 @@
 |image0| |image1| |image2| |image3| |image4| |Codacy Badge|
 
-SR3: Features Selection with Relaxed Regularization Framework.
-==============================================================
-
 .. |image0| image:: https://img.shields.io/pypi/l/skmixed
 .. |image1| image:: https://img.shields.io/pypi/v/skmixed
 .. |image2| image:: https://img.shields.io/github/workflow/status/aksholokhov/skmixed/Testing%20and%20Coverage/sr3
@@ -11,8 +8,8 @@ SR3: Features Selection with Relaxed Regularization Framework.
 .. |Codacy Badge| image:: https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b
    :target: https://www.codacy.com/gh/aksholokhov/skmixed/dashboard?utm_source=github.com&utm_medium=referral&utm_content=aksholokhov/skmixed&utm_campaign=Badge_Grade
 
-Quickstart
-==========
+Quickstart with ``skmixed``
+===========================
 
 SR3 is a relaxation method designed for accurate feature selection. It
 currently supports:

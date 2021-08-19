@@ -1,2 +1,44 @@
 Community Guidelines
 ====================
+
+We encourage the broader community to contribute to ``skmixed``! Please
+submit a pull request on GitHub if you fixed a bug or developed an
+extension.
+
+As a community, we follow the list of rules below:
+
+1. We adhere to `sklearn’s interfaces and
+   standards <https://scikit-learn.org/stable/developers/develop.html>`__
+
+   -  Please use ``sklearn.utils.estimator_checks.check_estimator`` to
+      ensure that your contributions don’t break this compatibility.
+
+2. For comments and docstrings, we use `numpy dostring
+   standards <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`__
+3. For version numbers, we use `Semantic
+   Versioning <https://semver.org/>`__.
+4. We pledge to `Contributor
+   Covenant <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`__
+   code of conduct.
+
+Developing ``skmixed``
+----------------------
+
+``skmixed`` does not require any special hardware and can be developed
+on your personal computer. To start, install ``skmixed`` in the
+developer mode:
+
+.. code:: bash
+
+   git clone https://github.com/aksholokhov/skmixed.git
+   cd skmixed
+   python setup.py develop
+
+Testing ``skmixed``
+-------------------
+
+To test the installation, invoke the tests with ``pytest``:
+
+.. code:: bash
+
+   pytest .
