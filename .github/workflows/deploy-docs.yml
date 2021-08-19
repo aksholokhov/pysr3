@@ -20,6 +20,7 @@ jobs:
           python setup.py develop
           pip install jupyter nbconvert nbformat sphinx sphinx-rtd-theme
       - name: Convert Jupytet Notebooks to Documentation Pages
+        run: |
           cd docs
           jupyter nbconvert --to rst quickstart.ipynb
           jupyter nbconvert --to rst models_overview.ipynb
@@ -35,4 +36,4 @@ jobs:
         with:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
-        FOLDER: docs/_build/html # The folder the action should deploy.
+          FOLDER: docs/_build/html # The folder the action should deploy.
