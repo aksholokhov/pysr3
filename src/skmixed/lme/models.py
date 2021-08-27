@@ -232,11 +232,11 @@ class LMEModel(BaseEstimator, RegressorMixin):
         }
 
         if "vaida_aic" in self.logger_.keys:
-            self.logger_.add("vaida_aic", oracle.vaida2005aic(beta, gamma))
+            self.logger_.add("vaida_aic", oracle.vaida2005aic(beta, gamma, tolerance=solver.tol))
         if "jones_bic" in self.logger_.keys:
-            self.logger_.add("jones_bic", oracle.jones2010bic(beta, gamma))
+            self.logger_.add("jones_bic", oracle.jones2010bic(beta, gamma, tolerance=solver.tol))
         if "muller_ic" in self.logger_.keys:
-            self.logger_.add("muller_ic", oracle.muller2018ic(beta, gamma))
+            self.logger_.add("muller_ic", oracle.muller2018ic(beta, gamma, tolerance=solver.tol))
         if "flip_probabilities_beta" in self.logger_.keys:
             self.logger_.add("flip_probabilities_beta", oracle.flip_probabilities_beta(beta, gamma))
 

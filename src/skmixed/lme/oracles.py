@@ -769,7 +769,7 @@ class LinearLMEOracle:
             n_eff += np.linalg.inv(c).sum()
         return n_eff
 
-    def jones2010bic(self, beta, gamma, **kwargs):
+    def jones2010bic(self, beta, gamma, tolerance=0., **kwargs):
         """
         Implements Bayes Information Criterion (BIC) from (Jones, 2010)
         # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
@@ -780,6 +780,9 @@ class LinearLMEOracle:
             Vector of estimates of fixed effects.
         gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -788,12 +791,12 @@ class LinearLMEOracle:
         Value of Jones's BIC
         """
         self._recalculate_cholesky(gamma)
-        p = sum(beta != 0)
-        q = sum(gamma != 0)
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
         return self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + (p + q) * np.log(
             self._jones2010n_eff())
 
-    def muller2018ic(self, beta, gamma, **kwargs):
+    def muller2018ic(self, beta, gamma, tolerance=0., **kwargs):
         """
         Implements Information Criterion (IC) from (Muller, 2018)
 
@@ -803,6 +806,10 @@ class LinearLMEOracle:
             Vector of estimates of fixed effects.
         gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -814,8 +821,8 @@ class LinearLMEOracle:
         N = self.problem.num_obs
         n_eff = self._jones2010n_eff()
         return 2 / N * self.value_function(self.beta_gamma_to_x(beta, gamma)) \
-               + 1 / N * np.log(n_eff) * sum(beta != 0) \
-               + 2 / N * sum(gamma != 0)
+               + 1 / N * np.log(n_eff) * sum(np.abs(beta) >= tolerance) \
+               + 2 / N * sum(np.abs(gamma) >= tolerance)
 
     def _hat_matrix(self, gamma):
         """
@@ -888,7 +895,7 @@ class LinearLMEOracle:
         h_matrix = self._hat_matrix(gamma)
         return np.trace(h_matrix)
 
-    def vaida2005aic(self, beta, gamma, **kwargs):
+    def vaida2005aic(self, beta, gamma, tolerance=0., **kwargs):
         """
         Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
 
@@ -898,6 +905,10 @@ class LinearLMEOracle:
             Vector of estimates of fixed effects.
         gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -907,8 +918,8 @@ class LinearLMEOracle:
         """
         rho = self._hodges2001ddf(gamma)
         n = self.problem.num_obs
-        p = sum(beta != 0)
-        q = sum(gamma != 0)
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
         alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
