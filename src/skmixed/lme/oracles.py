@@ -793,7 +793,7 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         p = sum(np.abs(beta) >= tolerance)
         q = sum(np.abs(gamma) >= tolerance)
-        return self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + (p + q) * np.log(
+        return self.loss(beta, gamma, **kwargs) + (p + q) * np.log(
             self._jones2010n_eff())
 
     def muller2018ic(self, beta, gamma, tolerance=0., **kwargs):
@@ -820,7 +820,7 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         N = self.problem.num_obs
         n_eff = self._jones2010n_eff()
-        return 2 / N * self.value_function(self.beta_gamma_to_x(beta, gamma)) \
+        return 2 / N * self.loss(beta, gamma, **kwargs) \
                + 1 / N * np.log(n_eff) * sum(np.abs(beta) >= tolerance) \
                + 2 / N * sum(np.abs(gamma) >= tolerance)
 
@@ -923,7 +923,7 @@ class LinearLMEOracle:
         alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
         # The likelihood here is conditional in the original paper
         # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2 * self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + alpha * (p + q)
+        return 2 * self.loss(beta, gamma, **kwargs) + alpha * (p + q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         """
@@ -1403,3 +1403,89 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             self.warm_start_ip["beta"] = beta
             self.warm_start_ip["gamma"] = gamma
         return beta, gamma, tbeta, tgamma, losses_kkt
+
+    def jones2010bic(self, beta, gamma, tolerance=0., **kwargs):
+        """
+        Implements Bayes Information Criterion (BIC) from (Jones, 2010)
+        # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        Value of Jones's BIC
+        """
+        self._recalculate_cholesky(gamma)
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
+        return super().loss(beta, gamma, **kwargs) + (p + q) * np.log(
+            self._jones2010n_eff())
+
+    def muller2018ic(self, beta, gamma, tolerance=0., **kwargs):
+        """
+        Implements Information Criterion (IC) from (Muller, 2018)
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        Value of Mueller's IC
+        """
+        self._recalculate_cholesky(gamma)
+        N = self.problem.num_obs
+        n_eff = self._jones2010n_eff()
+        return 2 / N * super().loss(beta, gamma, **kwargs) \
+               + 1 / N * np.log(n_eff) * sum(np.abs(beta) >= tolerance) \
+               + 2 / N * sum(np.abs(gamma) >= tolerance)
+
+
+    def vaida2005aic(self, beta, gamma, tolerance=0., **kwargs):
+        """
+        Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        Value for Vaida AIC
+        """
+        rho = self._hodges2001ddf(gamma)
+        n = self.problem.num_obs
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
+        alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
+        # The likelihood here is conditional in the original paper
+        # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
+        return 2 * super().loss(beta, gamma, **kwargs) + alpha * (p + q)
