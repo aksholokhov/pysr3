@@ -793,12 +793,14 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         p = sum(np.abs(beta) >= tolerance)
         q = sum(np.abs(gamma) >= tolerance)
-        return self.loss(beta, gamma, **kwargs) + (p + q) * np.log(
+        return 2 * self.loss(beta, gamma, **kwargs) + (p + q) * np.log(
             self._jones2010n_eff())
 
-    def muller2018ic(self, beta, gamma, tolerance=0., **kwargs):
+    def muller_hui_2016ic(self, beta, gamma, tolerance=0., **kwargs):
         """
-        Implements Information Criterion (IC) from (Muller, 2018)
+        Implements Information Criterion (IC) from (Muller, 2016)
+        https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1215989
+        page 1326, equation 3
 
         Parameters
         ----------
@@ -819,9 +821,10 @@ class LinearLMEOracle:
         """
         self._recalculate_cholesky(gamma)
         N = self.problem.num_obs
-        n_eff = self._jones2010n_eff()
+        # n_eff = self._jones2010n_eff()
+        m = self.problem.num_groups
         return 2 / N * self.loss(beta, gamma, **kwargs) \
-               + 1 / N * np.log(n_eff) * sum(np.abs(beta) >= tolerance) \
+               + 1 / N * np.log(m) * sum(np.abs(beta) >= tolerance) \
                + 2 / N * sum(np.abs(gamma) >= tolerance)
 
     def _hat_matrix(self, gamma):
@@ -895,7 +898,7 @@ class LinearLMEOracle:
         h_matrix = self._hat_matrix(gamma)
         return np.trace(h_matrix)
 
-    def vaida2005aic(self, beta, gamma, tolerance=0., **kwargs):
+    def vaida2005aic(self, beta, gamma, tolerance=0., marginalized=False, **kwargs):
         """
         Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
 
@@ -916,14 +919,25 @@ class LinearLMEOracle:
         -------
         Value for Vaida AIC
         """
-        rho = self._hodges2001ddf(gamma)
         n = self.problem.num_obs
         p = sum(np.abs(beta) >= tolerance)
         q = sum(np.abs(gamma) >= tolerance)
-        alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
-        # The likelihood here is conditional in the original paper
-        # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2 * self.loss(beta, gamma, **kwargs) + alpha * (p + q)
+        if marginalized:
+            # mAIC version
+            # See also p 141 eq 10 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            if (n - p - q - 1) > 0:
+                alpha = n / (n - p - q - 1)
+            else:
+                alpha = 1
+            return 2 * self.loss(beta, gamma, **kwargs) + 2 * alpha * (p + q)
+        else:
+            # cAIC version
+            # See also p 143 eq 17 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            rho = self._hodges2001ddf(gamma)
+            alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
+            return 2 * self.demarginalized_loss(beta, gamma, **kwargs) + alpha * (p + q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         """
@@ -1428,10 +1442,11 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         self._recalculate_cholesky(gamma)
         p = sum(np.abs(beta) >= tolerance)
         q = sum(np.abs(gamma) >= tolerance)
-        return super().loss(beta, gamma, **kwargs) + (p + q) * np.log(
+        return 2 * super().loss(beta, gamma, **kwargs) + (p + q) * np.log(
             self._jones2010n_eff())
 
-    def muller2018ic(self, beta, gamma, tolerance=0., **kwargs):
+
+    def muller_hui_2016ic(self, beta, gamma, tolerance=0., **kwargs):
         """
         Implements Information Criterion (IC) from (Muller, 2018)
 
@@ -1454,13 +1469,13 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         """
         self._recalculate_cholesky(gamma)
         N = self.problem.num_obs
-        n_eff = self._jones2010n_eff()
-        return 2 / N * super().loss(beta, gamma, **kwargs) \
-               + 1 / N * np.log(n_eff) * sum(np.abs(beta) >= tolerance) \
+        # n_eff = self._jones2010n_eff()
+        m = self.problem.num_groups
+        return 2 / N * self.loss(beta, gamma, **kwargs) \
+               + 1 / N * np.log(m) * sum(np.abs(beta) >= tolerance) \
                + 2 / N * sum(np.abs(gamma) >= tolerance)
 
-
-    def vaida2005aic(self, beta, gamma, tolerance=0., **kwargs):
+    def vaida2005aic(self, beta, gamma, tolerance=0., marginalized=False, **kwargs):
         """
         Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
 
@@ -1481,11 +1496,22 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         -------
         Value for Vaida AIC
         """
-        rho = self._hodges2001ddf(gamma)
         n = self.problem.num_obs
         p = sum(np.abs(beta) >= tolerance)
         q = sum(np.abs(gamma) >= tolerance)
-        alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
-        # The likelihood here is conditional in the original paper
-        # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2 * super().loss(beta, gamma, **kwargs) + alpha * (p + q)
+        if marginalized:
+            # mAIC version
+            # See also p 141 eq 10 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            if (n - p - q - 1) > 0:
+                alpha = n / (n - p - q - 1)
+            else:
+                alpha = 1
+            return 2 * super().loss(beta, gamma, **kwargs) + 2 * alpha * (p + q)
+        else:
+            # cAIC version
+            # See also p 143 eq 17 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            rho = self._hodges2001ddf(gamma)
+            alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
+            return 2 * super().demarginalized_loss(beta, gamma, **kwargs) + alpha * (p + q)

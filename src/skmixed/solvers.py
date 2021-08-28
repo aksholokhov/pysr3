@@ -63,8 +63,10 @@ class PGDSolver:
         x_prev = np.infty
         iteration = 0
 
-        if len(logger.keys) > 0:
+        if 'loss' in logger.keys:
             loss = oracle.value_function(x) + regularizer.value(x)
+
+        if len(logger.keys) > 0:
             logger.log(locals())
 
         while np.linalg.norm(x - x_prev) > self.tol and iteration < self.max_iter:
@@ -91,11 +93,15 @@ class PGDSolver:
             y = x + step_len * direction
             x = regularizer.prox(y, step_len)
             iteration += 1
-            if len(logger.keys) > 0:
+
+            if 'loss' in logger.keys:
                 loss = oracle.value_function(x) + regularizer.value(x)
+
+            if len(logger.keys) > 0:
                 logger.log(locals())
 
         logger.add("converged", iteration < self.max_iter)
+        logger.add("iteration", iteration)
 
         return x
 
@@ -159,9 +165,12 @@ class FakePGDSolver:
                                            prox_step_len=self.fixed_step_len,
                                            update_prox_every=self.update_prox_every,
                                            **kwargs)
+        if 'loss' in logger.keys:
+            loss = oracle.value_function(x) + regularizer.value(x)
 
         if len(logger.keys) > 0:
-            loss = oracle.value_function(x) + regularizer.value(x)
             logger.log(locals())
 
+        logger.add("converged", True)
+        logger.add("iteration", 1)
         return x

@@ -56,7 +56,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
     See the paper for more details.
     """
 
-    def __init__(self, logger_keys: Set = ('converged',), initializer: str = "None"):
+    def __init__(self, logger_keys: Set = ('converged', 'iteration'), initializer: str = "None"):
         """
         Initializes the model
 
@@ -233,10 +233,14 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         if "vaida_aic" in self.logger_.keys:
             self.logger_.add("vaida_aic", oracle.vaida2005aic(beta, gamma, tolerance=np.sqrt(solver.tol)))
+        if "vaida_aic_marginalized" in self.logger_.keys:
+            self.logger_.add("vaida_aic_marginalized", oracle.vaida2005aic(beta, gamma,
+                                                                           marginalized=True,
+                                                                           tolerance=np.sqrt(solver.tol)))
         if "jones_bic" in self.logger_.keys:
             self.logger_.add("jones_bic", oracle.jones2010bic(beta, gamma, tolerance=np.sqrt(solver.tol)))
         if "muller_ic" in self.logger_.keys:
-            self.logger_.add("muller_ic", oracle.muller2018ic(beta, gamma, tolerance=np.sqrt(solver.tol)))
+            self.logger_.add("muller_ic", oracle.muller_hui_2016ic(beta, gamma, tolerance=np.sqrt(solver.tol)))
         if "flip_probabilities_beta" in self.logger_.keys:
             self.logger_.add("flip_probabilities_beta", oracle.flip_probabilities_beta(beta, gamma))
 
@@ -454,7 +458,7 @@ class SimpleLMEModel(LMEModel):
         oracle = LinearLMEOracle(problem)
         oracle.instantiate(problem)
         if ic == "muller_ic":
-            return oracle.muller2018ic(**self.coef_)
+            return oracle.muller_hui_2016ic(**self.coef_)
         elif ic == "vaida_aic":
             return oracle.vaida2005aic(**self.coef_)
         elif ic == "jones_bic":
@@ -581,7 +585,7 @@ class SimpleLMEModelSR3(LMEModel):
         oracle = LinearLMEOracleSR3(problem)
         oracle.instantiate(problem)
         if ic == "muller_ic":
-            return oracle.muller2018ic(**self.coef_)
+            return oracle.muller_hui_2016ic(**self.coef_)
         elif ic == "vaida_aic":
             return oracle.vaida2005aic(**self.coef_)
         elif ic == "jones_bic":
