@@ -1471,7 +1471,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         N = self.problem.num_obs
         # n_eff = self._jones2010n_eff()
         m = self.problem.num_groups
-        return 2 / N * self.loss(beta, gamma, **kwargs) \
+        return 2 / N * super().loss(beta, gamma, **kwargs) \
                + 1 / N * np.log(m) * sum(np.abs(beta) >= tolerance) \
                + 2 / N * sum(np.abs(gamma) >= tolerance)
 
