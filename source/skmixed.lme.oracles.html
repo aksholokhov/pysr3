@@ -463,7 +463,7 @@ under the normal posterior.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracle.jones2010bic">
-<span class="sig-name descname"><span class="pre">jones2010bic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracle.jones2010bic" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">jones2010bic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracle.jones2010bic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements Bayes Information Criterion (BIC) from (Jones, 2010)
 # <a class="reference external" href="https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data">https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data</a></p>
 <dl class="field-list simple">
@@ -471,6 +471,8 @@ under the normal posterior.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
 <li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
 <li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
 </ul>
 </dd>
@@ -499,14 +501,18 @@ under the normal posterior.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracle.muller2018ic">
-<span class="sig-name descname"><span class="pre">muller2018ic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracle.muller2018ic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements Information Criterion (IC) from (Muller, 2018)</p>
+<dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracle.muller_hui_2016ic">
+<span class="sig-name descname"><span class="pre">muller_hui_2016ic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracle.muller_hui_2016ic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Information Criterion (IC) from (Muller, 2016)
+<a class="reference external" href="https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1215989">https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1215989</a>
+page 1326, equation 3</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
 <li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
 <li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
 </ul>
 </dd>
@@ -642,13 +648,15 @@ It assumes that all errors have sigma*I covariance matrices, where sigma is a sc
 
 <dl class="py method">
 <dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracle.vaida2005aic">
-<span class="sig-name descname"><span class="pre">vaida2005aic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracle.vaida2005aic" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vaida2005aic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marginalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracle.vaida2005aic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates Akaike Information Criterion (AIC) from <a class="reference external" href="https://www.jstor.org/stable/2673485">https://www.jstor.org/stable/2673485</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
 <li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
 <li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
 </ul>
 </dd>
@@ -865,6 +873,27 @@ and evaluates the loss with this beta and gamma.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracleSR3.jones2010bic">
+<span class="sig-name descname"><span class="pre">jones2010bic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracleSR3.jones2010bic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Bayes Information Criterion (BIC) from (Jones, 2010)
+# <a class="reference external" href="https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data">https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of Jones’s BIC</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracleSR3.loss">
 <span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbeta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracleSR3.loss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the loss function value ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2</p>
@@ -880,6 +909,26 @@ and evaluates the loss with this beta and gamma.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>result</strong> (<em>float</em>) – The value of the loss function: ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracleSR3.muller_hui_2016ic">
+<span class="sig-name descname"><span class="pre">muller_hui_2016ic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracleSR3.muller_hui_2016ic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Information Criterion (IC) from (Muller, 2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of Mueller’s IC</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -909,6 +958,26 @@ adjusted to account for regularization.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of optimal estimates of the fixed effects for given gamma.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skmixed.lme.oracles.LinearLMEOracleSR3.vaida2005aic">
+<span class="sig-name descname"><span class="pre">vaida2005aic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marginalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.lme.oracles.LinearLMEOracleSR3.vaida2005aic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates Akaike Information Criterion (AIC) from <a class="reference external" href="https://www.jstor.org/stable/2673485">https://www.jstor.org/stable/2673485</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value for Vaida AIC</em></p>
 </dd>
 </dl>
 </dd></dl>
