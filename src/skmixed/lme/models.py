@@ -188,8 +188,9 @@ class LMEModel(BaseEstimator, RegressorMixin):
         oracle, regularizer, solver = self.instantiate()
 
         oracle.instantiate(problem)
-        if not fe_regularization_weights:
+        if fe_regularization_weights is None:
             fe_regularization_weights = np.ones(problem.num_fixed_features)
+        if re_regularization_weights is None:
             re_regularization_weights = np.ones(problem.num_random_features)
         regularizer.instantiate(weights=oracle.beta_gamma_to_x(beta=fe_regularization_weights,
                                                                gamma=re_regularization_weights),

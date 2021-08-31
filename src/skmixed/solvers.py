@@ -164,6 +164,7 @@ class FakePGDSolver:
                                            max_iter=self.max_iter,
                                            prox_step_len=self.fixed_step_len,
                                            update_prox_every=self.update_prox_every,
+                                           logger=logger,
                                            **kwargs)
         if 'loss' in logger.keys:
             loss = oracle.value_function(x) + regularizer.value(x)
@@ -172,5 +173,4 @@ class FakePGDSolver:
             logger.log(locals())
 
         logger.add("converged", True)
-        logger.add("iteration", 1)
         return x

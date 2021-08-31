@@ -1228,7 +1228,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                                                                           tgamma=tgamma, **kwargs)
         return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
 
-    def gradient_value_function(self, w):
+    def gradient_value_function(self, w, logger=None, **kwargs):
         """
         Returns the gradient of the value function.
 
@@ -1295,8 +1295,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         return self.beta_gamma_to_x(tbeta, tgamma)
 
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
-                                   log_progress=False, regularizer=None, increase_lambdas=False,
-                                   line_search=False, prox_step_len=1.0, update_prox_every=1,
+                                   regularizer=None, increase_lambdas=False,
+                                   line_search=False, prox_step_len=1.0, update_prox_every=1, logger=None,
                                    **kwargs):
         losses_kkt = []
         if len(tgamma) == 0:
@@ -1319,8 +1319,6 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         mu = 0.1 * v.dot(gamma) / n
         step_len = 1
         iteration = 0
-        if log_progress:
-            self.logger = [gamma]
 
         def F_coord(v, b, g, mu):
             return np.concatenate([
@@ -1395,11 +1393,6 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
                 tbeta, tgamma = self.x_to_beta_gamma(tx)
 
-            losses_kkt.append(np.linalg.norm(F(x, mu)))
-
-            if log_progress:
-                self.logger.append(x[n:])
-
             # adjust barrier relaxation
             mu = 0.1 * v.dot(gamma) / n
 
@@ -1408,14 +1401,21 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 self.lg = 1.2 * (1 + self.lg)
                 tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
                                             or np.linalg.norm(gamma - tgamma) > self.tol_inner)
-                # optimize other components
-        if regularizer and update_prox_every > 0 and iteration < update_prox_every:
-            tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
-            tbeta, tgamma = self.x_to_beta_gamma(tx)
+                # optimize other components (that was happening once at the end only, moved to each iteration
+            if regularizer and update_prox_every > 0 and iteration < update_prox_every:
+                tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
+                tbeta, tgamma = self.x_to_beta_gamma(tx)
+
+            if logger and len(logger.keys) > 0:
+                logger.log(locals())
 
         if self.warm_start:
             self.warm_start_ip["beta"] = beta
             self.warm_start_ip["gamma"] = gamma
+
+        if logger:
+            logger.add("iteration", iteration)
+
         return beta, gamma, tbeta, tgamma, losses_kkt
 
     def jones2010bic(self, beta, gamma, tolerance=0., **kwargs):
