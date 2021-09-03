@@ -505,7 +505,7 @@ class SimpleLMEModelSR3(LMEModel):
                  stepping: str = "fixed",
                  ell: float = 40,
                  logger_keys: Set = ('converged',),
-                 warm_start=False,
+                 warm_start_oracle=True,
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len=None,
@@ -532,7 +532,7 @@ class SimpleLMEModelSR3(LMEModel):
             level of SR3-relaxation
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
-        warm_start: bool
+        warm_start_oracle: bool
             if fitting should be started from the current model's coefficients.
             Used for fine-tuning and iterative fitting.
         practical: bool
@@ -557,7 +557,7 @@ class SimpleLMEModelSR3(LMEModel):
         self.stepping = stepping
         self.logger_keys = logger_keys
         self.fixed_step_len = fixed_step_len
-        self.warm_start = warm_start
+        self.warm_start_oracle = warm_start_oracle
         self.prior = prior
         self.ell = ell
         self.practical = practical
@@ -575,7 +575,7 @@ class SimpleLMEModelSR3(LMEModel):
                                fixed_step_len=fixed_step_len)
         oracle = LinearLMEOracleSR3(None, lb=self.ell, lg=self.ell, tol_inner=self.tol_oracle,
                                     n_iter_inner=self.max_iter_oracle,
-                                    warm_start=self.warm_start, prior=self.prior)
+                                    warm_start=self.warm_start_oracle, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
         regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
         return oracle, regularizer, solver
@@ -701,7 +701,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                  nnz_tbeta: int = 1,
                  nnz_tgamma: int = 1,
                  logger_keys: Set = ('converged',),
-                 warm_start=False,
+                 warm_start_oracle=True,
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len=None,
@@ -734,7 +734,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
             the maximal number of non-zero random effects in your model
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
-        warm_start: bool
+        warm_start_oracle: bool
             if fitting should be started from the current model's coefficients.
             Used for fine-tuning and iterative fitting.
         practical: bool
@@ -758,7 +758,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                          max_iter_oracle=max_iter_oracle,
                          max_iter_solver=max_iter_solver,
                          stepping=stepping,
-                         warm_start=warm_start,
+                         warm_start_oracle=warm_start_oracle,
                          practical=practical,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
@@ -855,7 +855,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                  ell: float = 40,
                  lam: float = 1,
                  logger_keys: Set = ('converged',),
-                 warm_start=False,
+                 warm_start_oracle=True,
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len=None,
@@ -886,7 +886,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
             0 if the feature should be affected by the regularizer, 0 otherwise
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
-        warm_start: bool
+        warm_start_oracle: bool
             if fitting should be started from the current model's coefficients.
             Used for fine-tuning and iterative fitting.
         practical: bool
@@ -910,7 +910,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                          max_iter_oracle=max_iter_oracle,
                          max_iter_solver=max_iter_solver,
                          stepping=stepping,
-                         warm_start=warm_start,
+                         warm_start_oracle=warm_start_oracle,
                          practical=practical,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
@@ -1009,7 +1009,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                  rho: float = 0.3,
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
-                 warm_start=False,
+                 warm_start_oracle=True,
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len=None,
@@ -1042,7 +1042,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
             0 if the feature should be affected by the regularizer, 0 otherwise
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
-        warm_start: bool
+        warm_start_oracle: bool
             if fitting should be started from the current model's coefficients.
             Used for fine-tuning and iterative fitting.
         practical: bool
@@ -1066,7 +1066,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                          max_iter_oracle=max_iter_oracle,
                          max_iter_solver=max_iter_solver,
                          stepping=stepping,
-                         warm_start=warm_start,
+                         warm_start_oracle=warm_start_oracle,
                          practical=practical,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
@@ -1171,7 +1171,7 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                  sigma: float = 0.5,  # same
                  lam: float = 1.0,
                  logger_keys: Set = ('converged',),
-                 warm_start=False,
+                 warm_start_oracle=True,
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len=None,
@@ -1206,7 +1206,7 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
             0 if the feature should be affected by the regularizer, 0 otherwise
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
-        warm_start: bool
+        warm_start_oracle: bool
             if fitting should be started from the current model's coefficients.
             Used for fine-tuning and iterative fitting.
         practical: bool
@@ -1230,7 +1230,7 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                          max_iter_oracle=max_iter_oracle,
                          max_iter_solver=max_iter_solver,
                          stepping=stepping,
-                         warm_start=warm_start,
+                         warm_start_oracle=warm_start_oracle,
                          practical=practical,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
