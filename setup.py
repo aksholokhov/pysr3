@@ -7,7 +7,7 @@ if __name__ == "__main__":
     src_dir = base_dir / 'src'
 
     about = {}
-    with (src_dir / "skmixed" / "__about__.py").open() as f:
+    with (src_dir / "pysr3" / "__about__.py").open() as f:
         exec(f.read(), about)
 
     install_requirements = [t.strip() for t in open("requirements.txt", 'r').readlines()]
@@ -18,7 +18,9 @@ if __name__ == "__main__":
 
     doc_requirements = [
         'sphinx',
-        'sphinxbootstrap4theme'
+        'sphinx-rtd-theme'
+        'nbconvert',
+        'nbformat'
     ]
 
     setup(

@@ -1,0 +1,41 @@
+name: Build & Publish Docs with Sphinx
+
+on: [ push ]
+
+
+jobs:
+  release:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: r-lib/actions/setup-pandoc@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python setup.py develop
+          pip install jupyter nbconvert nbformat sphinx sphinx-rtd-theme
+      - name: Convert Jupytet Notebooks to Documentation Pages
+        run: |
+          cd docs
+          jupyter nbconvert --to rst quickstart.ipynb
+          jupyter nbconvert --to rst models_overview.ipynb
+          jupyter nbconvert --to rst community_guidelines.ipynb
+          cd ..
+      - name: Generate API docs & Build sphinx documentation
+        run: |
+          cd docs
+          sphinx-apidoc --separate -f -o source/ ../src/pysr3
+          make clean
+          make html
+          cd ..
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: docs/_build/html # The folder the action should deploy.

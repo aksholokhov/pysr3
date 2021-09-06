@@ -4,9 +4,9 @@ Implements general purpose numerical solvers, like PGD
 
 import numpy as np
 
-from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
-from skmixed.logger import Logger
-from skmixed.regularizers import Regularizer
+from pysr3.lme.oracles import LinearLMEOracle
+from pysr3.logger import Logger
+from pysr3.regularizers import Regularizer
 
 
 class PGDSolver:
@@ -63,8 +63,10 @@ class PGDSolver:
         x_prev = np.infty
         iteration = 0
 
-        if len(logger.keys) > 0:
+        if 'loss' in logger.keys:
             loss = oracle.value_function(x) + regularizer.value(x)
+
+        if len(logger.keys) > 0:
             logger.log(locals())
 
         while np.linalg.norm(x - x_prev) > self.tol and iteration < self.max_iter:
@@ -76,7 +78,6 @@ class PGDSolver:
                 step_len = self.fixed_step_len
                 while step_len > 1e-14:
                     y = x + step_len * direction
-                    y[oracle.problem.num_fixed_effects:] = np.clip(y[oracle.problem.num_fixed_effects:], 0, None)
                     z = regularizer.prox(y, step_len)
                     if oracle.value_function(z) <= oracle.value_function(x) - direction.dot(z - x) + (
                             1 / (2 * step_len)) * np.linalg.norm(z - x) ** 2:
@@ -90,14 +91,17 @@ class PGDSolver:
                 step_len = self.fixed_step_len
 
             y = x + step_len * direction
-            y[oracle.problem.num_fixed_effects:] = np.clip(y[oracle.problem.num_fixed_effects:], 0, None)
             x = regularizer.prox(y, step_len)
             iteration += 1
-            if len(logger.keys) > 0:
+
+            if 'loss' in logger.keys:
                 loss = oracle.value_function(x) + regularizer.value(x)
+
+            if len(logger.keys) > 0:
                 logger.log(locals())
 
         logger.add("converged", iteration < self.max_iter)
+        logger.add("iteration", iteration)
 
         return x
 
@@ -110,7 +114,7 @@ class FakePGDSolver:
     updated together with the original ones inside of the oracle's subroutine.
     """
 
-    def __init__(self, fixed_step_len=1, update_prox_every=1):
+    def __init__(self, tol=1e-4, max_iter=1000, fixed_step_len=1, update_prox_every=1):
         """
         Initializes the solver
 
@@ -123,8 +127,10 @@ class FakePGDSolver:
         """
         self.fixed_step_len = fixed_step_len
         self.update_prox_every = update_prox_every
+        self.tol = tol
+        self.max_iter = max_iter
 
-    def optimize(self, x0, oracle: LinearLMEOracleSR3 = None, regularizer: Regularizer = None, logger: Logger = None,
+    def optimize(self, x0, oracle=None, regularizer: Regularizer = None, logger: Logger = None,
                  **kwargs):
         """
         Solves the optimization problem for
@@ -152,12 +158,19 @@ class FakePGDSolver:
         if not regularizer:
             raise ValueError("regularizer can't be None")
 
-        x = oracle.find_optimal_parameters(x0, regularizer=regularizer, prox_step_len=self.fixed_step_len,
+        x = oracle.find_optimal_parameters(x0,
+                                           regularizer=regularizer,
+                                           tol=self.tol,
+                                           max_iter=self.max_iter,
+                                           prox_step_len=self.fixed_step_len,
                                            update_prox_every=self.update_prox_every,
+                                           logger=logger,
                                            **kwargs)
+        if 'loss' in logger.keys:
+            loss = oracle.value_function(x) + regularizer.value(x)
 
         if len(logger.keys) > 0:
-            loss = oracle.value_function(x) + regularizer.value(x)
             logger.log(locals())
 
+        logger.add("converged", True)
         return x

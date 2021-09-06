@@ -24,8 +24,8 @@ from scipy import stats
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.optimize import minimize
 
-from skmixed.lme.problems import LinearLMEProblem
-from skmixed.priors import NonInformativePrior
+from pysr3.lme.priors import NonInformativePriorLME
+from pysr3.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
 
 
 class LinearLMEOracle:
@@ -42,11 +42,11 @@ class LinearLMEOracle:
 
         𝜺_i ~ 𝒩(0, Λ)
 
-    The problem should be provided as LinearLMEProblem.
+    The problem should be provided as LMEProblem.
 
     """
 
-    def __init__(self, problem: Optional[LinearLMEProblem],
+    def __init__(self, problem: Optional[LMEProblem],
                  n_iter_inner=200,
                  tol_inner=1e-6,
                  warm_start_duals=False,
@@ -56,7 +56,7 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        problem : LinearLMEProblem
+        problem : LMEProblem
             set of data and answers. See docs for LinearLMEProblem class for more details.
         n_iter_inner : int
             maximal number of iterations for the oracle's numerical subroutines, if any
@@ -68,7 +68,7 @@ class LinearLMEOracle:
             additional prior for the oracle, see skmixed.priors for more info.
         """
         self.problem = problem
-        self.prior = prior if prior else NonInformativePrior()
+        self.prior = prior if prior else NonInformativePriorLME()
         self.beta_to_gamma_map = None
         self.omega_cholesky_inv = []
         self.omega_cholesky = []
@@ -87,7 +87,7 @@ class LinearLMEOracle:
 
         Parameters
         ----------
-        problem: LinearLMEProblem
+        problem: LMEProblem
             problem to attach
 
         Returns
@@ -96,16 +96,17 @@ class LinearLMEOracle:
 
         """
         self.problem = problem
-        beta_to_gamma_map = np.zeros(self.problem.num_fixed_effects)
+        beta_to_gamma_map = np.zeros(self.problem.num_fixed_features)
         beta_counter = 0
         gamma_counter = 0
-        for label in self.problem.column_labels:
-            if label == 1:
+        for label in ([
+            self.problem.intercept_label] if self.problem.intercept_label else []) + self.problem.column_labels:
+            if label == FIXED:
                 beta_to_gamma_map[beta_counter] = -1
                 beta_counter += 1
-            elif label == 2:
+            elif label == RANDOM:
                 gamma_counter += 1
-            elif label == 3:
+            elif label == FIXED_RANDOM:
                 beta_to_gamma_map[beta_counter] = gamma_counter
                 beta_counter += 1
                 gamma_counter += 1
@@ -149,13 +150,15 @@ class LinearLMEOracle:
                 if all the Cholesky factors were updated and stored successfully, otherwise raises and error
         """
 
-        if (self.gamma != gamma).any():
+        if (self.gamma != gamma).any() or len(gamma) == 0:
             self.omega_cholesky = []
             self.omega_cholesky_inv = []
             gamma_mat = np.diag(gamma)
             invert_upper_triangular: Callable[[np.ndarray], np.ndarray] = get_lapack_funcs("trtri")
             for x, y, z, stds in self.problem:
-                omega = z.dot(gamma_mat).dot(z.T) + np.diag(stds)
+                omega = np.diag(stds)
+                if len(gamma) > 0:
+                    omega += z.dot(gamma_mat).dot(z.T)
                 el = np.linalg.cholesky(omega)
                 el_inv = invert_upper_triangular(el.T)[0].T
                 self.omega_cholesky.append(el)
@@ -262,7 +265,7 @@ class LinearLMEOracle:
                 Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄).
         """
         self._recalculate_cholesky(gamma)
-        num_random_effects = self.problem.num_random_effects
+        num_random_effects = self.problem.num_random_features
         hessian = np.zeros(shape=(num_random_effects, num_random_effects))
         for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
@@ -439,7 +442,7 @@ class LinearLMEOracle:
         the gradient of the loss function with respect to beta
         """
         self._recalculate_cholesky(gamma)
-        gradient = np.zeros(self.problem.num_fixed_effects)
+        gradient = np.zeros(self.problem.num_fixed_features)
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             gradient += - (L_inv.dot(x)).T.dot(L_inv.dot(xi))
@@ -463,7 +466,7 @@ class LinearLMEOracle:
         Hessian of the loss function with respect to beta
         """
         self._recalculate_cholesky(gamma)
-        hessian = np.zeros((self.problem.num_fixed_effects, self.problem.num_fixed_effects))
+        hessian = np.zeros((self.problem.num_fixed_features, self.problem.num_fixed_features))
         for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             Lx = L_inv.dot(x)
             hessian += Lx.T.dot(Lx)
@@ -517,7 +520,7 @@ class LinearLMEOracle:
         Hessian of the loss function with respect to (beta, gamma)
         """
         self._recalculate_cholesky(gamma)
-        hessian = np.zeros((self.problem.num_random_effects, self.problem.num_fixed_effects))
+        hessian = np.zeros((self.problem.num_random_features, self.problem.num_fixed_features))
         for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             el_x = el_inv.dot(x)
@@ -539,8 +542,8 @@ class LinearLMEOracle:
         -------
         Tuple of numpy arrays: beta and gamma
         """
-        beta = x[:self.problem.num_fixed_effects]
-        gamma = x[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects]
+        beta = x[:self.problem.num_fixed_features]
+        gamma = x[self.problem.num_fixed_features:self.problem.num_fixed_features + self.problem.num_random_features]
         return beta, gamma
 
     @staticmethod
@@ -600,8 +603,8 @@ class LinearLMEOracle:
         """
         beta, gamma = self.x_to_beta_gamma(x)
         gradient = np.zeros(len(x))
-        gradient[:self.problem.num_fixed_effects] = self.gradient_beta(beta, gamma)
-        gradient[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects] = \
+        gradient[:self.problem.num_fixed_features] = self.gradient_beta(beta, gamma)
+        gradient[self.problem.num_fixed_features:self.problem.num_fixed_features + self.problem.num_random_features] = \
             self.gradient_gamma(beta, gamma)
         return gradient
 
@@ -766,7 +769,7 @@ class LinearLMEOracle:
             n_eff += np.linalg.inv(c).sum()
         return n_eff
 
-    def jones2010bic(self, beta, gamma, **kwargs):
+    def jones2010bic(self, beta, gamma, tolerance=0., **kwargs):
         """
         Implements Bayes Information Criterion (BIC) from (Jones, 2010)
         # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
@@ -777,6 +780,9 @@ class LinearLMEOracle:
             Vector of estimates of fixed effects.
         gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -785,14 +791,16 @@ class LinearLMEOracle:
         Value of Jones's BIC
         """
         self._recalculate_cholesky(gamma)
-        p = sum(beta != 0)
-        q = sum(gamma != 0)
-        return self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + (p + q) * np.log(
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
+        return 2 * self.loss(beta, gamma, **kwargs) + (p + q) * np.log(
             self._jones2010n_eff())
 
-    def muller2018ic(self, beta, gamma, **kwargs):
+    def muller_hui_2016ic(self, beta, gamma, tolerance=0., **kwargs):
         """
-        Implements Information Criterion (IC) from (Muller, 2018)
+        Implements Information Criterion (IC) from (Muller, 2016)
+        https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1215989
+        page 1326, equation 3
 
         Parameters
         ----------
@@ -800,6 +808,10 @@ class LinearLMEOracle:
             Vector of estimates of fixed effects.
         gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -809,10 +821,11 @@ class LinearLMEOracle:
         """
         self._recalculate_cholesky(gamma)
         N = self.problem.num_obs
-        n_eff = self._jones2010n_eff()
-        return 2 / N * self.value_function(self.beta_gamma_to_x(beta, gamma)) \
-               + 1 / N * np.log(n_eff) * sum(beta != 0) \
-               + 2 / N * sum(gamma != 0)
+        # n_eff = self._jones2010n_eff()
+        m = self.problem.num_groups
+        return 2 / N * self.loss(beta, gamma, **kwargs) \
+               + 1 / N * np.log(m) * sum(np.abs(beta) >= tolerance) \
+               + 2 / N * sum(np.abs(gamma) >= tolerance)
 
     def _hat_matrix(self, gamma):
         """
@@ -857,7 +870,7 @@ class LinearLMEOracle:
             gamma_masked = gamma[mask]
             h_gamma_kernel = np.diag(1 / gamma_masked) + z_masked.T.dot(stds_inv_mat).dot(z_masked)
             h_gamma_tail = z_masked.T.dot(stds_inv_mat)
-            h_gamma_i = np.zeros((self.problem.num_random_effects, z.shape[0]))
+            h_gamma_i = np.zeros((self.problem.num_random_features, z.shape[0]))
             h_gamma_i[mask, :] = np.linalg.inv(h_gamma_kernel).dot(h_gamma_tail)
             random_effects_parts.append(z.dot(h_gamma_i))
 
@@ -885,7 +898,7 @@ class LinearLMEOracle:
         h_matrix = self._hat_matrix(gamma)
         return np.trace(h_matrix)
 
-    def vaida2005aic(self, beta, gamma, **kwargs):
+    def vaida2005aic(self, beta, gamma, tolerance=0., marginalized=False, **kwargs):
         """
         Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
 
@@ -895,6 +908,10 @@ class LinearLMEOracle:
             Vector of estimates of fixed effects.
         gamma : np.ndarray, shape = [q]
             Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -902,14 +919,25 @@ class LinearLMEOracle:
         -------
         Value for Vaida AIC
         """
-        rho = self._hodges2001ddf(gamma)
         n = self.problem.num_obs
-        p = sum(beta != 0)
-        q = sum(gamma != 0)
-        alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
-        # The likelihood here is conditional in the original paper
-        # i.e. L(beta, gamma, us), but I put marginalized likelihood instead.
-        return 2 * self.value_function(self.beta_gamma_to_x(beta, gamma), **kwargs) + alpha * (p + q)
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
+        if marginalized:
+            # mAIC version
+            # See also p 141 eq 10 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            if (n - p - q - 1) > 0:
+                alpha = n / (n - p - q - 1)
+            else:
+                alpha = 1
+            return 2 * self.loss(beta, gamma, **kwargs) + 2 * alpha * (p + q)
+        else:
+            # cAIC version
+            # See also p 143 eq 17 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            rho = self._hodges2001ddf(gamma)
+            alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
+            return 2 * self.demarginalized_loss(beta, gamma, **kwargs) + alpha * (p + q)
 
     def get_ic(self, ic, beta, gamma, **kwargs):
         """
@@ -961,17 +989,17 @@ class LinearLMEOracle:
 class LinearLMEOracleSR3(LinearLMEOracle):
     """
        Implements Sparse Relaxed Regularized Regression (SR3) for Linear Mixed-Effects Model.
-       The problem should be provided as LinearLMEProblem.
+       The problem should be provided as LMEProblem.
 
        """
 
-    def __init__(self, problem: Optional[LinearLMEProblem], lb=0.1, lg=0.1, warm_start=True, **kwargs):
+    def __init__(self, problem: Optional[LMEProblem], lb=0.1, lg=0.1, warm_start=True, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
         Parameters
         ----------
-        problem: LinearLMEProblem
+        problem: LMEProblem
             The set of data and answers. See the docs for LinearLMEProblem for more details.
         lb : float
             Regularization coefficient (inverse std) for ||β - tβ||^2
@@ -1054,7 +1082,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 Hessian of the loss function with respect to gamma.
         """
 
-        return super().hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_effects)
+        return super().hessian_gamma(beta, gamma, **kwargs) + self.lg * np.eye(self.problem.num_random_features)
 
     def gradient_beta(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, **kwargs) -> np.ndarray:
         """
@@ -1095,7 +1123,42 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             hessian: np.ndarray, shape = [q, q]
                 Hessian of the loss function with respect to gamma
         """
-        return super().hessian_beta(beta, gamma, **kwargs) + self.lb * np.eye(self.problem.num_fixed_effects)
+        return super().hessian_beta(beta, gamma, **kwargs) + self.lb * np.eye(self.problem.num_fixed_features)
+
+    def optimal_beta(self, gamma: np.ndarray, tbeta: np.ndarray = None, _dont_solve_wrt_beta=False, **kwargs):
+        """
+        Returns beta (vector of estimations of fixed effects) which minimizes loss function for a fixed gamma.
+        The algorithm for computing optimal beta is::
+
+            kernel = ∑X_i^TΩ_iX_i
+            tail = ∑X_i^TΩ_iY_i
+            β = (kernel + I*lb)^{-1}*(tail + lb*tbeta)
+
+        It's available almost exclusively in linear models. In general one should use gradient_beta and do iterative
+        minimization instead.
+
+        Parameters
+        ----------
+        gamma : np.ndarray, shape = [k]
+            Vector of estimates of random effects.
+        tbeta : np.ndarray, shape = [n]
+            Vector of (nnz_tbeta)-sparse estimates for fixed effects.
+        _dont_solve_wrt_beta : bool, Optional
+            If true, then it does not perform the outer matrix inversion and returns the (kernel, tail) instead.
+            It's left here for the purposes of use in child classes where both the kernel and the tail should be
+            adjusted to account for regularization.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        beta: np.ndarray, shape = [n]
+            Vector of optimal estimates of the fixed effects for given gamma.
+        """
+        kernel, tail = super().optimal_beta(gamma, _dont_solve_wrt_beta=True, **kwargs)
+        if _dont_solve_wrt_beta:
+            return kernel, tail
+        return np.linalg.solve(self.lb * np.eye(self.problem.num_fixed_features) + kernel, self.lb * tbeta + tail)
 
     def joint_loss(self, x, w=None, *args, **kwargs):
         """
@@ -1140,8 +1203,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         """
         beta, gamma = self.x_to_beta_gamma(x)
         gradient = np.zeros(len(x))
-        gradient[:self.problem.num_fixed_effects] = self.gradient_beta(beta, gamma, tbeta=tbeta)
-        gradient[self.problem.num_fixed_effects:self.problem.num_fixed_effects + self.problem.num_random_effects] = \
+        gradient[:self.problem.num_fixed_features] = self.gradient_beta(beta, gamma, tbeta=tbeta)
+        gradient[self.problem.num_fixed_features:self.problem.num_fixed_features + self.problem.num_random_features] = \
             self.gradient_gamma(beta, gamma, tgamma=tgamma)
         return gradient
 
@@ -1165,7 +1228,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                                                                           tgamma=tgamma, **kwargs)
         return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
 
-    def gradient_value_function(self, w):
+    def gradient_value_function(self, w, logger=None, **kwargs):
         """
         Returns the gradient of the value function.
 
@@ -1179,10 +1242,11 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         Gradient of the value function
         """
         tbeta, tgamma = self.x_to_beta_gamma(w)
+
         beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
                                                                           tgamma=tgamma)
         x = self.beta_gamma_to_x(beta, gamma)
-        lambdas = np.array([self.lb] * self.problem.num_fixed_effects + [self.lg] * self.problem.num_random_effects)
+        lambdas = np.array([self.lb] * self.problem.num_fixed_features + [self.lg] * self.problem.num_random_features)
         return -lambdas * (x - w)
 
     def find_optimal_parameters(self, w, log_progress=False, regularizer=None, increase_lambdas=False,
@@ -1231,9 +1295,15 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         return self.beta_gamma_to_x(tbeta, tgamma)
 
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
-                                   log_progress=False, regularizer=None, increase_lambdas=False,
-                                   line_search=False, prox_step_len=1.0, update_prox_every=1,
+                                   regularizer=None, increase_lambdas=False,
+                                   line_search=False, prox_step_len=1.0, update_prox_every=1, logger=None,
                                    **kwargs):
+        losses_kkt = []
+        if len(tgamma) == 0:
+            beta = self.optimal_beta(gamma=tgamma, tbeta=tbeta)
+            gamma = tgamma
+            return beta, gamma, tbeta, tgamma, losses_kkt
+
         n = len(gamma)
         I = np.eye(n)
         Zb = np.zeros((len(gamma), len(beta)))
@@ -1249,9 +1319,6 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         mu = 0.1 * v.dot(gamma) / n
         step_len = 1
         iteration = 0
-        if log_progress:
-            self.logger = [gamma]
-        losses_kkt = []
 
         def F_coord(v, b, g, mu):
             return np.concatenate([
@@ -1326,11 +1393,6 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
                 tbeta, tgamma = self.x_to_beta_gamma(tx)
 
-            losses_kkt.append(np.linalg.norm(F(x, mu)))
-
-            if log_progress:
-                self.logger.append(x[n:])
-
             # adjust barrier relaxation
             mu = 0.1 * v.dot(gamma) / n
 
@@ -1339,12 +1401,117 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 self.lg = 1.2 * (1 + self.lg)
                 tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
                                             or np.linalg.norm(gamma - tgamma) > self.tol_inner)
-                # optimize other components
-        if regularizer and update_prox_every > 0 and iteration < update_prox_every:
-            tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
-            tbeta, tgamma = self.x_to_beta_gamma(tx)
+                # optimize other components (that was happening once at the end only, moved to each iteration
+            if regularizer and update_prox_every > 0 and iteration < update_prox_every:
+                tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
+                tbeta, tgamma = self.x_to_beta_gamma(tx)
+
+            if logger and len(logger.keys) > 0:
+                logger.log(locals())
 
         if self.warm_start:
             self.warm_start_ip["beta"] = beta
             self.warm_start_ip["gamma"] = gamma
+
+        if logger:
+            logger.add("iteration", iteration)
+
         return beta, gamma, tbeta, tgamma, losses_kkt
+
+    def jones2010bic(self, beta, gamma, tolerance=0., **kwargs):
+        """
+        Implements Bayes Information Criterion (BIC) from (Jones, 2010)
+        # https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        Value of Jones's BIC
+        """
+        self._recalculate_cholesky(gamma)
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
+        return 2 * super().loss(beta, gamma, **kwargs) + (p + q) * np.log(
+            self._jones2010n_eff())
+
+
+    def muller_hui_2016ic(self, beta, gamma, tolerance=0., **kwargs):
+        """
+        Implements Information Criterion (IC) from (Muller, 2018)
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        Value of Mueller's IC
+        """
+        self._recalculate_cholesky(gamma)
+        N = self.problem.num_obs
+        # n_eff = self._jones2010n_eff()
+        m = self.problem.num_groups
+        return 2 / N * super().loss(beta, gamma, **kwargs) \
+               + 1 / N * np.log(m) * sum(np.abs(beta) >= tolerance) \
+               + 2 / N * sum(np.abs(gamma) >= tolerance)
+
+    def vaida2005aic(self, beta, gamma, tolerance=0., marginalized=False, **kwargs):
+        """
+        Calculates Akaike Information Criterion (AIC) from https://www.jstor.org/stable/2673485
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [p]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [q]
+            Vector of estimates of random effects.
+        tolerance : float, positive
+            Threshold for absolute values of beta and gamma being considered zero.
+            Should account for the finite tolerance of the numerical solver.
+
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        Value for Vaida AIC
+        """
+        n = self.problem.num_obs
+        p = sum(np.abs(beta) >= tolerance)
+        q = sum(np.abs(gamma) >= tolerance)
+        if marginalized:
+            # mAIC version
+            # See also p 141 eq 10 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            if (n - p - q - 1) > 0:
+                alpha = n / (n - p - q - 1)
+            else:
+                alpha = 1
+            return 2 * super().loss(beta, gamma, **kwargs) + 2 * alpha * (p + q)
+        else:
+            # cAIC version
+            # See also p 143 eq 17 here
+            # https://projecteuclid.org/journals/statistical-science/volume-28/issue-2/Model-Selection-in-Linear-Mixed-Models/10.1214/12-STS410.short
+            rho = self._hodges2001ddf(gamma)
+            alpha = 2 * n / (n - p - 2) * (rho - (rho - p) / (n - p))
+            return 2 * super().demarginalized_loss(beta, gamma, **kwargs) + alpha * (p + q)
