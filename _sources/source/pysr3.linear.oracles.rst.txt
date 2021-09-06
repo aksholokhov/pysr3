@@ -1,7 +1,7 @@
-skmixed.regularizers module
+pysr3.linear.oracles module
 ===========================
 
-.. automodule:: skmixed.regularizers
+.. automodule:: pysr3.linear.oracles
    :members:
    :undoc-members:
    :show-inheritance:

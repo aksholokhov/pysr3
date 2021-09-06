@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Models Overview &mdash; skmixed 0.2.0 documentation</title>
+  <title>Models Overview &mdash; PySR3 0.3.0 documentation</title>
   
 
   
@@ -43,7 +43,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Community Guidelines" href="community_guidelines.html" />
-    <link rel="prev" title="Quickstart with skmixed" href="quickstart.html" /> 
+    <link rel="prev" title="Quickstart with pysr3" href="quickstart.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -57,7 +57,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> skmixed
+            <a href="index.html" class="icon icon-home"> PySR3
           
 
           
@@ -127,7 +127,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">skmixed</a>
+          <a href="index.html">PySR3</a>
         
       </nav>
 
@@ -189,7 +189,7 @@ your goals.</p>
 <h2>Table of Models<a class="headerlink" href="#table-of-models" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="linear-models">
 <h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline">¶</a></h3>
-<p>Located in <code class="docutils literal notranslate"><span class="pre">skmixed.linear</span></code> submodule</p>
+<p>Located in <code class="docutils literal notranslate"><span class="pre">pysr3.linear</span></code> submodule</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27%" />
@@ -270,7 +270,7 @@ functionality.</p>
 <p>The library currently implements five popular regularizers: L0, LASSO,
 A-LASSO, CAD, and SCAD. Below we plot the values and the proximal
 mappings for three of them:</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skmixed.regularizers</span> <span class="kn">import</span> <span class="n">L1Regularizer</span><span class="p">,</span> <span class="n">CADRegularizer</span><span class="p">,</span> <span class="n">SCADRegularizer</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pysr3.regularizers</span> <span class="kn">import</span> <span class="n">L1Regularizer</span><span class="p">,</span> <span class="n">CADRegularizer</span><span class="p">,</span> <span class="n">SCADRegularizer</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
@@ -294,8 +294,8 @@ mappings for three of them:</p>
 loss-funciton with a sum of absolute values of the model’s coefficients:</p>
 <div class="math notranslate nohighlight">
 \[R(x) =  \lambda \|x\|_1\]</div>
-<p>In <code class="docutils literal notranslate"><span class="pre">skmixed</span></code>, it’s implemented as
-<code class="docutils literal notranslate"><span class="pre">skmixed.regularizers.L1Regularizer</span></code> class.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>, it’s implemented as <code class="docutils literal notranslate"><span class="pre">pysr3.regularizers.L1Regularizer</span></code>
+class.</p>
 <p><span class="math notranslate nohighlight">\(\lambda\)</span> is a hyper-parameter that controls the strength of the
 regularization. Larger values of <span class="math notranslate nohighlight">\(\lambda\)</span> lead to sparser sets of
 coefficients. The optimal value is normally set via cross-validation
@@ -309,10 +309,10 @@ Quickstart tutorial.</p>
 problem – as weights for LASSO penalty:</p>
 <div class="math notranslate nohighlight">
 \[R(x) = \lambda\sum_{i=1}^n \frac{|x_i|}{|\bar{x}_i|}\]</div>
-<p>In <code class="docutils literal notranslate"><span class="pre">skmixed</span></code>, A-LASSO can be implemented by providing custom
+<p>In <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>, A-LASSO can be implemented by providing custom
 regularization weights to LASSO model:</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skmixed.linear.problems</span> <span class="kn">import</span> <span class="n">LinearProblem</span>
-<span class="kn">from</span> <span class="nn">skmixed.linear.models</span> <span class="kn">import</span> <span class="n">SimpleLinearModel</span><span class="p">,</span> <span class="n">LinearL1Model</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pysr3.linear.problems</span> <span class="kn">import</span> <span class="n">LinearProblem</span>
+<span class="kn">from</span> <span class="nn">pysr3.linear.models</span> <span class="kn">import</span> <span class="n">SimpleLinearModel</span><span class="p">,</span> <span class="n">LinearL1Model</span>
 
 <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">LinearProblem</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">num_objects</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">true_x</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">to_x_y</span><span class="p">()</span>
 <span class="n">non_regularized_coefficients</span> <span class="o">=</span> <span class="n">SimpleLinearModel</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
@@ -328,8 +328,8 @@ When the values of the coefficients are less than a hyper-parameter
 <span class="math notranslate nohighlight">\(\rho\)</span> – it works like LASSO, but it does not penalize the
 coefficients that are bigger than that in their absolute value. It
 addresses an issue of LASSO penalizing big coefficients too much.</p>
-<p>In <code class="docutils literal notranslate"><span class="pre">skmixed</span></code>, CAD regularizer is implemented as
-<code class="docutils literal notranslate"><span class="pre">skmixed.regularizers.CADRegularizer</span></code>.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>, CAD regularizer is implemented as
+<code class="docutils literal notranslate"><span class="pre">pysr3.regularizers.CADRegularizer</span></code>.</p>
 </div>
 <div class="section" id="scad">
 <h3>SCAD<a class="headerlink" href="#scad" title="Permalink to this headline">¶</a></h3>
@@ -338,18 +338,18 @@ of SCAD. Instead of imposing a hard threshold, it uses 2-knot smooth
 spline interpolation to connect the flat and the absolute value parts.
 The knots of the spline are located at points <span class="math notranslate nohighlight">\(\rho\)</span> and
 <span class="math notranslate nohighlight">\(\sigma\rho\)</span>.</p>
-<p>In <code class="docutils literal notranslate"><span class="pre">skmixed</span></code>, SCAD regularizer is implemented as
-<code class="docutils literal notranslate"><span class="pre">skmixed.regularizers.CADRegularizer</span></code>.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>, SCAD regularizer is implemented as
+<code class="docutils literal notranslate"><span class="pre">pysr3.regularizers.CADRegularizer</span></code>.</p>
 </div>
 </div>
 <div class="section" id="regular-pgd-vs-sr3-pgd">
 <h2>Regular PGD vs SR3-PGD<a class="headerlink" href="#regular-pgd-vs-sr3-pgd" title="Permalink to this headline">¶</a></h2>
 <p>Proximal Gradient Descent (PGD) is currently the core numerical solver
-for <code class="docutils literal notranslate"><span class="pre">skmixed</span></code>. It has a very simple form of iteration that requires
-only gradient information of the loss function and the proximal operator
-of the regularizer:</p>
+for <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>. It has a very simple form of iteration that requires only
+gradient information of the loss function and the proximal operator of
+the regularizer:</p>
 <p><span class="math notranslate nohighlight">\(x_{k+1} = \text{prox}_{\alpha R}(x_k - \alpha \nabla f(x_k))\)</span></p>
-<p>The core methodological innovation of <code class="docutils literal notranslate"><span class="pre">skmixed</span></code> is Sparse Relaxed
+<p>The core methodological innovation of <code class="docutils literal notranslate"><span class="pre">pysr3</span></code> is Sparse Relaxed
 Regularized Regression (SR3) framework. It improves the conditioning of
 the loss function, that leads to faster convergence and more accurate
 feature selection.</p>
@@ -358,8 +358,8 @@ likelihood for a Linear Mixed-Effect Model. Notice that the same
 optimization method takes nearly two orders of magnitude less iterations
 to converge.</p>
 <p><img alt="image0" src="_images/sr3_mixed_intuition.png" /></p>
-<p>Every model in skmixed has its SR3-empowered version. For all of them,
-the parameter <code class="docutils literal notranslate"><span class="pre">ell</span></code> controls the degree of relaxation, with larger
+<p>Every model in pysr3 has its SR3-empowered version. For all of them, the
+parameter <code class="docutils literal notranslate"><span class="pre">ell</span></code> controls the degree of relaxation, with larger
 parameter values giving tighter relaxations. <code class="docutils literal notranslate"><span class="pre">ell</span></code> can be left to its
 default value or can be found via grid-search simultaneously with
 <span class="math notranslate nohighlight">\(\lambda\)</span>.</p>
@@ -373,7 +373,7 @@ default value or can be found via grid-search simultaneously with
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="community_guidelines.html" class="btn btn-neutral float-right" title="Community Guidelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart with skmixed" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart with pysr3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

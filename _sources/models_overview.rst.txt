@@ -12,7 +12,7 @@ Table of Models
 Linear Models
 ~~~~~~~~~~~~~
 
-Located in ``skmixed.linear`` submodule
+Located in ``pysr3.linear`` submodule
 
 ================= ===================== ========================
 Regularizer       without SR3           with SR3
@@ -51,7 +51,7 @@ mappings for three of them:
 
 .. code:: ipython3
 
-    from skmixed.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer
+    from pysr3.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer
     import numpy as np
     from matplotlib import pyplot as plt
     
@@ -80,8 +80,8 @@ loss-funciton with a sum of absolute values of the model’s coefficients:
 
 .. math:: R(x) =  \lambda \|x\|_1
 
-In ``skmixed``, it’s implemented as
-``skmixed.regularizers.L1Regularizer`` class.
+In ``pysr3``, it’s implemented as ``pysr3.regularizers.L1Regularizer``
+class.
 
 :math:`\lambda` is a hyper-parameter that controls the strength of the
 regularization. Larger values of :math:`\lambda` lead to sparser sets of
@@ -98,13 +98,13 @@ problem – as weights for LASSO penalty:
 
 .. math:: R(x) = \lambda\sum_{i=1}^n \frac{|x_i|}{|\bar{x}_i|}
 
-In ``skmixed``, A-LASSO can be implemented by providing custom
+In ``pysr3``, A-LASSO can be implemented by providing custom
 regularization weights to LASSO model:
 
 .. code:: ipython3
 
-    from skmixed.linear.problems import LinearProblem
-    from skmixed.linear.models import SimpleLinearModel, LinearL1Model
+    from pysr3.linear.problems import LinearProblem
+    from pysr3.linear.models import SimpleLinearModel, LinearL1Model
     
     x, y = LinearProblem.generate(num_objects=100, num_features=200, true_x=[0, 1]*100).to_x_y()
     non_regularized_coefficients = SimpleLinearModel().fit(x, y).coef_["x"]
@@ -120,8 +120,8 @@ When the values of the coefficients are less than a hyper-parameter
 coefficients that are bigger than that in their absolute value. It
 addresses an issue of LASSO penalizing big coefficients too much.
 
-In ``skmixed``, CAD regularizer is implemented as
-``skmixed.regularizers.CADRegularizer``.
+In ``pysr3``, CAD regularizer is implemented as
+``pysr3.regularizers.CADRegularizer``.
 
 SCAD
 ~~~~
@@ -132,20 +132,20 @@ spline interpolation to connect the flat and the absolute value parts.
 The knots of the spline are located at points :math:`\rho` and
 :math:`\sigma\rho`.
 
-In ``skmixed``, SCAD regularizer is implemented as
-``skmixed.regularizers.CADRegularizer``.
+In ``pysr3``, SCAD regularizer is implemented as
+``pysr3.regularizers.CADRegularizer``.
 
 Regular PGD vs SR3-PGD
 ----------------------
 
 Proximal Gradient Descent (PGD) is currently the core numerical solver
-for ``skmixed``. It has a very simple form of iteration that requires
-only gradient information of the loss function and the proximal operator
-of the regularizer:
+for ``pysr3``. It has a very simple form of iteration that requires only
+gradient information of the loss function and the proximal operator of
+the regularizer:
 
 :math:`x_{k+1} = \text{prox}_{\alpha R}(x_k - \alpha \nabla f(x_k))`
 
-The core methodological innovation of ``skmixed`` is Sparse Relaxed
+The core methodological innovation of ``pysr3`` is Sparse Relaxed
 Regularized Regression (SR3) framework. It improves the conditioning of
 the loss function, that leads to faster convergence and more accurate
 feature selection.
@@ -157,8 +157,8 @@ to converge.
 
 |image0|
 
-Every model in skmixed has its SR3-empowered version. For all of them,
-the parameter ``ell`` controls the degree of relaxation, with larger
+Every model in pysr3 has its SR3-empowered version. For all of them, the
+parameter ``ell`` controls the degree of relaxation, with larger
 parameter values giving tighter relaxations. ``ell`` can be left to its
 default value or can be found via grid-search simultaneously with
 :math:`\lambda`.

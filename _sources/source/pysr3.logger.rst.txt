@@ -1,0 +1,7 @@
+pysr3.logger module
+===================
+
+.. automodule:: pysr3.logger
+   :members:
+   :undoc-members:
+   :show-inheritance:

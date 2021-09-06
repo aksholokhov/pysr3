@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>skmixed.logger module &mdash; skmixed 0.2.0 documentation</title>
+  <title>pysr3.logger module &mdash; PySR3 0.3.0 documentation</title>
   
 
   
@@ -41,8 +41,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="skmixed.priors module" href="skmixed.priors.html" />
-    <link rel="prev" title="skmixed.lme.problems module" href="skmixed.lme.problems.html" /> 
+    <link rel="next" title="pysr3.priors module" href="pysr3.priors.html" />
+    <link rel="prev" title="pysr3.lme.problems module" href="pysr3.lme.problems.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -56,7 +56,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> skmixed
+            <a href="../index.html" class="icon icon-home"> PySR3
           
 
           
@@ -96,16 +96,16 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../community_guidelines.html">Community Guidelines</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="skmixed.html">skmixed package</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="skmixed.html#subpackages">Subpackages</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="skmixed.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">skmixed.logger module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="skmixed.priors.html">skmixed.priors module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="skmixed.regularizers.html">skmixed.regularizers module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="skmixed.solvers.html">skmixed.solvers module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pysr3.html">pysr3 package</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pysr3.html#subpackages">Subpackages</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="pysr3.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pysr3.logger module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.priors.html">pysr3.priors module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.regularizers.html">pysr3.regularizers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.solvers.html">pysr3.solvers module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="skmixed.html#module-skmixed">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.html#module-pysr3">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -125,7 +125,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">skmixed</a>
+          <a href="../index.html">PySR3</a>
         
       </nav>
 
@@ -158,17 +158,17 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="modules.html">skmixed</a> &raquo;</li>
+          <li><a href="modules.html">pysr3</a> &raquo;</li>
         
-          <li><a href="skmixed.html">skmixed package</a> &raquo;</li>
+          <li><a href="pysr3.html">pysr3 package</a> &raquo;</li>
         
-      <li>skmixed.logger module</li>
+      <li>pysr3.logger module</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/source/skmixed.logger.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/source/pysr3.logger.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -181,11 +181,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-skmixed.logger">
-<span id="skmixed-logger-module"></span><h1>skmixed.logger module<a class="headerlink" href="#module-skmixed.logger" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pysr3.logger">
+<span id="pysr3-logger-module"></span><h1>pysr3.logger module<a class="headerlink" href="#module-pysr3.logger" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="skmixed.logger.Logger">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">skmixed.logger.</span></span><span class="sig-name descname"><span class="pre">Logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pysr3.logger.Logger">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.logger.</span></span><span class="sig-name descname"><span class="pre">Logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.logger.Logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Helper class for logging the progress of iterative methods.</p>
 <p>Initializes the logger</p>
@@ -195,8 +195,8 @@
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="skmixed.logger.Logger.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.add" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pysr3.logger.Logger.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.logger.Logger.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a key-value pair to the logger</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -209,8 +209,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="skmixed.logger.Logger.append">
-<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.append" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pysr3.logger.Logger.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.logger.Logger.append" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds value to what’s already stored in the logger. If no such key then it starts with 0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -226,8 +226,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="skmixed.logger.Logger.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.get" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pysr3.logger.Logger.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.logger.Logger.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the value by key</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -240,8 +240,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="skmixed.logger.Logger.log">
-<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmixed.logger.Logger.log" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pysr3.logger.Logger.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.logger.Logger.log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Records all values of parameters which keys are already in the logger.
 Ignores the rest.</p>
 <dl class="field-list simple">
@@ -264,8 +264,8 @@ Ignores the rest.</p>
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="skmixed.priors.html" class="btn btn-neutral float-right" title="skmixed.priors module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="skmixed.lme.problems.html" class="btn btn-neutral float-left" title="skmixed.lme.problems module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pysr3.priors.html" class="btn btn-neutral float-right" title="pysr3.priors module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pysr3.lme.problems.html" class="btn btn-neutral float-left" title="pysr3.lme.problems module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

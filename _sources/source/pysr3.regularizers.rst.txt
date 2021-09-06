@@ -1,7 +1,7 @@
-skmixed.lme.models module
+pysr3.regularizers module
 =========================
 
-.. automodule:: skmixed.lme.models
+.. automodule:: pysr3.regularizers
    :members:
    :undoc-members:
    :show-inheritance:

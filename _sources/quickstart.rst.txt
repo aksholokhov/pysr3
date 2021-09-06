@@ -1,16 +1,16 @@
 |image0| |image1| |image2| |image3| |image4| |Codacy Badge|
 
-.. |image0| image:: https://img.shields.io/pypi/l/skmixed
-.. |image1| image:: https://img.shields.io/pypi/v/skmixed
-.. |image2| image:: https://img.shields.io/github/workflow/status/aksholokhov/skmixed/Testing%20and%20Coverage/sr3
+.. |image0| image:: https://img.shields.io/pypi/l/pysr3
+.. |image1| image:: https://img.shields.io/pypi/v/pysr3
+.. |image2| image:: https://img.shields.io/github/workflow/status/aksholokhov/pysr3/Testing%20and%20Coverage/sr3
 .. |image3| image:: https://img.shields.io/badge/docs-up-green
-   :target: https://aksholokhov.github.io/skmixed/
-.. |image4| image:: https://img.shields.io/codecov/c/github/aksholokhov/skmixed/sr3?flag=unittests
+   :target: https://aksholokhov.github.io/pysr3/
+.. |image4| image:: https://img.shields.io/codecov/c/github/aksholokhov/pysr3/sr3?flag=unittests
 .. |Codacy Badge| image:: https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b
-   :target: https://www.codacy.com/gh/aksholokhov/skmixed/dashboard?utm_source=github.com&utm_medium=referral&utm_content=aksholokhov/skmixed&utm_campaign=Badge_Grade
+   :target: https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&utm_medium=referral&utm_content=aksholokhov/pysr3&utm_campaign=Badge_Grade
 
-Quickstart with ``skmixed``
-===========================
+Quickstart with ``pysr3``
+=========================
 
 SR3 is a relaxation method designed for accurate feature selection. It
 currently supports:
@@ -21,11 +21,11 @@ currently supports:
 Installation
 ------------
 
-skmixed can be installed via
+pysr3 can be installed via
 
 .. code:: bash
 
-    pip install skmixed
+    pip install pysr3
 
 Requirements
 ------------
@@ -42,7 +42,7 @@ following dependencies, as listed in requirements.txt:
 Usage
 -----
 
-skmixed models are fully compatible to `sklearn
+pysr3 models are fully compatible to `sklearn
 standards <https://scikit-learn.org/stable/developers/develop.html>`__,
 so you can use them as you normally would use a sklearn model.
 
@@ -56,7 +56,7 @@ shown below.
 
     import numpy as np
     
-    from skmixed.linear.problems import LinearProblem
+    from pysr3.linear.problems import LinearProblem
     
     # Create a sample dataset
     seed = 42
@@ -82,7 +82,7 @@ shown below.
 .. code:: ipython3
 
     # Automatic features selection using information criterion
-    from skmixed.linear.models import LinearL1ModelSR3
+    from pysr3.linear.models import LinearL1ModelSR3
     from sklearn.metrics import accuracy_score, confusion_matrix
     from sklearn.model_selection import RandomizedSearchCV
     from sklearn.utils.fixes import loguniform
@@ -123,8 +123,8 @@ simultaneous selection of fixed and random effects.
 
 .. code:: ipython3
 
-    from skmixed.lme.models import L1LmeModelSR3
-    from skmixed.lme.problems import LMEProblem, LMEStratifiedShuffleSplit
+    from pysr3.lme.models import L1LmeModelSR3
+    from pysr3.lme.problems import LMEProblem, LMEStratifiedShuffleSplit
     
     problem, true_parameters = LMEProblem.generate(
         groups_sizes=[10] * 6,  # 6 groups, 10 objects each

@@ -1,0 +1,20 @@
+pysr3.linear package
+====================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   pysr3.linear.models
+   pysr3.linear.oracles
+   pysr3.linear.problems
+
+Module contents
+---------------
+
+.. automodule:: pysr3.linear
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,5 +1,5 @@
-skmixed package
-===============
+pysr3 package
+=============
 
 Subpackages
 -----------
@@ -7,8 +7,8 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   skmixed.linear
-   skmixed.lme
+   pysr3.linear
+   pysr3.lme
 
 Submodules
 ----------
@@ -16,15 +16,15 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   skmixed.logger
-   skmixed.priors
-   skmixed.regularizers
-   skmixed.solvers
+   pysr3.logger
+   pysr3.priors
+   pysr3.regularizers
+   pysr3.solvers
 
 Module contents
 ---------------
 
-.. automodule:: skmixed
+.. automodule:: pysr3
    :members:
    :undoc-members:
    :show-inheritance:

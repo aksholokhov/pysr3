@@ -1,7 +1,7 @@
 Community Guidelines
 ====================
 
-We encourage the broader community to contribute to ``skmixed``! Please
+We encourage the broader community to contribute to ``pysr3``! Please
 submit a pull request on GitHub if you fixed a bug or developed an
 extension.
 
@@ -21,21 +21,21 @@ As a community, we follow the list of rules below:
    Covenant <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`__
    code of conduct.
 
-Developing ``skmixed``
-----------------------
+Developing ``pysr3``
+--------------------
 
-``skmixed`` does not require any special hardware and can be developed
-on your personal computer. To start, install ``skmixed`` in the
-developer mode:
+``pysr3`` does not require any special hardware and can be developed on
+your personal computer. To start, install ``pysr3`` in the developer
+mode:
 
 .. code:: bash
 
-   git clone https://github.com/aksholokhov/skmixed.git
-   cd skmixed
+   git clone https://github.com/aksholokhov/pysr3.git
+   cd pysr3
    python setup.py develop
 
-Testing ``skmixed``
--------------------
+Testing ``pysr3``
+-----------------
 
 To test the installation, invoke the tests with ``pytest``:
 

@@ -1,0 +1,7 @@
+pysr3.lme.models module
+=======================
+
+.. automodule:: pysr3.lme.models
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+pysr3.lme.priors module
+=======================
+
+.. automodule:: pysr3.lme.priors
+   :members:
+   :undoc-members:
+   :show-inheritance:

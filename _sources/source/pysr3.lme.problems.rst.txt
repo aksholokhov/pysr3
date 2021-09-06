@@ -1,7 +1,7 @@
-skmixed.lme.priors module
+pysr3.lme.problems module
 =========================
 
-.. automodule:: skmixed.lme.priors
+.. automodule:: pysr3.lme.problems
    :members:
    :undoc-members:
    :show-inheritance:

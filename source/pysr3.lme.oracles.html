@@ -1,0 +1,1054 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pysr3.lme.oracles module &mdash; PySR3 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pysr3.lme.priors module" href="pysr3.lme.priors.html" />
+    <link rel="prev" title="pysr3.lme.models module" href="pysr3.lme.models.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PySR3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models_overview.html">Models Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../community_guidelines.html">Community Guidelines</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pysr3.html">pysr3 package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pysr3.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.html">pysr3.linear package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="pysr3.lme.html">pysr3.lme package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.html#module-pysr3">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PySR3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">pysr3</a> &raquo;</li>
+        
+          <li><a href="pysr3.html">pysr3 package</a> &raquo;</li>
+        
+          <li><a href="pysr3.lme.html">pysr3.lme package</a> &raquo;</li>
+        
+      <li>pysr3.lme.oracles module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/source/pysr3.lme.oracles.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pysr3.lme.oracles">
+<span id="pysr3-lme-oracles-module"></span><h1>pysr3.lme.oracles module<a class="headerlink" href="#module-pysr3.lme.oracles" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.oracles.</span></span><span class="sig-name descname"><span class="pre">LinearLMEOracle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem" title="pysr3.lme.problems.LMEProblem"><span class="pre">pysr3.lme.problems.LMEProblem</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iter_inner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_inner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start_duals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements Linear Mixed-Effects Model functional for given problem.</p>
+<p>The model is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Y_i</span> <span class="o">=</span> <span class="n">X_i</span><span class="o">*</span><span class="n">β</span> <span class="o">+</span> <span class="n">Z_i</span><span class="o">*</span><span class="n">u_i</span> <span class="o">+</span> <span class="n">𝜺_i</span><span class="p">,</span>
+
+<span class="n">where</span>
+
+<span class="n">u_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diag</span><span class="p">(</span><span class="n">𝛄</span><span class="p">)),</span>
+
+<span class="n">𝜺_i</span> <span class="o">~</span> <span class="n">𝒩</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Λ</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The problem should be provided as LMEProblem.</p>
+<p>Creates an oracle on top of the given problem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> (<em>LMEProblem</em>) – set of data and answers. See docs for LinearLMEProblem class for more details.</p></li>
+<li><p><strong>n_iter_inner</strong> (<em>int</em>) – maximal number of iterations for the oracle’s numerical subroutines, if any</p></li>
+<li><p><strong>tol_inner</strong> (<em>float</em>) – tolerance for stopping criteria of the oracle’s numerical subroutines, if any</p></li>
+<li><p><strong>warm_start_duals</strong> (<em>bool</em>) – if to warm-start when numerical subroutines are called sequentially</p></li>
+<li><p><strong>prior</strong> – additional prior for the oracle, see skmixed.priors for more info.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.beta_gamma_to_x">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">beta_gamma_to_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.beta_gamma_to_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges beta and gamma into one array x = [beta, gamma]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>x – the ndarray of [beta, gamma]</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.demarginalized_loss">
+<span class="sig-name descname"><span class="pre">demarginalized_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.demarginalized_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates a de-marginalized loss of the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the value of the de-marginalized loss</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.flip_probabilities_beta">
+<span class="sig-name descname"><span class="pre">flip_probabilities_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.flip_probabilities_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the probabilities of coordinates in beta to flip their signs
+under the normal posterior.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>probabilities each coordinates of beta, as ndarray.</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.forget">
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detaches the problem from the oracle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.get_condition_numbers">
+<span class="sig-name descname"><span class="pre">get_condition_numbers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.get_condition_numbers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the condition numbers of the data matrices X and Z</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of the condition numbers of the data matrices X and Z</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.get_ic">
+<span class="sig-name descname"><span class="pre">get_ic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.get_ic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for information criteria</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ic</strong> (<em>str</em>) – Can be “IC_jones2010bic”, “IC_vaida2005aic”</p></li>
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>The value of the information criterion requested</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.gradient_beta">
+<span class="sig-name descname"><span class="pre">gradient_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.gradient_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the gradient of the loss-function with respect to beta</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the gradient of the loss function with respect to beta</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.gradient_gamma">
+<span class="sig-name descname"><span class="pre">gradient_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.gradient_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the gradient of the loss function with respect to gamma: ∇_𝛄[ℒ](β, 𝛄)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>grad_gamma</strong> (<em>np.ndarray, shape = [k]</em>) – The gradient of the loss function with respect to gamma: ∇_𝛄[ℒ](β, 𝛄)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.gradient_value_function">
+<span class="sig-name descname"><span class="pre">gradient_value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.gradient_value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the gradient of the value function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>w</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Gradient of the value function</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.hessian_beta">
+<span class="sig-name descname"><span class="pre">hessian_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.hessian_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates Hessian of the loss-function with respect to beta</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Hessian of the loss function with respect to beta</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.hessian_beta_gamma">
+<span class="sig-name descname"><span class="pre">hessian_beta_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.hessian_beta_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates mixed Hessian of the loss-function with respect to (beta, gamma)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Hessian of the loss function with respect to (beta, gamma)</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.hessian_gamma">
+<span class="sig-name descname"><span class="pre">hessian_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">take_only_positive_part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.hessian_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>take_only_positive_part</strong> (<em>bool</em>) – Whether to return only the positive-definite part of Hessian</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>hessian</strong> (<em>np.ndarray, shape = [k, k]</em>) – Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach the problem to the oracle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>problem</strong> (<em>LMEProblem</em>) – problem to attach</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.joint_gradient">
+<span class="sig-name descname"><span class="pre">joint_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.joint_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes x = [beta, gamma] and evaluates the gradient of the loss with this beta and gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p></li>
+<li><p><strong>args</strong> – for debugging and passing parameters</p></li>
+<li><p><strong>kwargs</strong> – for debugging and passing parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Gradient of the loss at x = [beta, gamma]</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.joint_loss">
+<span class="sig-name descname"><span class="pre">joint_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.joint_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes x = [beta, gamma] and evaluates the loss with this beta and gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p></li>
+<li><p><strong>args</strong> – for debugging and passing parameters</p></li>
+<li><p><strong>kwargs</strong> – for debugging and passing parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Loss at x = [beta, gamma]</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.jones2010bic">
+<span class="sig-name descname"><span class="pre">jones2010bic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.jones2010bic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Bayes Information Criterion (BIC) from (Jones, 2010)
+# <a class="reference external" href="https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data">https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of Jones’s BIC</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the loss function value ℒ(β, 𝛄).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>result</strong> (<em>float</em>) – The value of the loss function: ℒ(β, 𝛄)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.muller_hui_2016ic">
+<span class="sig-name descname"><span class="pre">muller_hui_2016ic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.muller_hui_2016ic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Information Criterion (IC) from (Muller, 2016)
+<a class="reference external" href="https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1215989">https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1215989</a>
+page 1326, equation 3</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of Mueller’s IC</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_beta">
+<span class="sig-name descname"><span class="pre">optimal_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_dont_solve_wrt_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns beta (vector of estimations of fixed effects) which minimizes loss function for a fixed gamma.</p>
+<p>The algorithm for computing optimal beta is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>kernel = ∑X_i^TΩ_iX_i
+
+tail = ∑X_i^TΩ_iY_i
+
+β = (kernel)^{-1}*tail
+</pre></div>
+</div>
+<p>It’s available almost exclusively in linear models. In general one should use gradient_beta and do iterative
+minimization instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>_dont_solve_wrt_beta</strong> (<em>bool, Optional</em>) – If true, then it does not perform the outer matrix inversion and returns the (kernel, tail) instead.
+It’s left here for the purposes of use in child classes where both the kernel and the tail should be
+adjusted to account for regularization.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of optimal estimates of the fixed effects for given gamma.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_gamma">
+<span class="sig-name descname"><span class="pre">optimal_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pgd'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates optimal gamma given beta</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – which numerical subroutine to use: “pgd” or “ip”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>optimal gamma</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_gamma_ip">
+<span class="sig-name descname"><span class="pre">optimal_gamma_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_gamma_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates optimal gamma given beta with an Interior Point Method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+<li><p><strong>log_progress</strong> (<em>bool</em>) – Whether to log the loss function during optimization (for debugging only)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>optimal gamma</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_gamma_pgd">
+<span class="sig-name descname"><span class="pre">optimal_gamma_pgd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_gamma_pgd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates optimal gamma given beta with a Proximal Projected Gradient Descent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+<li><p><strong>log_progress</strong> (<em>bool</em>) – Whether to log the loss function during optimization (for debugging only)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>optimal gamma</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_obs_std">
+<span class="sig-name descname"><span class="pre">optimal_obs_std</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_obs_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the optimal (in the maximal likelihood sense) variances of the observation errors.
+It assumes that all errors have sigma*I covariance matrices, where sigma is a scalar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>value of sigma – amplitude of the noise.</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_random_effects">
+<span class="sig-name descname"><span class="pre">optimal_random_effects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_random_effects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns set of optimal random effects estimations for given beta and gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>u</strong> (<em>np.ndarray, shape = [m, q]</em>) – Set of optimal random effects estimations for given beta and gamma</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.vaida2005aic">
+<span class="sig-name descname"><span class="pre">vaida2005aic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marginalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.vaida2005aic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates Akaike Information Criterion (AIC) from <a class="reference external" href="https://www.jstor.org/stable/2673485">https://www.jstor.org/stable/2673485</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value for Vaida AIC</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.value_function">
+<span class="sig-name descname"><span class="pre">value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates value function of the problem.
+If no relaxation is applied then the value function is the loss function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p></li>
+<li><p><strong>kwargs</strong> – for debugging and passing parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of the value function</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.x_to_beta_gamma">
+<span class="sig-name descname"><span class="pre">x_to_beta_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.x_to_beta_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes x = [beta, gamma], splits it, and returns beta and gamma separately</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Tuple of numpy arrays</strong> (<em>beta and gamma</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.oracles.</span></span><span class="sig-name descname"><span class="pre">LinearLMEOracleSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem" title="pysr3.lme.problems.LMEProblem"><span class="pre">pysr3.lme.problems.LMEProblem</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warm_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysr3.lme.oracles.LinearLMEOracle" title="pysr3.lme.oracles.LinearLMEOracle"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.lme.oracles.LinearLMEOracle</span></code></a></p>
+<p>Implements Sparse Relaxed Regularized Regression (SR3) for Linear Mixed-Effects Model.
+The problem should be provided as LMEProblem.</p>
+<p>Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> (<em>LMEProblem</em>) – The set of data and answers. See the docs for LinearLMEProblem for more details.</p></li>
+<li><p><strong>lb</strong> (<em>float</em>) – Regularization coefficient (inverse std) for ||β - tβ||^2</p></li>
+<li><p><strong>lg</strong> (<em>float</em>) – Regularization coefficient (inverse std) for ||𝛄 - t𝛄||^2</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.find_optimal_parameters">
+<span class="sig-name descname"><span class="pre">find_optimal_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">increase_lambdas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prox_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.find_optimal_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around the routine that maximizes the likelihood of the oracle with respect to its
+non-relaxed parameters. This routine is designed for experiments doing all relaxations of (SR3 and IP)
+simultaneously (SR3Practical).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p></li>
+<li><p><strong>log_progress</strong> (<em>bool</em>) – whether to log progress of internal numerical routines</p></li>
+<li><p><strong>regularizer</strong> (<em>Regularizer</em>) – an instance of Regularizer class</p></li>
+<li><p><strong>increase_lambdas</strong> (<em>bool</em>) – whether to iteratively increase the parameters of SR3 relaxation</p></li>
+<li><p><strong>line_search</strong> (<em>bool</em>) – whether to perform line-search inside IP method</p></li>
+<li><p><strong>prox_step_len</strong> (<em>float</em>) – step-size for numerical subroutines</p></li>
+<li><p><strong>update_prox_every</strong> (<em>int</em>) – how frequently algorithm updates sparse variables (tbeta, tgamma)</p></li>
+<li><p><strong>kwargs</strong> – for passing extra arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Five objects</strong> (<em>beta, gamma, tbeta, tgamma, logger</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.find_optimal_parameters_ip">
+<span class="sig-name descname"><span class="pre">find_optimal_parameters_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbeta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">increase_lambdas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prox_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_prox_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.find_optimal_parameters_ip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.gradient_beta">
+<span class="sig-name descname"><span class="pre">gradient_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbeta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.gradient_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the gradient of the loss-function with respect to beta</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects, initial point.</p></li>
+<li><p><strong>tbeta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of relaxed estimates of fixed effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>the gradient of the loss function with respect to beta</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.gradient_gamma">
+<span class="sig-name descname"><span class="pre">gradient_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.gradient_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the gradient of the loss function with respect to gamma: grad_gamma =  ∇_𝛄[ℒ](β, 𝛄) + lg*(𝛄 - t𝛄)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tgamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of relaxed estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>grad_gamma</strong> (<em>np.ndarray, shape = [q]</em>) – The gradient of the loss function with respect to gamma: grad_gamma = ∇_𝛄[ℒ](β, 𝛄) + lg*(𝛄 - t𝛄)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.gradient_value_function">
+<span class="sig-name descname"><span class="pre">gradient_value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.gradient_value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the gradient of the value function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>w</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Gradient of the value function</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.hessian_beta">
+<span class="sig-name descname"><span class="pre">hessian_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.hessian_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hessian of the loss function with respect to gamma</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>hessian</strong> (<em>np.ndarray, shape = [q, q]</em>) – Hessian of the loss function with respect to gamma</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.hessian_gamma">
+<span class="sig-name descname"><span class="pre">hessian_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.hessian_gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hessian of the loss function with respect to gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>hessian</strong> (<em>np.ndarray, shape = [q, q]</em>) – Hessian of the loss function with respect to gamma.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.joint_gradient">
+<span class="sig-name descname"><span class="pre">joint_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbeta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.joint_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes x = [beta, gamma] and evaluates the gradient of the loss with this beta and gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p></li>
+<li><p><strong>tbeta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of relaxed estimates of fixed effects.</p></li>
+<li><p><strong>tgamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of relaxed estimates of random effects.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Gradient of the loss at x = [beta, gamma]</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.joint_loss">
+<span class="sig-name descname"><span class="pre">joint_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.joint_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes x = [beta, gamma], w = [tbeta, tgamma],
+and evaluates the loss with this beta and gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p></li>
+<li><p><strong>w</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [tbeta, tgamma]</p></li>
+<li><p><strong>args</strong> – for debugging and passing parameters</p></li>
+<li><p><strong>kwargs</strong> – for debugging and passing parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Loss at (x, w)</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.jones2010bic">
+<span class="sig-name descname"><span class="pre">jones2010bic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.jones2010bic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Bayes Information Criterion (BIC) from (Jones, 2010)
+# <a class="reference external" href="https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data">https://www.researchgate.net/publication/51536734_Bayesian_information_criterion_for_longitudinal_and_clustered_data</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of Jones’s BIC</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbeta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tgamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the loss function value ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tbeta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of relaxed estimates of fixed effects.</p></li>
+<li><p><strong>tgamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of relaxed estimates of random effects.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>result</strong> (<em>float</em>) – The value of the loss function: ℒ(β, 𝛄) + lb/2*||β - tβ||^2 + lg/2*||𝛄 - t𝛄||^2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.muller_hui_2016ic">
+<span class="sig-name descname"><span class="pre">muller_hui_2016ic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.muller_hui_2016ic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Information Criterion (IC) from (Muller, 2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of Mueller’s IC</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.optimal_beta">
+<span class="sig-name descname"><span class="pre">optimal_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbeta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_dont_solve_wrt_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.optimal_beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns beta (vector of estimations of fixed effects) which minimizes loss function for a fixed gamma.
+The algorithm for computing optimal beta is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>kernel = ∑X_i^TΩ_iX_i
+tail = ∑X_i^TΩ_iY_i
+β = (kernel + I*lb)^{-1}*(tail + lb*tbeta)
+</pre></div>
+</div>
+<p>It’s available almost exclusively in linear models. In general one should use gradient_beta and do iterative
+minimization instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [k]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tbeta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of (nnz_tbeta)-sparse estimates for fixed effects.</p></li>
+<li><p><strong>_dont_solve_wrt_beta</strong> (<em>bool, Optional</em>) – If true, then it does not perform the outer matrix inversion and returns the (kernel, tail) instead.
+It’s left here for the purposes of use in child classes where both the kernel and the tail should be
+adjusted to account for regularization.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>beta</strong> (<em>np.ndarray, shape = [n]</em>) – Vector of optimal estimates of the fixed effects for given gamma.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.vaida2005aic">
+<span class="sig-name descname"><span class="pre">vaida2005aic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marginalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.vaida2005aic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates Akaike Information Criterion (AIC) from <a class="reference external" href="https://www.jstor.org/stable/2673485">https://www.jstor.org/stable/2673485</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
+<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
+<li><p><strong>tolerance</strong> (<em>float, positive</em>) – Threshold for absolute values of beta and gamma being considered zero.
+Should account for the finite tolerance of the numerical solver.</p></li>
+<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value for Vaida AIC</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracleSR3.value_function">
+<span class="sig-name descname"><span class="pre">value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracleSR3.value_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates value function of the problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>w</strong> (<em>ndarray, (p+q)</em>) – vector of parameters [beta, gamma]</p></li>
+<li><p><strong>kwargs</strong> – for debugging and passing parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Value of the value function</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pysr3.lme.priors.html" class="btn btn-neutral float-right" title="pysr3.lme.priors module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pysr3.lme.models.html" class="btn btn-neutral float-left" title="pysr3.lme.models module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Aleksei Sholokhov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

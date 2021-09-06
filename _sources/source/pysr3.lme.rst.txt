@@ -1,0 +1,22 @@
+pysr3.lme package
+=================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   pysr3.lme.model_selectors
+   pysr3.lme.models
+   pysr3.lme.oracles
+   pysr3.lme.priors
+   pysr3.lme.problems
+
+Module contents
+---------------
+
+.. automodule:: pysr3.lme
+   :members:
+   :undoc-members:
+   :show-inheritance:
