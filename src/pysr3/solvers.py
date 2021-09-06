@@ -4,9 +4,9 @@ Implements general purpose numerical solvers, like PGD
 
 import numpy as np
 
-from skmixed.lme.oracles import LinearLMEOracle
-from skmixed.logger import Logger
-from skmixed.regularizers import Regularizer
+from pysr3.lme.oracles import LinearLMEOracle
+from pysr3.logger import Logger
+from pysr3.regularizers import Regularizer
 
 
 class PGDSolver:

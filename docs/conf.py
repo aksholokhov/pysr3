@@ -13,7 +13,7 @@
 import os
 import sys
 
-from skmixed.__about__ import __author__, __version__, __title__
+from pysr3.__about__ import __author__, __version__, __title__
 
 sys.path.insert(0, os.path.abspath('.'))
 

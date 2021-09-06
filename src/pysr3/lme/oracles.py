@@ -24,8 +24,8 @@ from scipy import stats
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.optimize import minimize
 
-from skmixed.lme.priors import NonInformativePriorLME
-from skmixed.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
+from pysr3.lme.priors import NonInformativePriorLME
+from pysr3.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
 
 
 class LinearLMEOracle:

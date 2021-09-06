@@ -1,7 +1,7 @@
 from typing import Dict
 
-from skmixed.lme.problems import LMEProblem
-from skmixed.priors import Prior, GaussianPrior
+from pysr3.lme.problems import LMEProblem
+from pysr3.priors import Prior, GaussianPrior
 
 
 class GaussianPriorLME:

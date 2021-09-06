@@ -5,11 +5,11 @@ import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, check_X_y, check_array
 from sklearn.exceptions import DataConversionWarning, NotFittedError
 
-from skmixed.linear.oracles import LinearOracle, LinearOracleSR3
-from skmixed.linear.problems import LinearProblem
-from skmixed.logger import Logger
-from skmixed.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer, Regularizer
-from skmixed.solvers import PGDSolver, FakePGDSolver
+from pysr3.linear.oracles import LinearOracle, LinearOracleSR3
+from pysr3.linear.problems import LinearProblem
+from pysr3.logger import Logger
+from pysr3.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer, Regularizer
+from pysr3.solvers import PGDSolver, FakePGDSolver
 
 
 class LinearModel(BaseEstimator, RegressorMixin):

@@ -4,9 +4,9 @@ from unittest import TestCase
 import numpy as np
 from numpy import allclose
 
-from skmixed.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
-from skmixed.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
-from skmixed.lme.problems import random_effects_to_matrix
+from pysr3.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
+from pysr3.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
+from pysr3.lme.problems import random_effects_to_matrix
 
 
 class TestLinearLMEOracle(TestCase):

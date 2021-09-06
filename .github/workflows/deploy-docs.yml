@@ -29,7 +29,7 @@ jobs:
       - name: Generate API docs & Build sphinx documentation
         run: |
           cd docs
-          sphinx-apidoc --separate -f -o source/ ../src/skmixed
+          sphinx-apidoc --separate -f -o source/ ../src/pysr3
           make clean
           make html
           cd ..

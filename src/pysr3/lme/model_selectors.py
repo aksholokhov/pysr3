@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from skmixed.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
-from skmixed.lme.models import L0LmeModelSR3, L1LmeModelSR3, CADLmeModelSR3, SCADLmeModelSR3
-from skmixed.lme.problems import LMEProblem
+from pysr3.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
+from pysr3.lme.models import L0LmeModelSR3, L1LmeModelSR3, CADLmeModelSR3, SCADLmeModelSR3
+from pysr3.lme.problems import LMEProblem
 
 MODELS_NAMES = ("L0", "L1", "CAD", "SCAD", "L0_SR3", "L1_SR3", "CAD_SR3", "SCAD_SR3")
 

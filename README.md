@@ -37,11 +37,10 @@ so you can use them as you normally would use a sklearn model.
 ### Linear Models
 A simple example of using SR3-empowered LASSO for feature selection is shown below.
 
-
 ```python
 import numpy as np
 
-from skmixed.linear.problems import LinearProblem
+from pysr3.linear.problems import LinearProblem
 
 # Create a sample dataset
 seed = 42
@@ -61,11 +60,9 @@ print(f"The dataset has {a.shape[0]} objects and {a.shape[1]} features; \n"
     The dataset has 300 objects and 500 features; 
     The vector of true parameters contains 55 non-zero elements out of 500.
 
-
-
 ```python
 # Automatic features selection using information criterion
-from skmixed.linear.models import LinearL1ModelSR3
+from pysr3.linear.models import LinearL1ModelSR3
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.utils.fixes import loguniform
@@ -101,10 +98,9 @@ print(f"The model found {tp} out of {tp + fn} features correctly, but also chose
 Below we show how to use Linear Mixed-Effects (LME) models for simultaneous selection
 of fixed and random effects.
 
-
 ```python
-from skmixed.lme.models import L1LmeModelSR3
-from skmixed.lme.problems import LMEProblem, LMEStratifiedShuffleSplit
+from pysr3.lme.models import L1LmeModelSR3
+from pysr3.lme.problems import LMEProblem, LMEStratifiedShuffleSplit
 
 problem, true_parameters = LMEProblem.generate(
     groups_sizes=[10] * 6,  # 6 groups, 10 objects each

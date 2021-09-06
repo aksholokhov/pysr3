@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from skmixed.lme.problems import LMEProblem
+from pysr3.lme.problems import LMEProblem
 
 
 class TestLinearLMEProblem(unittest.TestCase):

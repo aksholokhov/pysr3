@@ -6,10 +6,10 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.fixes import loguniform
 
-from skmixed.lme.models import L0LmeModelSR3, L0LmeModel, L1LmeModel, L1LmeModelSR3, CADLmeModel, CADLmeModelSR3, \
+from pysr3.lme.models import L0LmeModelSR3, L0LmeModel, L1LmeModel, L1LmeModelSR3, CADLmeModel, CADLmeModelSR3, \
     SCADLmeModel, SCADLmeModelSR3, SimpleLMEModel, SimpleLMEModelSR3
-from skmixed.lme.problems import LMEProblem, LMEStratifiedShuffleSplit, FIXED_RANDOM
-from skmixed.lme.problems import random_effects_to_matrix
+from pysr3.lme.problems import LMEProblem, LMEStratifiedShuffleSplit, FIXED_RANDOM
+from pysr3.lme.problems import random_effects_to_matrix
 
 
 class TestLmeModels(unittest.TestCase):

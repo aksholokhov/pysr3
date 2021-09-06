@@ -4,7 +4,7 @@ Various regularizers (L0, LASSO, CAD, SCAD, etc)
 
 import numpy as np
 
-from skmixed.lme.oracles import LinearLMEOracle
+from pysr3.lme.oracles import LinearLMEOracle
 
 
 class Regularizer:

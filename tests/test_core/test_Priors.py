@@ -1,6 +1,6 @@
 import unittest
 
-from skmixed.priors import GaussianPrior
+from pysr3.priors import GaussianPrior
 
 
 class TestPriors(unittest.TestCase):

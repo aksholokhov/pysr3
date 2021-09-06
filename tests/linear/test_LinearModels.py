@@ -4,9 +4,9 @@ import numpy as np
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
 from sklearn.utils.estimator_checks import check_estimator
 
-from skmixed.linear.models import SimpleLinearModel, SimpleLinearModelSR3, LinearL1Model, LinearL1ModelSR3, \
+from pysr3.linear.models import SimpleLinearModel, SimpleLinearModelSR3, LinearL1Model, LinearL1ModelSR3, \
     LinearCADModel, LinearCADModelSR3, LinearSCADModel, LinearSCADModelSR3
-from skmixed.linear.problems import LinearProblem
+from pysr3.linear.problems import LinearProblem
 
 
 class TestLinearModels(unittest.TestCase):

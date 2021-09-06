@@ -1,7 +1,7 @@
 import numpy as np
 
-from skmixed.linear.problems import LinearProblem
-from skmixed.priors import Prior, NonInformativePrior
+from pysr3.linear.problems import LinearProblem
+from pysr3.priors import Prior, NonInformativePrior
 
 
 class LinearOracle:
