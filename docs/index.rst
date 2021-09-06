@@ -1,4 +1,4 @@
-Welcome to skmixed's documentation!
+Welcome to PySR3 documentation!
 ===================================
 
 SR3 is a relaxation method designed for accurate feature selection. It
