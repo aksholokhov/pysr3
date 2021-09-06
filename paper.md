@@ -68,7 +68,7 @@ PySR3 package implements a variety of feature selection methods for linear and l
 The package includes widely used regularizers (LASSO, Adaptive LASSO, SCAD), as well as recently developed
 ones (CAD, L0). The library is built to make it as easy as possible to add new loss functions, constraints, 
 information criteria, and regularization strategies. Moreover, all PySR3 models fully adhere the standards and 
-interface requirements of `sklearn` ([@scikit-learn]), providing an interface that is familiar to the modelling community.
+interface requirements of `sklearn` ([@sklearn_api]), providing an interface that is familiar to the modelling community.
 
 To the best of our knowledge, there are no standalone Python packages for mixed-effect feature selection. Compared to established feature selection packages available in `R`, such as `glmmLasso` [@schelldorfer2014glmmlasso] that implements only fitting a LASSO model for a given regularization constant, PySR3 offers higher versatility of options and black-box toolkit that removes the burden of choosing hyper-parameters and information criteria from practitioners. For researchers, the basic implementations add value by serving as powerful baseline solutions of many
 current and new regularizers, whereas their SR3-empowered versions offer state-of-the-art performance to stimulate
