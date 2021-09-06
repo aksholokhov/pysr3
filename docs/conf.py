@@ -13,26 +13,25 @@
 import os
 import sys
 
-import sphinxbootstrap4theme
+from pysr3.__about__ import __author__, __version__, __title__
 
 sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'skmixed'
-copyright = '2021, Aleksei Sholokhov'
-author = 'Aleksei Sholokhov'
+project = __title__
+copyright = f'2021, {__author__}'
+author = __author__
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.0'
+release = __version__
 
 # -- General configuration ------------------------------------------------
 master_doc = 'index'
-html_theme_path = [sphinxbootstrap4theme.get_path()]
 autoclass_content = "both"  # include both class docstring and __init__
 autodoc_default_flags = [
-        # Make sure that any autodoc declarations show the right members
-        "members",
+    # Make sure that any autodoc declarations show the right members
+    "members",
         "inherited-members",
         "private-members",
         "show-inheritance",
@@ -44,7 +43,8 @@ autodoc_default_flags = [
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.coverage',
               'sphinx.ext.napoleon',
-              'sphinx.ext.autosummary'
+              'sphinx.ext.autosummary',
+              'IPython.sphinxext.ipython_console_highlighting'
               ]
 
 autosummary_generate = True  # Make _autosummary files and include them
@@ -70,8 +70,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = 'sphinx_rtd_theme'
-html_theme = 'sphinxbootstrap4theme'
+html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinxbootstrap4theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".

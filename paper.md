@@ -1,9 +1,11 @@
 ---
-title: 'skmixed: A Python Package for Feature Selection in Mixed-Effect Models'
+title: 'pysr3: A Python Package for Sparse Relaxed Regularized Regression'
 tags:
   - Python
   - feature selection
   - mixed-effect models
+  - linear models
+  - regularization
 authors:
   - name: Aleksei Sholokhov
     orcid: 0000-0001-8173-6236
@@ -25,11 +27,14 @@ bibliography: paper.bib
 ---
 
 # Summary
+1. Feature selection is important
 Feature selection is a core step in regression modeling. As new types of data becomes readily available, current
 datasets include more information that may be related to key research questions. In most contexts, only some of
 information is relevant or allows reliable extrapolation. For predictive modeling, the presence of irrelevant features
 can hamper stability of estimation, validity of inference, prediction accuracy, and qualitative conclusions of the
 research. Reliable feature selection is therefore key in a wide range of regression settings.
+
+2. To do FS we need methods that work with with ill-conditioned problems.
 
 Linear Mixed-Effects (LME) models can be viewed as extensions of standard linear regression to clustered data settings.
 They are a fundamental tool for modeling between-cluster variations of the quantity of interest, and commonly arise in
@@ -40,6 +45,8 @@ correlations between objects in the same group, and (c) presence of two related 
 effects to select from: fixed and random effects. These challenges preclude straightforward application and extension of
 classical feature selection methods to feature selection for LMEs.
 
+3. Moreover, it should be flexible enough to accomodate various regularizers.
+
 While feature selection for LMEs is a hot topic with a lot of research [@Buscemi2019Survey], there is no universal
 approach that would outperform all other strategies in every setting, leading to many suggested approaches and
 corresponding implementations. Current state of the art in the field custom-tailor their numerical implementation to the
@@ -47,8 +54,9 @@ specific method that they propose. As a result, libraries for use by practitione
 available, tightly coupled to a particular approach. This gap in open source implementation effectively blocks the
 practitioner from comparing available methods, without (re)implementing complex methods in published papers.
 
-Here, we fill this gap by (1) creating universal solvers that work with most popular regularization techniques, and on (
-2) improving the selection accuracy of all of these techniques through novel relaxation reformulations that can be
+4. Pysr3 
+
+Here, we fill this gap by (1) creating universal solvers that work with most popular regularization techniques, and on (2) improving the selection accuracy of all of these techniques through novel relaxation reformulations that can be
 applied to essentially any regularizer.
 
 # Statement of Need

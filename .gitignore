@@ -15,6 +15,9 @@ build
 # environment
 skmixed_env
 
+# coverage
+.coverage
+
 # docs
 docs/generated
 docs/_build

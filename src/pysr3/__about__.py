@@ -19,20 +19,20 @@ __all__ = [
     "__email__", "__license__", "__copyright__"
 ]
 
-__title__ = "skmixed"
-__summary__ = "Library for Feature Selection in Linear Mixed-Effect Models."
-__long_description__ = ("This package is designed to simplify covariates " +
-                        " selections for linear mixed-effect models." +
-                        " It supports many classic regularization techniques." +
+__title__ = "PySR3"
+__summary__ = "Python Library for Sparse Relaxed Regularized Regression."
+__long_description__ = ("This package implements classic and novel feature selection algorithms " +
+                        " for linear and mixed-effect models." +
+                        " It supports many widely used regularization techniques, like LASSO, A-LASSO, CAD and SCAD." +
                         " See README.md for details and examples.")
-__uri__ = "https://github.com/aksholokhov/skmixed"
+__uri__ = "https://github.com/aksholokhov/pysr3"
 __classifiers__ = [
                       "Programming Language :: Python :: 3",
                       'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
                       "Operating System :: OS Independent",
                   ],
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __author__ = "Aleksei Sholokhov"
 __email__ = "aksh@uw.edu"

@@ -38,6 +38,7 @@ class Logger:
     def add(self, key, value):
         """
         Adds a key-value pair to the logger
+
         Parameters
         ----------
         key: str

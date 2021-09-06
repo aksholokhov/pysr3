@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from skmixed.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
-from skmixed.lme.models import Sr3L0LmeModel, SR3L1LmeModel, SR3CADLmeModel, SR3SCADLmeModel
-from skmixed.lme.problems import LinearLMEProblem
+from pysr3.lme.models import L0LmeModel, L1LmeModel, CADLmeModel, SCADLmeModel
+from pysr3.lme.models import L0LmeModelSR3, L1LmeModelSR3, CADLmeModelSR3, SCADLmeModelSR3
+from pysr3.lme.problems import LMEProblem
 
 MODELS_NAMES = ("L0", "L1", "CAD", "SCAD", "L0_SR3", "L1_SR3", "CAD_SR3", "SCAD_SR3")
 
@@ -26,7 +26,7 @@ def select_covariates(df: pd.DataFrame,
                       output_folder: Union[str, Path] = ".",
                       model: str = "L1_SR3",
                       **kwargs) -> None:
-    """Implements a black-box functionality for selecting most important fixed and random features
+    """Implements black-box functionality for selecting most important fixed and random features
     in Linear Mixed-Effect Models.
 
     Parameters
@@ -75,15 +75,15 @@ def select_covariates(df: pd.DataFrame,
     if not output_folder.exists():
         output_folder.mkdir()
 
-    problem = LinearLMEProblem.from_dataframe(data=df,
-                                              fixed_effects=covs.get("fixed_effects", []),
-                                              random_effects=covs.get("random_effects", []),
-                                              groups=group,
-                                              obs_std=se,
-                                              target=target,
-                                              must_include_fe=pre_sel_covs.get("fixed_effects", []),
-                                              must_include_re=pre_sel_covs.get("random_effects", []),
-                                              )
+    problem = LMEProblem.from_dataframe(data=df,
+                                        fixed_effects=covs.get("fixed_effects", []),
+                                        random_effects=covs.get("random_effects", []),
+                                        groups=group,
+                                        variance=se,
+                                        target=target,
+                                        must_include_fe=pre_sel_covs.get("fixed_effects", []),
+                                        must_include_re=pre_sel_covs.get("random_effects", []),
+                                        )
 
     model_constructor, selection_spectrum = get_model(model, problem)
     best_model = None
@@ -98,8 +98,10 @@ def select_covariates(df: pd.DataFrame,
         print(f"{params}, score={score}")
 
     sel_covs = {
-        "fixed_effects": [label for label, coef in zip(problem.fe_columns, best_model.coef_["beta"]) if coef != 0],
-        "random_effects": [label for label, coef in zip(problem.re_columns, best_model.coef_["gamma"]) if coef != 0]
+        "fixed_effects": [label for label, coef in zip(problem.fixed_features_columns, best_model.coef_["beta"]) if
+                          coef != 0],
+        "random_effects": [label for label, coef in zip(problem.random_features_columns, best_model.coef_["gamma"]) if
+                           coef != 0]
     }
 
     # save results
@@ -109,7 +111,7 @@ def select_covariates(df: pd.DataFrame,
     print(sel_covs)
 
 
-def get_model(model: str, problem: LinearLMEProblem):
+def get_model(model: str, problem: LMEProblem):
     """
     Takes the name of the model. Returns the constructor for it,
     as well as a suitable parameter grid for various sparsity levels.
@@ -124,22 +126,22 @@ def get_model(model: str, problem: LinearLMEProblem):
 
     """
     if model == "L0" or model == "SR3_L0":
-        selection_spectrum = [{"nnz_tbeta": p, "nnz_tgamma": q} for p in range(1, problem.num_fixed_effects) for q in
-                              range(1, problem.num_random_effects) if p >= q]
-        return lambda params: L0LmeModel(**params) if model == "L0" else Sr3L0LmeModel(**params), selection_spectrum
+        selection_spectrum = [{"nnz_tbeta": p, "nnz_tgamma": q} for p in range(1, problem.num_fixed_features) for q in
+                              range(1, problem.num_random_features) if p >= q]
+        return lambda params: L0LmeModel(**params) if model == "L0" else L0LmeModelSR3(**params), selection_spectrum
 
     selection_spectrum = [{"lam": lam} for lam in np.logspace(start=-4, stop=5, num=100)]
     if model == "L1":
         return lambda params: L1LmeModel(**params), selection_spectrum
     elif model == "L1_SR3":
-        return lambda params: SR3L1LmeModel(**params), selection_spectrum
+        return lambda params: L1LmeModelSR3(**params), selection_spectrum
     elif model == "CAD":
         return lambda params: CADLmeModel(**params), selection_spectrum
     elif model == "CAD_SR3":
-        return lambda params: SR3CADLmeModel(**params), selection_spectrum
+        return lambda params: CADLmeModelSR3(**params), selection_spectrum
     elif model == "SCAD":
         return lambda params: SCADLmeModel(**params), selection_spectrum
     elif model == "SCAD_SR3":
-        return lambda params: SR3SCADLmeModel(**params), selection_spectrum
+        return lambda params: SCADLmeModelSR3(**params), selection_spectrum
     else:
         raise ValueError(f"Model name is not recognized: {model}. Should be one of: {MODELS_NAMES}")

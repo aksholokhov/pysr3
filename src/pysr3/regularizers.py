@@ -4,7 +4,7 @@ Various regularizers (L0, LASSO, CAD, SCAD, etc)
 
 import numpy as np
 
-from skmixed.lme.oracles import LinearLMEOracle
+from pysr3.lme.oracles import LinearLMEOracle
 
 
 class Regularizer:
@@ -37,7 +37,7 @@ class Regularizer:
         """
         pass
 
-    def value(self, x):
+    def value(self, x) -> float:
         """
         Returns the value for the regularizer at the point x
 
@@ -77,10 +77,9 @@ class L0Regularizer(Regularizer):
     """
 
     def __init__(self,
-                 nnz_tbeta=1,
-                 nnz_tgamma=1,
+                 nnz_tbeta=None,
+                 nnz_tgamma=None,
                  independent_beta_and_gamma=False,
-                 participation_in_selection=None,
                  oracle: LinearLMEOracle = None):
         """
         Create the regularizer.
@@ -94,23 +93,19 @@ class L0Regularizer(Regularizer):
         independent_beta_and_gamma: bool
             If true then we only can set an element of gamma as non-zero when the respective
             element of beta is non-zero too.
-        participation_in_selection: ndarray
-            Array of boolean values telling whether the regularizer should be applied to the respective
-            coordinate.
         oracle: LinearLMEOracle
             class that encompasses the information about the problem
         """
         self.nnz_tbeta = nnz_tbeta
         self.nnz_tgamma = nnz_tgamma
         self.oracle = oracle
-        self.participation_in_selection = participation_in_selection
         self.independent_beta_and_gamma = independent_beta_and_gamma
         self.beta_weights = None
         self.gamma_weights = None
         self.beta_participation_in_selection = None
         self.gamma_participation_in_selection = None
 
-    def instantiate(self, weights):
+    def instantiate(self, weights, **kwargs):
         """
         Attaches weights to the regularizer.
 
@@ -129,6 +124,10 @@ class L0Regularizer(Regularizer):
         self.gamma_weights = gamma_weights
         self.beta_participation_in_selection = beta_weights.astype(bool)
         self.gamma_participation_in_selection = gamma_weights.astype(bool)
+        if self.nnz_tbeta is None:
+            self.nnz_tbeta = len(beta_weights)
+        if self.nnz_tgamma is None:
+            self.nnz_tgamma = len(gamma_weights)
 
     def forget(self):
         """
@@ -284,7 +283,7 @@ class L1Regularizer(Regularizer):
         self.lam = lam
         self.weights = None
 
-    def instantiate(self, weights):
+    def instantiate(self, weights, **kwargs):
         """
         Attach regularization weights
 
@@ -324,7 +323,7 @@ class L1Regularizer(Regularizer):
         """
         if self.weights is not None:
             return self.weights.dot(np.abs(x))
-        return self.lam * np.linalg.norm(x, 1)
+        return self.lam * np.abs(x).sum()
 
     def prox(self, x, alpha):
         """
@@ -368,7 +367,7 @@ class CADRegularizer(Regularizer):
         self.lam = lam
         self.weights = None
 
-    def instantiate(self, weights=None):
+    def instantiate(self, weights=None, **kwargs):
         """
         Attach regularization weights
 
@@ -425,11 +424,16 @@ class CADRegularizer(Regularizer):
         -------
         result of the application of the proximal operator to x
         """
+        x = np.atleast_1d(x)
         v = np.copy(x)
         idx_small = np.where((np.abs(x) <= self.rho) & (self.weights > 0 if self.weights is not None else True))
-        v[idx_small] = (x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0, None) - (
-                - x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0,
-                                                                                  None)
+        if self.weights is not None:
+            v[idx_small] = (x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0, None) - (
+                    - x[idx_small] - self.weights[idx_small] * alpha * self.lam).clip(0,
+                                                                                      None)
+        else:
+            v[idx_small] = (x[idx_small] - alpha * self.lam).clip(0, None) - (
+                    - x[idx_small] - alpha * self.lam).clip(0, None)
         return v
 
 
@@ -457,7 +461,7 @@ class SCADRegularizer(Regularizer):
         self.lam = lam
         self.weights = None
 
-    def instantiate(self, weights=None):
+    def instantiate(self, weights=None, **kwargs):
         """
         Attach regularization weights
 
@@ -497,9 +501,10 @@ class SCADRegularizer(Regularizer):
         the value of the regularizer
         """
         total = 0
+        x = np.atleast_1d(x)
         for x_i, w in zip(x, self.weights if self.weights is not None else np.ones(x.shape)):
             if abs(x_i) < self.sigma:
-                total += w * self.sigma * x_i
+                total += w * self.sigma * abs(x_i)
             elif self.sigma <= abs(x_i) <= self.rho * self.sigma:
                 total += w * (-x_i ** 2 + 2 * self.rho * self.sigma * abs(x_i) - self.sigma ** 2) / (2 * (self.rho - 1))
             else:
@@ -521,6 +526,7 @@ class SCADRegularizer(Regularizer):
         -------
         result of the application of the proximal operator to x
         """
+        x = np.atleast_1d(x)
         v = np.zeros(x.shape)
         for i, w in enumerate(self.weights if self.weights is not None else np.ones(x.shape)):
             alpha_eff = alpha * self.lam * w
@@ -529,7 +535,7 @@ class SCADRegularizer(Regularizer):
             elif abs(x[i]) > max(self.rho, 1 + alpha_eff) * self.sigma:
                 v[i] = x[i]
             elif self.sigma * (1 + alpha_eff) <= abs(x[i]) <= max(self.rho, 1 + alpha_eff) * self.sigma:
-                v[i] = ((self.rho - 1) * x[i] + np.sign(x[i]) * self.rho * self.sigma * alpha_eff) / (
+                v[i] = ((self.rho - 1) * x[i] - np.sign(x[i]) * self.rho * self.sigma * alpha_eff) / (
                         self.rho - 1 - alpha_eff)
             else:
                 v[i] = (x[i] - self.sigma * alpha_eff).clip(0, None) - (- x[i] - self.sigma * alpha_eff).clip(0, None)
@@ -572,3 +578,31 @@ class DummyRegularizer(Regularizer):
         result of the application of the proximal operator to x
         """
         return x
+
+
+class PositiveQuadrantRegularizer(Regularizer):
+
+    def __init__(self, other_regularizer: Regularizer = None):
+        self.other_regularizer = other_regularizer
+        self.positive_coordinates = None
+
+    def instantiate(self, weights, oracle=None, **kwargs):
+        self.positive_coordinates = ([False] * oracle.problem.num_fixed_features +
+                                     [True] * oracle.problem.num_random_features)
+        if self.other_regularizer:
+            self.other_regularizer.instantiate(weights=weights, **kwargs)
+
+    def value(self, x):
+        y = np.infty if any(x[self.positive_coordinates] < 0) else 0
+        if self.other_regularizer:
+            return y + self.other_regularizer.value(x)
+        else:
+            return y
+
+    def prox(self, x, alpha):
+        y = x.copy()
+        y[self.positive_coordinates] = np.clip(x[self.positive_coordinates], 0, None)
+        if self.other_regularizer:
+            return self.other_regularizer.prox(y, alpha)
+        else:
+            return y

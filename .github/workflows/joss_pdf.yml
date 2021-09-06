@@ -1,6 +1,9 @@
 name: JOSS Paper Draft Generation
 
-on: [ push ]
+on:
+  push:
+    branches:
+      - joss
 
 jobs:
   paper:
