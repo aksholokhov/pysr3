@@ -1,11 +1,11 @@
-![](https://img.shields.io/pypi/l/skmixed)
-![](https://img.shields.io/pypi/v/skmixed)
-![](https://img.shields.io/github/workflow/status/aksholokhov/skmixed/Testing%20and%20Coverage/sr3)
-[![](https://img.shields.io/badge/docs-up-green)](https://aksholokhov.github.io/skmixed/)
-![](https://img.shields.io/codecov/c/github/aksholokhov/skmixed/sr3?flag=unittests)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b)](https://www.codacy.com/gh/aksholokhov/skmixed/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/skmixed&amp;utm_campaign=Badge_Grade)
+![](https://img.shields.io/pypi/l/pysr3)
+![](https://img.shields.io/pypi/v/pysr3)
+![](https://img.shields.io/github/workflow/status/aksholokhov/pysr3/Testing%20and%20Coverage/sr3)
+[![](https://img.shields.io/badge/docs-up-green)](https://aksholokhov.github.io/pysr3/)
+![](https://img.shields.io/codecov/c/github/aksholokhov/pysr3/sr3?flag=unittests)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b)](https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/pysr3&amp;utm_campaign=Badge_Grade)
 
-# Quickstart with `skmixed`
+# Quickstart with `pysr3`
 
 SR3 is a relaxation method designed for accurate feature selection.
 It currently supports:
@@ -15,9 +15,9 @@ It currently supports:
 
 ## Installation
 
-skmixed can be installed via
+pysr3 can be installed via
 ```bash
- pip install skmixed
+ pip install pysr3
 ```
 
 ## Requirements
@@ -31,11 +31,12 @@ dependencies, as listed in requirements.txt:
 * scikit_learn>=0.24.2
 
 ## Usage
-skmixed models are fully compatible to [sklearn standards](https://scikit-learn.org/stable/developers/develop.html),
+pysr3 models are fully compatible to [sklearn standards](https://scikit-learn.org/stable/developers/develop.html),
 so you can use them as you normally would use a sklearn model.
 
 ### Linear Models
 A simple example of using SR3-empowered LASSO for feature selection is shown below.
+
 
 ```python
 import numpy as np
@@ -59,6 +60,8 @@ print(f"The dataset has {a.shape[0]} objects and {a.shape[1]} features; \n"
 
     The dataset has 300 objects and 500 features; 
     The vector of true parameters contains 55 non-zero elements out of 500.
+
+
 
 ```python
 # Automatic features selection using information criterion
@@ -97,6 +100,7 @@ print(f"The model found {tp} out of {tp + fn} features correctly, but also chose
 
 Below we show how to use Linear Mixed-Effects (LME) models for simultaneous selection
 of fixed and random effects.
+
 
 ```python
 from pysr3.lme.models import L1LmeModelSR3
