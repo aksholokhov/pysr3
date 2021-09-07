@@ -337,7 +337,7 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         group_labels = self.coef_['group_labels']
         answers = []
-        for i, (x, _, z, variances) in enumerate(problem):
+        for i, (x, _, z, _) in enumerate(problem):
             label = problem.group_labels[i]
             idx_of_this_label_in_train = np.where(group_labels == label)
             assert len(idx_of_this_label_in_train) <= 1, "Group labels of the classifier contain duplicates."

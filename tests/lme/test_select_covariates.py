@@ -33,7 +33,7 @@ class TestSelectCovariates(unittest.TestCase):
                 for model_name in MODELS_NAMES:
                     with self.subTest(model_name=model_name):
                         true_beta = true_gamma = np.array([1, 0, 1])
-                        problem, true_model_parameters = LMEProblem.generate(**problem_parameters, seed=i,
+                        problem, _ = LMEProblem.generate(**problem_parameters, seed=i,
                                                                              beta=true_beta, gamma=true_gamma)
                         x, y, labels = problem.to_x_y()
                         data = pd.DataFrame(x, columns=["group", "x1", "x2", "x3", "variance"])
@@ -50,7 +50,7 @@ class TestSelectCovariates(unittest.TestCase):
                                           model_name=model_name
                                           )
                         with open('sel_covs.yaml', 'r') as f:
-                            answers = yaml.load(f)
+                            answers = yaml.safe_load(f)
                         self.assertEquals(tuple(answers['fixed_effects']), ("x1", "x3"))
                         self.assertEquals(tuple(answers['random_effects']), ("x1", "x3"))
                 if Path('sel_covs.yaml').exists():

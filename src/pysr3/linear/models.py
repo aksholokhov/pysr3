@@ -16,7 +16,7 @@ class LinearModel(BaseEstimator, RegressorMixin):
 
     def __init__(self, logger_keys=None):
         """
-        Initializes a linear model
+        Initializes a linear model.
 
         Parameters
         ----------

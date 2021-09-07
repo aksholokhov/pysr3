@@ -22,8 +22,6 @@ from typing import Dict
 
 import numpy as np
 
-from pysr3.lme.problems import LMEProblem
-
 
 class Prior:
     pass

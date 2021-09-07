@@ -27,7 +27,6 @@ from scipy.linalg.lapack import get_lapack_funcs
 
 
 class LinearLMEOracle:
-
     """
     Implements Linear Mixed-Effects Model functional for given problem.
 
@@ -186,7 +185,7 @@ class LinearLMEOracle:
 
         result = 0
         self._recalculate_cholesky(gamma)
-        for (x, y, _, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, _, _), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             result += 1 / 2 * np.sum(L_inv.dot(xi) ** 2) - np.sum(np.log(np.diag(L_inv)))
         return result + self.prior.loss(beta, gamma)
@@ -266,7 +265,7 @@ class LinearLMEOracle:
         self._recalculate_cholesky(gamma)
         num_random_effects = self.problem.num_random_features
         hessian = np.zeros(shape=(num_random_effects, num_random_effects))
-        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, z, _), el_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             el_z = el_inv.dot(z)
             el_xi = el_inv.dot(xi).reshape((len(xi), 1))
@@ -442,7 +441,7 @@ class LinearLMEOracle:
         """
         self._recalculate_cholesky(gamma)
         gradient = np.zeros(self.problem.num_fixed_features)
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, _, _), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             gradient += - (L_inv.dot(x)).T.dot(L_inv.dot(xi))
         return gradient + self.prior.gradient_beta(beta=beta, gamma=gamma)
@@ -1224,7 +1223,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         """
         tbeta, tgamma = self.x_to_beta_gamma(w)
         beta, gamma, tbeta, tgamma, _ = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
-                                                                          tgamma=tgamma, **kwargs)
+                                                                        tgamma=tgamma, **kwargs)
         return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
 
     def gradient_value_function(self, w, logger=None, **kwargs):
@@ -1242,8 +1241,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         """
         tbeta, tgamma = self.x_to_beta_gamma(w)
 
-        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
-                                                                          tgamma=tgamma)
+        beta, gamma, tbeta, tgamma, _ = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
+                                                                        tgamma=tgamma)
         x = self.beta_gamma_to_x(beta, gamma)
         lambdas = np.array([self.lb] * self.problem.num_fixed_features + [self.lg] * self.problem.num_random_features)
         return -lambdas * (x - w)
@@ -1280,17 +1279,17 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         Five objects: beta, gamma, tbeta, tgamma, logger
         """
         tbeta, tgamma = self.x_to_beta_gamma(w)
-        _, _, tbeta, tgamma, log = self.find_optimal_parameters_ip(beta=2 * tbeta,
-                                                                          gamma=2 * tgamma,
-                                                                          tbeta=tbeta,
-                                                                          tgamma=tgamma,
-                                                                          log_progress=log_progress,
-                                                                          regularizer=regularizer,
-                                                                          increase_lambdas=increase_lambdas,
-                                                                          line_search=line_search,
-                                                                          prox_step_len=prox_step_len,
-                                                                          update_prox_every=update_prox_every,
-                                                                          **kwargs)
+        _, _, tbeta, tgamma, _ = self.find_optimal_parameters_ip(beta=2 * tbeta,
+                                                                 gamma=2 * tgamma,
+                                                                 tbeta=tbeta,
+                                                                 tgamma=tgamma,
+                                                                 log_progress=log_progress,
+                                                                 regularizer=regularizer,
+                                                                 increase_lambdas=increase_lambdas,
+                                                                 line_search=line_search,
+                                                                 prox_step_len=prox_step_len,
+                                                                 update_prox_every=update_prox_every,
+                                                                 **kwargs)
         return self.beta_gamma_to_x(tbeta, tgamma)
 
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
@@ -1443,7 +1442,6 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         q = sum(np.abs(gamma) >= tolerance)
         return 2 * super().loss(beta, gamma, **kwargs) + (p + q) * np.log(
             self._jones2010n_eff())
-
 
     def muller_hui_2016ic(self, beta, gamma, tolerance=0., **kwargs):
         """

@@ -21,7 +21,7 @@ class TestLinearLMEProblem(unittest.TestCase):
                                                        seed=0)
         x1, y1, columns_labels = problem.to_x_y()
         problem2 = LMEProblem.from_x_y(x1, y1, columns_labels=columns_labels)
-        for i, (x, y, z, l) in enumerate(problem2):
+        for i, (x, y, z, _) in enumerate(problem2):
             self.assertTrue(np.allclose(y, x.dot(true_parameters['beta']) + z.dot(
                 true_parameters['random_effects'][i][1]) + true_parameters['errors'][i]))
 
@@ -94,7 +94,7 @@ class TestLinearLMEProblem(unittest.TestCase):
         self.assertTrue(np.all(columns_labels_2 == columns_labels))
 
     def test_from_dataframe(self):
-        problem, true_parameters = LMEProblem.generate(groups_sizes=[40, 30, 50],
+        problem, _ = LMEProblem.generate(groups_sizes=[40, 30, 50],
                                                        features_labels=["fixed+random"] * 2,
                                                        fit_fixed_intercept=True,
                                                        fit_random_intercept=True,
