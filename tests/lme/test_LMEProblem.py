@@ -112,8 +112,8 @@ class TestLinearLMEProblem(unittest.TestCase):
                                              variance="obs_var",
                                              target="target",
                                              groups="groups",
-                                             must_include_fe=[],
-                                             must_include_re=["x1"])
+                                             not_regularized_fe=[],
+                                             not_regularized_re=["x1"])
         x2, y2, columns_labels_2 = problem2.to_x_y()
         self.assertTrue(np.all(x == x2))
         self.assertTrue(np.all(y == y2))

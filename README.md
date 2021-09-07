@@ -48,7 +48,7 @@ seed = 42
 num_objects = 300
 num_features = 500
 np.random.seed(seed)
-# create a vector of true model's coefficients
+# create a vector of true model_name's coefficients
 true_x = np.random.choice(2, size=num_features, p=np.array([0.9, 0.1]))
 # create sample data
 a = 10 * np.random.randn(num_objects, num_features)
@@ -73,7 +73,7 @@ from sklearn.utils.fixes import loguniform
 # Here we use SR3-empowered LASSO, but many other popular regularizers are also available
 # See the glossary of models for more details.
 model = LinearL1ModelSR3()
-# We will search for the best model over the range of strengths for the regularizer
+# We will search for the best model_name over the range of strengths for the regularizer
 params = {
     "lam": loguniform(1e-1, 1e2)
 }
@@ -88,7 +88,7 @@ selector.fit(a, b)
 maybe_x = selector.best_estimator_.coef_['x']
 tn, fp, fn, tp = confusion_matrix(true_x, maybe_x != 0).ravel()
 
-print(f"The model found {tp} out of {tp + fn} features correctly, but also chose {fp} extra irrelevant features. \n"
+print(f"The model_name found {tp} out of {tp + fn} features correctly, but also chose {fp} extra irrelevant features. \n"
       f"The best parameter is {selector.best_params_}")
 ```
 
@@ -126,12 +126,12 @@ x, y, columns_labels = problem.to_x_y()
 
 
 ```python
-# We use SR3-empowered LASSO model, but many other popular models are also available.
+# We use SR3-empowered LASSO model_name, but many other popular models are also available.
 # See the glossary of models for more details.
 model = L1LmeModelSR3()
 
 # We're going to select features by varying the strength of the prior
-# and choosing the model that yields the best information criterion
+# and choosing the model_name that yields the best information criterion
 # on the validation set.
 params = {
     "lam": loguniform(1e-3, 1e3)
@@ -163,7 +163,7 @@ ftn, ffp, ffn, ftp = confusion_matrix(true_parameters["beta"], abs(maybe_beta) >
 rtn, rfp, rfn, rtp = confusion_matrix(true_parameters["gamma"], abs(maybe_gamma) > 1e-2).ravel()
 
 print(
-    f"The model found {ftp} out of {ftp + ffn} correct fixed features, and also chose {ffp} out of {ftn + ffn} extra irrelevant fixed features. \n"
+    f"The model_name found {ftp} out of {ftp + ffn} correct fixed features, and also chose {ffp} out of {ftn + ffn} extra irrelevant fixed features. \n"
     f"It also identified {rtp} out of {rtp + rfn} random effects correctly, and got {rfp} out of {rtn + rfn} non-present random effects. \n"
     f"The best sparsity parameter is {selector.best_params_}")
 ```

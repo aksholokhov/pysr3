@@ -24,7 +24,7 @@ def select_covariates(df: pd.DataFrame,
                       covs: Optional[Dict[str, List[str]]] = None,
                       pre_sel_covs: Optional[Dict[str, List[str]]] = None,
                       output_folder: Union[str, Path] = ".",
-                      model: str = "L1_SR3",
+                      model_name: str = "L1_SR3",
                       **kwargs) -> None:
     """Implements black-box functionality for selecting most important fixed and random features
     in Linear Mixed-Effect Models.
@@ -42,14 +42,14 @@ def select_covariates(df: pd.DataFrame,
     covs : Optional[Dict[str, List[str]]]
         Dictionary contains all the covariate candidates. Keys of the dictionary
         are `fixed_effects` and `random_effects`, and corresponding value is a
-        list of covariate names which can be empty. Default to `None`, and when
+        list of covariates names which can be empty. Default to `None`, and when
         `covs` is None, it will be automatically parsed as Dictionary with empty
         list as values.
     pre_sel_covs : Optional[Dict[str, List[str]]]
         Same structure with `covs`. Default to `None`.
     output_folder : Union[str, Path]
         Path for output folder to store the results. Default to `"."`.
-    model : str
+    model_name : str
         which model to use. Can be "L0", "L0_SR3", "L1", "L1_SR3", "CAD", "CAD_SR3", "SCAD", "SCAD_SR3"
 
     Returns
@@ -81,27 +81,27 @@ def select_covariates(df: pd.DataFrame,
                                         groups=group,
                                         variance=se,
                                         target=target,
-                                        must_include_fe=pre_sel_covs.get("fixed_effects", []),
-                                        must_include_re=pre_sel_covs.get("random_effects", []),
+                                        not_regularized_fe=pre_sel_covs.get("fixed_effects", []),
+                                        not_regularized_re=pre_sel_covs.get("random_effects", []),
                                         )
 
-    model_constructor, selection_spectrum = get_model(model, problem)
+    model_constructor, selection_spectrum = get_model(model_name, problem)
     best_model = None
     best_score = +np.infty
     for params in selection_spectrum:
-        model = model_constructor(params)
+        model = model_constructor({**params, "logger_keys": ('converged', 'jones_bic')})
         model.fit_problem(problem)
-        score = model.jones2010bic()
+        score = model.logger_.get('jones_bic')
         if score < best_score:
             best_model = model
             best_score = score
-        print(f"{params}, score={score}")
+        # print(f"{model}: {params}, score={score}")
 
     sel_covs = {
         "fixed_effects": [label for label, coef in zip(problem.fixed_features_columns, best_model.coef_["beta"]) if
-                          coef != 0],
+                          abs(coef) >= 1e-2],
         "random_effects": [label for label, coef in zip(problem.random_features_columns, best_model.coef_["gamma"]) if
-                           coef != 0]
+                           abs(coef) >= 1e-2]
     }
 
     # save results
@@ -125,7 +125,7 @@ def get_model(model: str, problem: LMEProblem):
     -------
 
     """
-    if model == "L0" or model == "SR3_L0":
+    if model == "L0" or model == "L0_SR3":
         selection_spectrum = [{"nnz_tbeta": p, "nnz_tgamma": q} for p in range(1, problem.num_fixed_features) for q in
                               range(1, problem.num_random_features) if p >= q]
         return lambda params: L0LmeModel(**params) if model == "L0" else L0LmeModelSR3(**params), selection_spectrum

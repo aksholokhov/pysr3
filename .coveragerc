@@ -1,2 +1,8 @@
 [run]
-branch = True
+omit =
+    setup.py
+    docs/*
+    build/*
+    tests/*
+    */__init__.py
+    */__about__.py

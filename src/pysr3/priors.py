@@ -1,5 +1,21 @@
+# Prior distributions for model parameters
+# Copyright (C) 2021 Aleksei Sholokhov, aksh@uw.edu
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
-Prior distributions for models' parameters
+Prior distributions for model parameters
 """
 
 from typing import Dict
@@ -24,9 +40,6 @@ class GaussianPrior:
 
         Parameters
         ----------
-        fe_params: dict[str: tuple(float, float)]
-            gaussian prior parameters for fixed effects. The format is {"name": (mean, std), ...}
-             E.g. {"intercept": (0, 2), "time": (1, 1)}
         params: dict[str: tuple(float, float)]
             gaussian prior for variances of random effects. Same format as above.
         """
@@ -41,15 +54,16 @@ class GaussianPrior:
 
         Parameters
         ----------
-        problem: LMEProblem
-            problem to fit
+        problem_columns: List[str]
+            Names of the columns for a particular dataset. Matches the elements of self.params (dict)
+            with the columns of a particular dataset.
 
         Returns
         -------
         None
         """
         assert all(key in problem_columns for key in self.params.keys()), \
-            (f"Some keys are listed in the prior but not listed in the prolem's column labels:" +
+            (f"Some keys are listed in the prior but not listed in the problem's column labels:" +
              f" {[key for key in self.params.keys() if key not in problem_columns]}")
 
         means = []
@@ -83,11 +97,8 @@ class GaussianPrior:
 
         Parameters
         ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
+        x: ndarray
+            vector of parameters
 
         Returns
         -------
@@ -101,33 +112,22 @@ class GaussianPrior:
 
         Parameters
         ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
+        x: ndarray
+            vector of parameters
 
         Returns
         -------
-        gradient w.r.t. beta
+        gradient
         """
         return self.weights * (1 / self.stds) * (x - self.means)
 
-    def hessian(self, x):
+    def hessian(self, _):
         """
         Evaluates Hessian of the prior with respect to the vector of fixed effects
 
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
         Returns
         -------
-        Hessian w.r.t. (beta, beta)
+        Hessian
         """
         return np.diag(self.weights * (1 / self.stds))
 
@@ -167,17 +167,10 @@ class NonInformativePrior(Prior):
         """
         pass
 
-    def loss(self, x):
+    @staticmethod
+    def loss(_):
         """
         Value of the prior at beta, gamma.
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
 
         Returns
         -------
@@ -185,35 +178,21 @@ class NonInformativePrior(Prior):
         """
         return 0
 
-    def gradient(self, x):
+    @staticmethod
+    def gradient(_):
         """
         Evaluates the gradient of the prior with respect to the vector of fixed effects
 
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
-
         Returns
         -------
-        gradient w.r.t. beta
+        gradient
         """
         return 0
 
-    def hessian(self, x):
+    @staticmethod
+    def hessian(_):
         """
         Evaluates Hessian of the prior with respect to the vector of random effects
-
-        Parameters
-        ----------
-        beta: ndarray
-            vector of fixed effects
-
-        gamma: ndarray
-            vector of random effects
 
         Returns
         -------

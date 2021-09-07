@@ -20,9 +20,6 @@ class LinearModel(BaseEstimator, RegressorMixin):
     def instantiate(self) -> Tuple[Optional[LinearOracle], Optional[Regularizer], Optional[PGDSolver]]:
         raise NotImplementedError("LinearModel is a base abstract class that should be used only for inheritance.")
 
-    def forget(self):
-        pass
-
     def fit(self,
             x: np.ndarray,
             y: np.ndarray,

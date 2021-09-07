@@ -545,11 +545,16 @@ class LMEProblem(Problem):
         columns: List[str]
             List of columns names
 
-        columns_labels: List, shape = [n], Optional
-            A list of column labels which can be 0 (group labels), 1 (fixed effect), 2 (random effect),
-            3 (both fixed and random), 4 (observation standard deviance), or 5 (categorical features).
-            There should be only one 0 in the list. If columns_labels is None then it's assumed that
-            it is the first row of x.
+        columns_labels :  List[str]
+            List of column labels. There shall be only one column of group labels and answers STDs.
+
+                - "fixed" : fixed effect
+                - "random" : random effect
+                - "fixed+random" : both fixed and random,
+                - "group" : groups labels
+                - "variance" : answers standard deviations
+                -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                    | and "fit_random_intercept" respectively.
 
         fit_fixed_intercept: bool, default = True
             Whether to add an intercept as a fixed feature
@@ -604,7 +609,8 @@ class LMEProblem(Problem):
             assert len(columns) == x.shape[1], "'columns' should contain names for all columns"
 
         if must_include_fe or must_include_re and not columns:
-            raise ValueError("'columns' must be provided when 'must_include_fe' or 'must_include_re' are provided")
+            raise ValueError(
+                "'columns' must be provided when 'not_regularized_fe' or 'not_regularized_re' are provided")
 
         num_fixed_features = len(fixed_features_idx) + (1 if fit_fixed_intercept else 0)
 
@@ -738,18 +744,49 @@ class LMEProblem(Problem):
                        groups: str,
                        variance: str,
                        target: str,
-                       must_include_fe: List[str],
-                       must_include_re: List[str]
+                       not_regularized_fe: List[str],
+                       not_regularized_re: List[str]
                        ):
+        """
+        Creates LMEProblem from Pandas dataframe
 
-        for effect in fixed_effects + random_effects + [groups, variance, target] + must_include_fe + must_include_re:
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Dataframe that contains all relevant data
+        fixed_effects : List[str]
+            List of column names that should be included as fixed effects
+        random_effects : List[str]
+            List of column names that should be included as random effects
+        groups : str
+            Name of the column that contains groups labels
+        variance : str
+            Name of the column that contains observation variances
+        target : str
+            Name of the column that contains the target variable
+        not_regularized_fe : str
+            List of fixed effects which corresponding coefficients in the model are not penalized by
+            a sparsity-promoting regularizer. Does NOT guarantee that these features are going to be
+            included to the final model but significantly increases the chances of it.
+        not_regularized_re : str
+            List of random effects which corresponding coefficients in the model are not penalized by
+            a sparsity-promoting regularizer. Does NOT guarantee that these features are going to be
+            included to the final model but significantly increases the chances of it.
+
+        Returns
+        -------
+            LMEProblem
+        """
+
+        for effect in fixed_effects + random_effects + [groups, variance,
+                                                        target] + not_regularized_fe + not_regularized_re:
             if effect not in data.columns:
                 raise ValueError(f"{effect} is not a column of the data-frame")
 
-        if not all(effect in fixed_effects for effect in must_include_fe):
-            raise ValueError("All elements from must_include_fe should also be in fixed_effects")
-        if not all(effect in random_effects for effect in must_include_re):
-            raise ValueError("All elements from must_include_re should also be in random_effects")
+        if not all(effect in fixed_effects for effect in not_regularized_fe):
+            raise ValueError("All elements from not_regularized_fe should also be in fixed_effects")
+        if not all(effect in random_effects for effect in not_regularized_re):
+            raise ValueError("All elements from not_regularized_re should also be in random_effects")
 
         columns = []
         column_labels = []
@@ -776,24 +813,65 @@ class LMEProblem(Problem):
                                    columns=columns,
                                    fit_fixed_intercept="intercept" in fixed_effects,
                                    fit_random_intercept="intercept" in random_effects,
-                                   must_include_fe=must_include_fe,
-                                   must_include_re=must_include_re)
+                                   must_include_fe=not_regularized_fe,
+                                   must_include_re=not_regularized_re)
 
 
 class LMEStratifiedShuffleSplit:
-    def __init__(self, columns_labels, random_state=42, test_size=0.25, n_splits=3):
+    """
+    Class that generates shuffle splits of the dataset that are stratified by groups
+    """
+
+    def __init__(self, columns_labels: List[str], random_state=42, test_size=0.25, n_splits=3):
+        """
+        Creates LMEStratifiedShuffleSplit
+
+        Parameters
+        ----------
+        columns_labels :  List[str]
+            List of column labels. There shall be only one column of group labels and answers STDs.
+
+                - "fixed" : fixed effect
+                - "random" : random effect
+                - "fixed+random" : both fixed and random,
+                - "group" : groups labels
+                - "variance" : answers standard deviations
+                -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                    | and "fit_random_intercept" respectively.
+
+        random_state : int
+            Random seed for the generator
+        test_size : float, between 0 and 1
+            fraction of the dataset for the test part of splits
+        n_splits : int
+            number of splits
+        """
         self.columns_labels = columns_labels
         self.seed = random_state
         self.test_size = test_size
         self.n_splits = n_splits
 
     def split(self, x=None, y=None, groups=None):
+        """
+        Generates splits
+
+        Parameters
+        ----------
+        x : ndarray, (n, p)
+            data matrix
+        y : ndarray (n, )
+            target variable
+
+        Returns
+        -------
+        Iterable over tuples (X_train, y_train, X_test, y_test) that are stratified by the group
+        """
         check_X_y(x, y)
         splitter = StratifiedShuffleSplit(n_splits=self.n_splits, test_size=self.test_size, random_state=self.seed)
         group_column = np.where([label == GROUP for label in self.columns_labels])[0]
         return splitter.split(x, y=x[:, group_column])
 
-    def get_n_splits(self, x=None, y=None, groups=None):
+    def get_n_splits(self, x, y, groups):
         return self.n_splits
 
 
@@ -805,15 +883,20 @@ def get_per_group_coefficients(beta, random_effects, labels):
     ----------
     beta: ndarray, shape=(n,), n is the number of fixed effects.
         Vector of fixed effects.
+
     random_effects: ndarray or list, shape=(m, k), m groups, k random effects.
         Array of random effects.
-    labels: ndarray[int], shape=(t,), t -- number of columns in the dataset INCLUDING INTERCEPT.
-        Vector of labels of the column's dataset, including intercept. Labels can be the following integers:
-            0 : Groups labels (ignored).
-            1 : Fixed effect.
-            2 : Random effect.
-            3 : Both fixed and random effect.
-            4 : Standard deviations for measurement errors for answers (ignored).
+
+    labels :  List[str]
+        List of column labels. There shall be only one column of group labels and answers STDs.
+
+            - "fixed" : fixed effect
+            - "random" : random effect
+            - "fixed+random" : both fixed and random,
+            - "group" : groups labels
+            - "variance" : answers standard deviations
+            -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                | and "fit_random_intercept" respectively.
 
     Returns
     -------

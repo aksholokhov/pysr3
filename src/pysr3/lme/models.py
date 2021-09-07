@@ -1,4 +1,4 @@
-# This code implements solvers for linear mixed-effects models.
+# This code implements a variety of sklearn-compatible linear mixed-effects models.
 # Copyright (C) 2020 Aleksei Sholokhov, aksh@uw.edu
 #
 # This program is free software: you can redistribute it and/or modify
@@ -62,12 +62,6 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        solver: PGDSolver
-            an instance of PGDSolver
-        oracle: LinearLMEOracle
-            an instance of LinearLMEOracle
-        regularizer: Regularizer
-            an instance of Regularizer
         initializer: str
             "EM" or "None"
         logger_keys: Optional[Set[str]]
@@ -77,6 +71,9 @@ class LMEModel(BaseEstimator, RegressorMixin):
         self.initializer = initializer
 
     def instantiate(self) -> Tuple[Optional[LinearLMEOracle], Optional[Regularizer], Optional[PGDSolver]]:
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver.
+        """
         raise NotImplementedError("LinearModel is a base abstract class that should be used only for inheritance.")
 
     def fit(self,
@@ -91,53 +88,62 @@ class LMEModel(BaseEstimator, RegressorMixin):
             re_regularization_weights=None,
             **kwargs):
         """
-                Fits a Linear Model with Linear Mixed-Effects to the given data.
+        Fits a Linear Model with Linear Mixed-Effects to the given data.
 
-                Parameters
-                ----------
+        Parameters
+        ----------
+        x : np.ndarray
+            Data matrix. Rows correspond to objects, columns correspond to features, group labels, and variances.
 
-                x : np.ndarray
-                    Data. If columns_labels = None then it's assumed that columns_labels are in the first row of x.
+        y : np.ndarray
+            Answers, real-valued array.
 
-                y : np.ndarray
-                    Answers, real-valued array.
+        columns_labels :  List[str]
+            List of column labels. There shall be only one column of group labels and answers STDs.
 
-                columns_labels : np.ndarray
-                    List of column labels. There shall be only one column of group labels and answers STDs,
-                    and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
+                - "fixed" : fixed effect
+                - "random" : random effect
+                - "fixed+random" : both fixed and random,
+                - "group" : groups labels
+                - "variance" : answers standard deviations
+                -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                    | and "fit_random_intercept" respectively.
 
-                        - 1 : fixed effect
-                        - 2 : random effect
-                        - 3 : both fixed and random,
-                        - 0 : groups labels
-                        - 4 : answers standard deviations
+        initial_parameters : Dict[np.ndarray]
+            Dict with possible fields:
 
-                initial_parameters : np.ndarray
-                    Dict with possible fields:
+                -   | 'beta' : np.ndarray, shape = [p],
+                    | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
+                -   | 'gamma' : np.ndarray, shape = [q],
+                    | Initial estimate of random effects covariances.
+                    | If None then it defaults to an all-ones vector.
 
-                        -   | 'beta0' : np.ndarray, shape = [n],
-                            | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
-                        -   | 'gamma0' : np.ndarray, shape = [k],
-                            | Initial estimate of random effects covariances.
-                            | If None then it defaults to an all-ones vector.
+        warm_start : bool, default is False
+            Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
+            Throws NotFittedError if set to True when not fitted.
 
-                warm_start : bool, default is False
-                    Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
-                    Throws NotFittedError if set to True when not fitted.
+        fit_fixed_intercept : bool, default = False
+            Whether to add the intercept to the model
 
-                fit_fixed_intercept : bool, default = False
-                    Whether to add the intercept to the model
+        fit_random_intercept : bool, default = False
+            Whether treat the intercept as a random effect.
 
-                fit_random_intercept : bool, default = False
-                    Whether treat the intercept as a random effect.
-                kwargs :
-                    Not used currently, left here for passing debugging parameters.
+        fe_regularization_weights: ndarray[int], 0 or 1
+            Vector of length of the number of features where 0 means do not apply regularizer to the
+            coefficients of the corresponding fixed features and 1 means apply as usual.
 
-                Returns
-                -------
-                self : LinearLMESparseModel
-                    Fitted regression model.
-                """
+        re_regularization_weights: ndarray[int], 0 or 1
+            Vector of length of the number of features where 0 means do not apply regularizer to the
+            coefficients of the corresponding fixed features and 1 means apply as usual.
+
+        kwargs :
+            Not used currently, left here for passing debugging parameters.
+
+        Returns
+        -------
+        self : LinearLMESparseModel
+            Fitted regression model.
+        """
         check_X_y(x, y)
         x = np.array(x, dtype='float64')
         y = np.array(y, dtype='float64')
@@ -169,14 +175,23 @@ class LMEModel(BaseEstimator, RegressorMixin):
         initial_parameters : np.ndarray
             Dict with possible fields:
 
-                -   | 'beta0' : np.ndarray, shape = [n],
+                -   | 'beta' : np.ndarray, shape = [p],
                     | Initial estimate of fixed effects. If None then it defaults to an all-ones vector.
-                -   | 'gamma0' : np.ndarray, shape = [k],
+                -   | 'gamma' : np.ndarray, shape = [q],
                     | Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.
 
         warm_start : bool, default is False
             Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
             Throws NotFittedError if set to True when not fitted.
+
+        fe_regularization_weights: ndarray[int], 0 or 1
+            Vector of length of the number of features where 0 means do not apply regularizer to the
+            coefficients of the corresponding fixed features and 1 means apply as usual.
+
+        re_regularization_weights: ndarray[int], 0 or 1
+            Vector of length of the number of features where 0 means do not apply regularizer to the
+            coefficients of the corresponding fixed features and 1 means apply as usual.
+
 
         kwargs :
             Not used currently, left here for passing debugging parameters.
@@ -262,22 +277,22 @@ class LMEModel(BaseEstimator, RegressorMixin):
             the number of columns and the columns' labels should be the same. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
 
-        columns_labels : Optional[List[str]]
-            List of column labels. There shall be only one column of group labels and answers STDs,
-            and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
+        columns_labels :  List[str]
+            List of column labels. There shall be only one column of group labels and answers STDs.
 
-                - 1 : fixed effect
-                - 2 : random effect
-                - 3 : both fixed and random,
-                - 0 : groups labels
-                - 4 : answers standard deviations
+                - "fixed" : fixed effect
+                - "random" : random effect
+                - "fixed+random" : both fixed and random,
+                - "group" : groups labels
+                - "variance" : answers standard deviations
+                -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                    | and "fit_random_intercept" respectively.
 
-        fit_fixed_intercept: bool, default = True
+        fit_fixed_intercept: bool, default = False
             Whether to add an intercept as a fixed feature
 
-        fit_random_intercept: bool, default = True
+        fit_random_intercept: bool, default = False
             Whether to add an intercept as a random feature.
-
 
         Returns
         -------
@@ -362,8 +377,22 @@ class LMEModel(BaseEstimator, RegressorMixin):
         y : np.ndarray
             Answers, real-valued array.
 
-        columns_labels: np.ndarray
-            Labels for columns of x
+        columns_labels :  List[str]
+            List of column labels. There shall be only one column of group labels and answers STDs.
+
+                - "fixed" : fixed effect
+                - "random" : random effect
+                - "fixed+random" : both fixed and random,
+                - "group" : groups labels
+                - "variance" : answers standard deviations
+                -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                    | and "fit_random_intercept" respectively.
+
+        fit_fixed_intercept: bool, default = False
+            Whether to add an intercept as a fixed feature
+
+        fit_random_intercept: bool, default = False
+            Whether to add an intercept as a random feature.
 
         sample_weight : array_like, Optional
             Weights of samples for calculating the R^2 statistics.
@@ -444,6 +473,13 @@ class SimpleLMEModel(LMEModel):
         self.prior = prior
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle = LinearLMEOracle(None, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
         regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
@@ -454,6 +490,35 @@ class SimpleLMEModel(LMEModel):
         return oracle, regularizer, solver
 
     def get_information_criterion(self, x, y, columns_labels=None, ic="muller_ic"):
+        """
+        x : np.ndarray
+            Data matrix. Rows correspond to objects, columns correspond to features, group labels, and variances.
+
+        y : np.ndarray
+            Answers, real-valued array.
+
+        columns_labels :  List[str]
+            List of column labels. There shall be only one column of group labels and answers STDs.
+
+                - "fixed" : fixed effect
+                - "random" : random effect
+                - "fixed+random" : both fixed and random,
+                - "group" : groups labels
+                - "variance" : answers standard deviations
+                -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                    | and "fit_random_intercept" respectively.
+
+        ic : str
+            Information criterion. Can be one of the following
+
+                - "muller_ic": IC from (Hui, Muller, 2016)
+                - "vaida_aic": AIC from (Vaida, 2005)
+                - "jones_bic": BIC from (Jones, 2010)
+
+        Returns
+        -------
+            value of the requested IC
+        """
         self.check_is_fitted()
         problem = LMEProblem.from_x_y(x, y, columns_labels=columns_labels)
         oracle = LinearLMEOracle(problem)
@@ -564,6 +629,13 @@ class SimpleLMEModelSR3(LMEModel):
         self.update_prox_every = update_prox_every
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         if not self.fixed_step_len:
             fixed_step_len = 1 if self.ell == 0 else 1 / self.ell
         else:
@@ -581,6 +653,35 @@ class SimpleLMEModelSR3(LMEModel):
         return oracle, regularizer, solver
 
     def get_information_criterion(self, x, y, columns_labels=None, ic="muller_ic"):
+        """
+        x : np.ndarray
+            Data matrix. Rows correspond to objects, columns correspond to features, group labels, and variances.
+
+        y : np.ndarray
+            Answers, real-valued array.
+
+        columns_labels :  List[str]
+            List of column labels. There shall be only one column of group labels and answers STDs.
+
+                - "fixed" : fixed effect
+                - "random" : random effect
+                - "fixed+random" : both fixed and random,
+                - "group" : groups labels
+                - "variance" : answers standard deviations
+                -   | "intercept" : intercept column (fixed or random intercept is controlled by "fit_fixed_intercept"
+                    | and "fit_random_intercept" respectively.
+
+        ic : str
+            Information criterion. Can be one of the following
+
+                - "muller_ic": IC from (Hui, Muller, 2016)
+                - "vaida_aic": AIC from (Vaida, 2005)
+                - "jones_bic": BIC from (Jones, 2010)
+
+        Returns
+        -------
+            value of the requested IC
+        """
         self.check_is_fitted()
         problem = LMEProblem.from_x_y(x, y, columns_labels=columns_labels)
         oracle = LinearLMEOracleSR3(problem)
@@ -769,6 +870,13 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
         self.nnz_tgamma = nnz_tgamma
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle, regularizer, solver = super().instantiate()
         l0_regularizer = L0Regularizer(nnz_tbeta=self.nnz_tbeta,
                                        nnz_tgamma=self.nnz_tgamma,
@@ -831,6 +939,13 @@ class L1LmeModel(SimpleLMEModel):
         self.lam = lam
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle, regularizer, solver = super().instantiate()
         fixed_step_len = 1 / (self.lam + 1) if not self.fixed_step_len else self.fixed_step_len
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
@@ -920,6 +1035,13 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
         self.lam = lam
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle, regularizer, solver = super().instantiate()
         l1_regularizer = L1Regularizer(lam=self.lam)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
@@ -984,6 +1106,13 @@ class CADLmeModel(SimpleLMEModel):
         self.rho = rho
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle, regularizer, solver = super().instantiate()
         fixed_step_len = 1 / (self.lam + 1) if not self.fixed_step_len else self.fixed_step_len
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
@@ -1077,6 +1206,13 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
         self.rho = rho
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle, regularizer, solver = super().instantiate()
         cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
@@ -1145,6 +1281,13 @@ class SCADLmeModel(SimpleLMEModel):
         self.sigma = sigma
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle, regularizer, solver = super().instantiate()
         fixed_step_len = 1 / (self.lam + 1) if not self.fixed_step_len else self.fixed_step_len
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
@@ -1242,47 +1385,14 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
         self.sigma = sigma
 
     def instantiate(self):
+        """
+        Instantiates the model: creates all internal entities such as oracle, regularizer, and solver
+
+        Returns
+        -------
+        Tuple of [Oracle, Regularizer, Solver] that correspond to this model
+        """
         oracle, regularizer, solver = super().instantiate()
         scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
         return oracle, regularizer, solver
-
-
-def _check_input_consistency(problem, beta=None, gamma=None, tbeta=None, tgamma=None):
-    """
-    Checks the consistency of .fit() arguments
-
-    Parameters
-    ----------
-    problem : LMEProblem
-        The problem which contains data
-    beta : array-like, shape = [n], Optional
-        Vector of fixed effects
-    gamma : array-like, shape = [k], Optional
-        Vector of random effects
-    tbeta : array-like, shape = [n], Optional
-        Vector of the sparse set of fixed effects (for regularized models)
-    tgamma : array-like, shape = [k], Optional
-        Vector of the sparse set of random effects (for regularized models)
-
-    Returns
-    -------
-        output : None
-            None if all the checks are passed, otherwise raises an exception
-    """
-
-    num_features = problem.num_fixed_features
-    num_random_effects = problem.num_random_features
-    if beta is not None:
-        if tbeta is not None:
-            check_consistent_length(beta, tbeta)
-        assert len(beta) == num_features, "len(beta) is %d, but the number of features in data is %d" % (
-            len(beta), num_features
-        )
-    if gamma is not None:
-        if tgamma is not None:
-            check_consistent_length(gamma, tgamma)
-        assert len(gamma) == num_random_effects, "len(gamma) is %d, but the number of random effects in data is %d" % (
-            len(gamma), num_random_effects
-        )
-    return None
