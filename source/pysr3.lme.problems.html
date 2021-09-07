@@ -194,23 +194,58 @@
 :Parameters: <strong>kwargs</strong> – anything needed</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.problems.LMEProblem.from_dataframe">
-<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">from_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_effects</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_effects</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_include_fe</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_include_re</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEProblem.from_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">from_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_effects</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_effects</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">not_regularized_fe</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">not_regularized_re</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEProblem.from_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates LMEProblem from Pandas dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – Dataframe that contains all relevant data</p></li>
+<li><p><strong>fixed_effects</strong> (<em>List[str]</em>) – List of column names that should be included as fixed effects</p></li>
+<li><p><strong>random_effects</strong> (<em>List[str]</em>) – List of column names that should be included as random effects</p></li>
+<li><p><strong>groups</strong> (<em>str</em>) – Name of the column that contains groups labels</p></li>
+<li><p><strong>variance</strong> (<em>str</em>) – Name of the column that contains observation variances</p></li>
+<li><p><strong>target</strong> (<em>str</em>) – Name of the column that contains the target variable</p></li>
+<li><p><strong>not_regularized_fe</strong> (<em>str</em>) – List of fixed effects which corresponding coefficients in the model are not penalized by
+a sparsity-promoting regularizer. Does NOT guarantee that these features are going to be
+included to the final model but significantly increases the chances of it.</p></li>
+<li><p><strong>not_regularized_re</strong> (<em>str</em>) – List of random effects which corresponding coefficients in the model are not penalized by
+a sparsity-promoting regularizer. Does NOT guarantee that these features are going to be
+included to the final model but significantly increases the chances of it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>LMEProblem</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.problems.LMEProblem.from_x_y">
 <em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">from_x_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_fixed_intercept</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_random_intercept</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_include_fe</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_include_re</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEProblem.from_x_y" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transforms matrices x (data) and y(answers) into an instance of LMEProblem</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
+<dd class="field-odd"><ul>
 <li><p><strong>x</strong> (<em>array-like, shape = [m,n]</em>) – Data.</p></li>
 <li><p><strong>y</strong> (<em>array-like, shape = [m]</em>) – Answers.</p></li>
 <li><p><strong>columns</strong> (<em>List[str]</em>) – List of columns names</p></li>
-<li><p><strong>columns_labels</strong> (<em>List, shape = [n], Optional</em>) – A list of column labels which can be 0 (group labels), 1 (fixed effect), 2 (random effect),
-3 (both fixed and random), 4 (observation standard deviance), or 5 (categorical features).
-There should be only one 0 in the list. If columns_labels is None then it’s assumed that
-it is the first row of x.</p></li>
+<li><p><strong>columns_labels</strong> (<em>List[str]</em>) –</p>
+<p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
+<blockquote>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
 <li><p><strong>fit_fixed_intercept</strong> (<em>bool, default = True</em>) – Whether to add an intercept as a fixed feature</p></li>
 <li><p><strong>fit_random_intercept</strong> (<em>bool, default = True</em>) – Whether to add an intercept as a random feature.</p></li>
 <li><p><strong>must_include_re</strong> (<em>List[str]</em>) – List of fixed effects for which any effect of sparsity-promoting regularizers
@@ -351,17 +386,57 @@ in which case it’s set to 0.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.lme.problems.LMEStratifiedShuffleSplit">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.problems.</span></span><span class="sig-name descname"><span class="pre">LMEStratifiedShuffleSplit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEStratifiedShuffleSplit" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.problems.</span></span><span class="sig-name descname"><span class="pre">LMEStratifiedShuffleSplit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEStratifiedShuffleSplit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that generates shuffle splits of the dataset that are stratified by groups</p>
+<p>Creates LMEStratifiedShuffleSplit</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul>
+<li><p><strong>columns_labels</strong> (<em>List[str]</em>) –</p>
+<p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
+<blockquote>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>random_state</strong> (<em>int</em>) – Random seed for the generator</p></li>
+<li><p><strong>test_size</strong> (<em>float, between 0 and 1</em>) – fraction of the dataset for the test part of splits</p></li>
+<li><p><strong>n_splits</strong> (<em>int</em>) – number of splits</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.problems.LMEStratifiedShuffleSplit.get_n_splits">
-<span class="sig-name descname"><span class="pre">get_n_splits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEStratifiedShuffleSplit.get_n_splits" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_n_splits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEStratifiedShuffleSplit.get_n_splits" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.problems.LMEStratifiedShuffleSplit.split">
 <span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.problems.LMEStratifiedShuffleSplit.split" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Generates splits</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray, (n, p)</em>) – data matrix</p></li>
+<li><p><strong>y</strong> (<em>ndarray (n, )</em>) – target variable</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>Iterable over tuples (X_train, y_train, X_test, y_test) that are stratified by the group</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -415,15 +490,22 @@ in which case it’s set to 0.</p></li>
 <dd class="field-odd"><ul>
 <li><p><strong>beta</strong> (<em>ndarray, shape=(n,), n is the number of fixed effects.</em>) – Vector of fixed effects.</p></li>
 <li><p><strong>random_effects</strong> (<em>ndarray or list, shape=(m, k), m groups, k random effects.</em>) – Array of random effects.</p></li>
-<li><p><strong>labels</strong> (<em>ndarray[int], shape=(t,), t – number of columns in the dataset INCLUDING INTERCEPT.</em>) –</p>
-<dl class="simple">
-<dt>Vector of labels of the column’s dataset, including intercept. Labels can be the following integers:</dt><dd><p>0 : Groups labels (ignored).
-1 : Fixed effect.
-2 : Random effect.
-3 : Both fixed and random effect.
-4 : Standard deviations for measurement errors for answers (ignored).</p>
-</dd>
-</dl>
+<li><p><strong>labels</strong> (<em>List[str]</em>) –</p>
+<p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
+<blockquote>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
 </li>
 </ul>
 </dd>

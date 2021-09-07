@@ -214,7 +214,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.CADLmeModel.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.CADLmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -255,7 +261,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.CADLmeModelSR3.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.CADLmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -290,7 +302,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.L0LmeModel.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.L0LmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -352,7 +370,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.L0LmeModelSR3.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.L0LmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -385,7 +409,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.L1LmeModel.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.L1LmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -425,7 +455,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.L1LmeModelSR3.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.L1LmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -453,9 +489,6 @@ as fixed_step_len=1/L.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>solver</strong> (<em>PGDSolver</em>) – an instance of PGDSolver</p></li>
-<li><p><strong>oracle</strong> (<em>LinearLMEOracle</em>) – an instance of LinearLMEOracle</p></li>
-<li><p><strong>regularizer</strong> (<em>Regularizer</em>) – an instance of Regularizer</p></li>
 <li><p><strong>initializer</strong> (<em>str</em>) – “EM” or “None”</p></li>
 <li><p><strong>logger_keys</strong> (<em>Optional[Set[str]]</em>) – list of values for the logger to track.</p></li>
 </ul>
@@ -479,31 +512,36 @@ as fixed_step_len=1/L.</p></li>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul>
-<li><p><strong>x</strong> (<em>np.ndarray</em>) – Data. If columns_labels = None then it’s assumed that columns_labels are in the first row of x.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – Data matrix. Rows correspond to objects, columns correspond to features, group labels, and variances.</p></li>
 <li><p><strong>y</strong> (<em>np.ndarray</em>) – Answers, real-valued array.</p></li>
-<li><p><strong>columns_labels</strong> (<em>np.ndarray</em>) – List of column labels. There shall be only one column of group labels and answers STDs,
-and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).</p>
+<li><p><strong>columns_labels</strong> (<em>List[str]</em>) –</p>
+<p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
 <blockquote>
-<div><ul class="simple">
-<li><p>1 : fixed effect</p></li>
-<li><p>2 : random effect</p></li>
-<li><p>3 : both fixed and random,</p></li>
-<li><p>0 : groups labels</p></li>
-<li><p>4 : answers standard deviations</p></li>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>initial_parameters</strong> (<em>np.ndarray</em>) –</p>
+<li><p><strong>initial_parameters</strong> (<em>Dict[np.ndarray]</em>) –</p>
 <p>Dict with possible fields:</p>
 <blockquote>
 <div><ul>
 <li><div class="line-block">
-<div class="line">‘beta0’ : np.ndarray, shape = [n],</div>
+<div class="line">‘beta’ : np.ndarray, shape = [p],</div>
 <div class="line">Initial estimate of fixed effects. If None then it defaults to an all-ones vector.</div>
 </div>
 </li>
 <li><div class="line-block">
-<div class="line">‘gamma0’ : np.ndarray, shape = [k],</div>
+<div class="line">‘gamma’ : np.ndarray, shape = [q],</div>
 <div class="line">Initial estimate of random effects covariances.</div>
 <div class="line">If None then it defaults to an all-ones vector.</div>
 </div>
@@ -515,6 +553,10 @@ and overall n columns with fixed effects (1 or 3) and k columns of random effect
 Throws NotFittedError if set to True when not fitted.</p></li>
 <li><p><strong>fit_fixed_intercept</strong> (<em>bool, default = False</em>) – Whether to add the intercept to the model</p></li>
 <li><p><strong>fit_random_intercept</strong> (<em>bool, default = False</em>) – Whether treat the intercept as a random effect.</p></li>
+<li><p><strong>fe_regularization_weights</strong> (<em>ndarray[int], 0 or 1</em>) – Vector of length of the number of features where 0 means do not apply regularizer to the
+coefficients of the corresponding fixed features and 1 means apply as usual.</p></li>
+<li><p><strong>re_regularization_weights</strong> (<em>ndarray[int], 0 or 1</em>) – Vector of length of the number of features where 0 means do not apply regularizer to the
+coefficients of the corresponding fixed features and 1 means apply as usual.</p></li>
 <li><p><strong>kwargs</strong> – Not used currently, left here for passing debugging parameters.</p></li>
 </ul>
 </dd>
@@ -537,12 +579,12 @@ Throws NotFittedError if set to True when not fitted.</p></li>
 <blockquote>
 <div><ul>
 <li><div class="line-block">
-<div class="line">‘beta0’ : np.ndarray, shape = [n],</div>
+<div class="line">‘beta’ : np.ndarray, shape = [p],</div>
 <div class="line">Initial estimate of fixed effects. If None then it defaults to an all-ones vector.</div>
 </div>
 </li>
 <li><div class="line-block">
-<div class="line">‘gamma0’ : np.ndarray, shape = [k],</div>
+<div class="line">‘gamma’ : np.ndarray, shape = [q],</div>
 <div class="line">Initial estimate of random effects covariances. If None then it defaults to an all-ones vector.</div>
 </div>
 </li>
@@ -551,11 +593,20 @@ Throws NotFittedError if set to True when not fitted.</p></li>
 </li>
 <li><p><strong>warm_start</strong> (<em>bool, default is False</em>) – Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
 Throws NotFittedError if set to True when not fitted.</p></li>
-<li><p><strong>kwargs</strong> – Not used currently, left here for passing debugging parameters.</p></li>
+<li><p><strong>fe_regularization_weights</strong> (<em>ndarray[int], 0 or 1</em>) – Vector of length of the number of features where 0 means do not apply regularizer to the
+coefficients of the corresponding fixed features and 1 means apply as usual.</p></li>
+<li><p><strong>re_regularization_weights</strong> (<em>ndarray[int], 0 or 1</em>) – Vector of length of the number of features where 0 means do not apply regularizer to the
+coefficients of the corresponding fixed features and 1 means apply as usual.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>self</em></p>
+</dl>
+<dl class="simple">
+<dt>kwargs :</dt><dd><p>Not used currently, left here for passing debugging parameters.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>self</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -563,7 +614,8 @@ Throws NotFittedError if set to True when not fitted.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.LMEModel.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle" title="pysr3.lme.oracles.LinearLMEOracle"><span class="pre">pysr3.lme.oracles.LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">pysr3.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.solvers.html#pysr3.solvers.PGDSolver" title="pysr3.solvers.PGDSolver"><span class="pre">pysr3.solvers.PGDSolver</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pysr3.lme.models.LMEModel.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.LMEModel.predict">
@@ -575,20 +627,25 @@ Throws NotFittedError if set to True when not fitted.</p></li>
 <li><p><strong>x</strong> (<em>np.ndarray</em>) – Data matrix. Should have the same format as the data which was used for fitting the model:
 the number of columns and the columns’ labels should be the same. It may contain new groups, in which case
 the prediction will be formed using the fixed effects only.</p></li>
-<li><p><strong>columns_labels</strong> (<em>Optional[List[str]]</em>) – List of column labels. There shall be only one column of group labels and answers STDs,
-and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).</p>
+<li><p><strong>columns_labels</strong> (<em>List[str]</em>) –</p>
+<p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
 <blockquote>
-<div><ul class="simple">
-<li><p>1 : fixed effect</p></li>
-<li><p>2 : random effect</p></li>
-<li><p>3 : both fixed and random,</p></li>
-<li><p>0 : groups labels</p></li>
-<li><p>4 : answers standard deviations</p></li>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
 </ul>
 </div></blockquote>
 </li>
-<li><p><strong>fit_fixed_intercept</strong> (<em>bool, default = True</em>) – Whether to add an intercept as a fixed feature</p></li>
-<li><p><strong>fit_random_intercept</strong> (<em>bool, default = True</em>) – Whether to add an intercept as a random feature.</p></li>
+<li><p><strong>fit_fixed_intercept</strong> (<em>bool, default = False</em>) – Whether to add an intercept as a fixed feature</p></li>
+<li><p><strong>fit_random_intercept</strong> (<em>bool, default = False</em>) – Whether to add an intercept as a random feature.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -626,14 +683,32 @@ total sum of squares ((y_true - y_true.mean()) ** 2).sum().
 The best possible score is 1.0 and it can be negative (because the model can be arbitrarily worse).
 A constant model that always predicts the expected value of y,
 disregarding the input features, would get a R^2 score of 0.0.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
+<dd class="field-odd"><ul>
 <li><p><strong>x</strong> (<em>np.ndarray</em>) – Data matrix. Should have the same format as the data which was used for fitting the model:
 the number of columns and the columns’ labels should be the same. It may contain new groups, in which case
 the prediction will be formed using the fixed effects only.</p></li>
 <li><p><strong>y</strong> (<em>np.ndarray</em>) – Answers, real-valued array.</p></li>
-<li><p><strong>columns_labels</strong> (<em>np.ndarray</em>) – Labels for columns of x</p></li>
+<li><p><strong>columns_labels</strong> (<em>List[str]</em>) –</p>
+<p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
+<blockquote>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>fit_fixed_intercept</strong> (<em>bool, default = False</em>) – Whether to add an intercept as a fixed feature</p></li>
+<li><p><strong>fit_random_intercept</strong> (<em>bool, default = False</em>) – Whether to add an intercept as a random feature.</p></li>
 <li><p><strong>sample_weight</strong> (<em>array_like, Optional</em>) – Weights of samples for calculating the R^2 statistics.</p></li>
 </ul>
 </dd>
@@ -676,7 +751,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.SCADLmeModel.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.SCADLmeModel.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -718,7 +799,13 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.SCADLmeModelSR3.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.SCADLmeModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -750,12 +837,54 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.SimpleLMEModel.get_information_criterion">
 <span class="sig-name descname"><span class="pre">get_information_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'muller_ic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.SimpleLMEModel.get_information_criterion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl>
+<dt>x<span class="classifier">np.ndarray</span></dt><dd><p>Data matrix. Rows correspond to objects, columns correspond to features, group labels, and variances.</p>
+</dd>
+<dt>y<span class="classifier">np.ndarray</span></dt><dd><p>Answers, real-valued array.</p>
+</dd>
+<dt>columns_labels<span class="classifier">List[str]</span></dt><dd><p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
+<blockquote>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>ic<span class="classifier">str</span></dt><dd><p>Information criterion. Can be one of the following</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“muller_ic”: IC from (Hui, Muller, 2016)</p></li>
+<li><p>“vaida_aic”: AIC from (Vaida, 2005)</p></li>
+<li><p>“jones_bic”: BIC from (Jones, 2010)</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>value of the requested IC</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.SimpleLMEModel.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.SimpleLMEModel.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -814,12 +943,54 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.SimpleLMEModelSR3.get_information_criterion">
 <span class="sig-name descname"><span class="pre">get_information_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'muller_ic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.SimpleLMEModelSR3.get_information_criterion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl>
+<dt>x<span class="classifier">np.ndarray</span></dt><dd><p>Data matrix. Rows correspond to objects, columns correspond to features, group labels, and variances.</p>
+</dd>
+<dt>y<span class="classifier">np.ndarray</span></dt><dd><p>Answers, real-valued array.</p>
+</dd>
+<dt>columns_labels<span class="classifier">List[str]</span></dt><dd><p>List of column labels. There shall be only one column of group labels and answers STDs.</p>
+<blockquote>
+<div><ul>
+<li><p>“fixed” : fixed effect</p></li>
+<li><p>“random” : random effect</p></li>
+<li><p>“fixed+random” : both fixed and random,</p></li>
+<li><p>“group” : groups labels</p></li>
+<li><p>“variance” : answers standard deviations</p></li>
+<li><div class="line-block">
+<div class="line">“intercept” : intercept column (fixed or random intercept is controlled by “fit_fixed_intercept”</div>
+<div class="line">and “fit_random_intercept” respectively.</div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>ic<span class="classifier">str</span></dt><dd><p>Information criterion. Can be one of the following</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“muller_ic”: IC from (Hui, Muller, 2016)</p></li>
+<li><p>“vaida_aic”: AIC from (Vaida, 2005)</p></li>
+<li><p>“jones_bic”: BIC from (Jones, 2010)</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>value of the requested IC</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.models.SimpleLMEModelSR3.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.models.SimpleLMEModelSR3.instantiate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Instantiates the model: creates all internal entities such as oracle, regularizer, and solver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple of [Oracle, Regularizer, Solver] that correspond to this model</em></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
