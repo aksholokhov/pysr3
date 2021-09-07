@@ -15,6 +15,14 @@ from pysr3.solvers import PGDSolver, FakePGDSolver
 class LinearModel(BaseEstimator, RegressorMixin):
 
     def __init__(self, logger_keys=None):
+        """
+        Initializes a linear model
+
+        Parameters
+        ----------
+        logger_keys: Tuple[str]
+            Set of values that the logger is supposed to log
+        """
         self.logger_keys = logger_keys
 
     def instantiate(self) -> Tuple[Optional[LinearOracle], Optional[Regularizer], Optional[PGDSolver]]:
@@ -28,34 +36,34 @@ class LinearModel(BaseEstimator, RegressorMixin):
             regularization_weights=None,
             **kwargs):
         """
-                Fits a Linear Model to the given data.
+        Fits a Linear Model to the given data.
 
-                Parameters
-                ----------
-                x : np.ndarray
-                    Data
+        Parameters
+        ----------
+        x : np.ndarray
+            Data
 
-                y : np.ndarray
-                    Answers, real-valued array.
+        y : np.ndarray
+            Answers, real-valued array.
 
-                initial_parameters : np.ndarray
-                    Dict with possible fields:
+        initial_parameters : np.ndarray
+            Dict with possible fields:
 
-                        -   | 'x0' : np.ndarray, shape = [n],
-                            | Initial estimate of model's coefficients. If None then it defaults to an all-ones vector.
+                -   | 'x0' : np.ndarray, shape = [n],
+                    | Initial estimate of model's coefficients. If None then it defaults to an all-ones vector.
 
-                warm_start : bool, default is False
-                    Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
-                    Throws NotFittedError if set to True when not fitted.
+        warm_start : bool, default is False
+            Whether to use previous parameters as initial ones. Overrides initial_parameters if given.
+            Throws NotFittedError if set to True when not fitted.
 
-                kwargs :
-                    Not used currently, left here for passing debugging parameters.
+        kwargs :
+            Not used currently, left here for passing debugging parameters.
 
-                Returns
-                -------
-                self : LinearLMESparseModel
-                    Fitted regression model.
-                """
+        Returns
+        -------
+        self : LinearLMESparseModel
+            Fitted regression model.
+        """
         check_X_y(x, y)
         x = np.array(x)
         y = np.array(y)

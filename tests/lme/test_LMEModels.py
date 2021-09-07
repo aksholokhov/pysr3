@@ -81,19 +81,14 @@ class TestLmeModels(unittest.TestCase):
             with self.subTest(i=i):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
-                        problem, true_model_parameters = LMEProblem.generate(**problem_parameters, seed=i)
-                        x, y, _ = problem.to_x_y()
+                        problem, _ = LMEProblem.generate(**problem_parameters, seed=i)
+                        _, y, _ = problem.to_x_y()
 
                         model_params = default_params.copy()
                         model_params.update(local_params)
 
                         model = model_constructor(**model_params)
                         model.fit_problem(problem)
-                        logger = model.logger_
-                        loss = np.array(logger.get("loss"))
-
-                        # self.assertTrue(np.all(loss[1:-1] - loss[:-2] <= 0) and loss[-1] - loss[-2] <= 1e-13,  # sometimes the very last step goes up to machine precision and then stops
-                        #                    msg="%d) Loss does not decrease monotonically with iterations. (seed=%d)" % (i, i))
 
                         y_pred = model.predict_problem(problem)
                         explained_variance = explained_variance_score(y, y_pred)

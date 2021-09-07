@@ -17,7 +17,7 @@ class TestLinearLMEOracle(TestCase):
         r = 1e-6
         rtol = 1e-4
         atol = 1e-5
-        problem, true_parameters = LMEProblem.generate(seed=random_seed)
+        problem, _ = LMEProblem.generate(seed=random_seed)
         oracle = LinearLMEOracle(problem)
         np.random.seed(random_seed)
         for j in range(trials):
@@ -47,11 +47,11 @@ class TestLinearLMEOracle(TestCase):
         r = 1e-5
         rtol = 1e-4
         atol = 1e-4
-        problem, true_parameters = LMEProblem.generate(groups_sizes=[5, 8, 10],
-                                                       features_labels=[FIXED_RANDOM, FIXED, RANDOM],
-                                                       seed=random_seed,
-                                                       fit_fixed_intercept=True,
-                                                       fit_random_intercept=True)
+        problem, _ = LMEProblem.generate(groups_sizes=[5, 8, 10],
+                                         features_labels=[FIXED_RANDOM, FIXED, RANDOM],
+                                         seed=random_seed,
+                                         fit_fixed_intercept=True,
+                                         fit_random_intercept=True)
         oracle = LinearLMEOracle(problem)
 
         for j in range(trials):
@@ -229,7 +229,7 @@ class TestLinearLMEOracle(TestCase):
             rho = gamma / (gamma + 0.1)
             oracle._recalculate_cholesky(true_parameters['gamma'])
             n_eff = oracle._jones2010n_eff()
-            assert np.allclose(n_eff, sum([ni / (1 + (ni - 1) * rho) for ni in problem.groups_sizes]))
+            self.assertTrue(np.allclose(n_eff, sum([ni / (1 + (ni - 1) * rho) for ni in problem.groups_sizes])))
 
     def test_hodges2001ddf(self):
         # From here:
@@ -243,7 +243,7 @@ class TestLinearLMEOracle(TestCase):
         true_gamma = true_parameters['gamma']
         ddf = oracle._hodges2001ddf(true_gamma)
         #  #|beta| <= DDoF <= #|beta| + num_groups*#|u|
-        assert 4 <= ddf <= 4 + 4 * 3
+        self.assertTrue(4 <= ddf <= 4 + 4 * 3)
 
     def test_hat_matrix(self):
         for seed in range(10):
@@ -258,14 +258,14 @@ class TestLinearLMEOracle(TestCase):
             us = oracle.optimal_random_effects(optimal_beta, gamma)
             ys_true = []
             ys_optimal_true = []
-            for (x, y, z, l), u in zip(problem, us):
+            for (x, y, z, _), u in zip(problem, us):
                 ys_optimal_true.append(x.dot(optimal_beta) + z.dot(u))
                 ys_true.append(y)
             ys_true = np.concatenate(ys_true)
             ys_optimal_true = np.concatenate(ys_optimal_true)
             hat_matrix = oracle._hat_matrix(gamma)
             ys_optimal_hat = hat_matrix.dot(ys_true)
-            assert np.allclose(ys_optimal_true, ys_optimal_hat)
+            self.assertTrue(np.allclose(ys_optimal_true, ys_optimal_hat))
 
     def test_flip_probabilities(self):
         problem, true_parameters = LMEProblem.generate(groups_sizes=[40, 30, 50],

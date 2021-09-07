@@ -20,15 +20,14 @@ from typing import Optional
 
 import numpy as np
 import scipy as sp
-from scipy import stats
-from scipy.linalg.lapack import get_lapack_funcs
-from scipy.optimize import minimize
-
 from pysr3.lme.priors import NonInformativePriorLME
 from pysr3.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
+from scipy import stats
+from scipy.linalg.lapack import get_lapack_funcs
 
 
 class LinearLMEOracle:
+
     """
     Implements Linear Mixed-Effects Model functional for given problem.
 
@@ -155,7 +154,7 @@ class LinearLMEOracle:
             self.omega_cholesky_inv = []
             gamma_mat = np.diag(gamma)
             invert_upper_triangular: Callable[[np.ndarray], np.ndarray] = get_lapack_funcs("trtri")
-            for x, y, z, stds in self.problem:
+            for _, _, z, stds in self.problem:
                 omega = np.diag(stds)
                 if len(gamma) > 0:
                     omega += z.dot(gamma_mat).dot(z.T)
@@ -187,7 +186,7 @@ class LinearLMEOracle:
 
         result = 0
         self._recalculate_cholesky(gamma)
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, _, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             result += 1 / 2 * np.sum(L_inv.dot(xi) ** 2) - np.sum(np.log(np.diag(L_inv)))
         return result + self.prior.loss(beta, gamma)
@@ -238,7 +237,7 @@ class LinearLMEOracle:
 
         self._recalculate_cholesky(gamma)
         grad_gamma = np.zeros(len(gamma))
-        for (x, y, z, stds), el_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, z, _), el_inv in zip(self.problem, self.omega_cholesky_inv):
             xi = y - x.dot(beta)
             el_z = el_inv.dot(z)
             grad_gamma += 1 / 2 * np.sum(el_z ** 2, axis=0) - 1 / 2 * el_z.T.dot(el_inv.dot(xi)) ** 2
@@ -976,9 +975,9 @@ class LinearLMEOracle:
         """
         singular_values_x = []
         singular_values_z = []
-        for x, y, z, l in self.problem:
-            u, sx, v = np.linalg.svd(x.T.dot(x))
-            u, sz, v = np.linalg.svd(z.T.dot(z))
+        for x, _, z, _ in self.problem:
+            _, sx, _ = np.linalg.svd(x.T.dot(x))
+            _, sz, _ = np.linalg.svd(z.T.dot(z))
             singular_values_x += list(sx)
             singular_values_z += list(sz)
 
@@ -1224,7 +1223,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         Value of the value function
         """
         tbeta, tgamma = self.x_to_beta_gamma(w)
-        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
+        beta, gamma, tbeta, tgamma, _ = self.find_optimal_parameters_ip(2 * tbeta, 2 * tgamma, tbeta=tbeta,
                                                                           tgamma=tgamma, **kwargs)
         return self.loss(beta, gamma, tbeta=tbeta, tgamma=tgamma, **kwargs)
 
@@ -1281,7 +1280,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         Five objects: beta, gamma, tbeta, tgamma, logger
         """
         tbeta, tgamma = self.x_to_beta_gamma(w)
-        beta, gamma, tbeta, tgamma, log = self.find_optimal_parameters_ip(beta=2 * tbeta,
+        _, _, tbeta, tgamma, log = self.find_optimal_parameters_ip(beta=2 * tbeta,
                                                                           gamma=2 * tgamma,
                                                                           tbeta=tbeta,
                                                                           tgamma=tgamma,

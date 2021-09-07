@@ -70,10 +70,10 @@ class TestLinearLMEProblem(unittest.TestCase):
                                                        obs_var=0.1,
                                                        seed=42)
 
-        self.assertEqual(len(true_parameters["beta"]), 1, "Beta should be of len = 1 for no-data problem")
-        self.assertEqual(len(true_parameters["gamma"]), 1), "Gamma should be of len = 1 for no-data problem"
+        self.assertEqual(len(true_parameters["beta"]), 1, msg="Beta should be of len = 1 for no-data problem")
+        self.assertEqual(len(true_parameters["gamma"]), 1, msg="Gamma should be of len = 1 for no-data problem")
         self.assertTrue(np.all([np.all(x == 1) and np.all(z == 1) for x, y, z, l in
-                                problem])), "All fixed and random features should be 1 for no-data problem"
+                                problem]), msg="All fixed and random features should be 1 for no-data problem")
 
     def test_from_to_xy_preserves_dataset_structure(self):
         study_sizes = [20, 15, 10]
