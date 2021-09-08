@@ -19,7 +19,7 @@ MODELS_NAMES = ("L0", "L1", "CAD", "SCAD", "L0_SR3", "L1_SR3", "CAD_SR3", "SCAD_
 
 def select_covariates(df: pd.DataFrame,
                       target: str,
-                      se: str,
+                      variance: str,
                       group: str,
                       covs: Optional[Dict[str, List[str]]] = None,
                       pre_sel_covs: Optional[Dict[str, List[str]]] = None,
@@ -35,8 +35,8 @@ def select_covariates(df: pd.DataFrame,
         Data frame contains all the necessary columns.
     target : str
         Column name of observation.
-    se : str
-        Column name of the observation standard error
+    variance : str
+        Column name of the observation variances
     group : str
         Column name of the group, usually specified as `study_id`.
     covs : Optional[Dict[str, List[str]]]
@@ -65,7 +65,7 @@ def select_covariates(df: pd.DataFrame,
         covs[key] = list({*covs[key], *pre_sel_covs[key]})
 
     # check df contain all cols
-    cols = {target, se, group, *covs["fixed_effects"], *covs["random_effects"]}
+    cols = {target, variance, group, *covs["fixed_effects"], *covs["random_effects"]}
     for col in cols:
         if col not in df.columns:
             raise ValueError(f"df does not contain col={col}.")
@@ -79,7 +79,7 @@ def select_covariates(df: pd.DataFrame,
                                         fixed_effects=covs.get("fixed_effects", []),
                                         random_effects=covs.get("random_effects", []),
                                         groups=group,
-                                        variance=se,
+                                        variance=variance,
                                         target=target,
                                         not_regularized_fe=pre_sel_covs.get("fixed_effects", []),
                                         not_regularized_re=pre_sel_covs.get("random_effects", []),

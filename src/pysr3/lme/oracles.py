@@ -1370,7 +1370,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
             if line_search:
                 res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-                                           x0=np.array([max_step_len]),
+                                           x0=np.array([0]),
                                            method="TNC",
                                            jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
                                                dF(x + alpha * direction).dot(direction)),

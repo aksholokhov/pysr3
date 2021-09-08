@@ -202,9 +202,15 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         oracle.instantiate(problem)
         if fe_regularization_weights is None:
-            fe_regularization_weights = np.ones(problem.num_fixed_features)
+            if problem.fe_regularization_weights is None:
+                fe_regularization_weights = np.ones(problem.num_fixed_features)
+            else:
+                fe_regularization_weights = problem.fe_regularization_weights
         if re_regularization_weights is None:
-            re_regularization_weights = np.ones(problem.num_random_features)
+            if problem.re_regularization_weights is None:
+                re_regularization_weights = np.ones(problem.num_random_features)
+            else:
+                re_regularization_weights = problem.re_regularization_weights
         regularizer.instantiate(weights=oracle.beta_gamma_to_x(beta=fe_regularization_weights,
                                                                gamma=re_regularization_weights),
                                 oracle=oracle)
@@ -235,7 +241,8 @@ class LMEModel(BaseEstimator, RegressorMixin):
 
         us = oracle.optimal_random_effects(beta, gamma)
 
-        per_group_coefficients = get_per_group_coefficients(beta, us, labels=problem.column_labels)
+        per_group_coefficients = get_per_group_coefficients(beta, us, labels=[problem.intercept_label]
+                                                                             + problem.column_labels)
 
         self.coef_ = {
             "beta": beta,

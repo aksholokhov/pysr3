@@ -64,7 +64,7 @@ class TestLinearModels(unittest.TestCase):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
                         problem = LinearProblem.generate(**problem_parameters, seed=i)
-                        x, y = problem.to_x_y()
+                        _, y = problem.to_x_y()
 
                         model_params = default_params.copy()
                         model_params.update(local_params)

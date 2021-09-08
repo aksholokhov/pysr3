@@ -608,7 +608,7 @@ class LMEProblem(Problem):
         if columns:
             assert len(columns) == x.shape[1], "'columns' should contain names for all columns"
 
-        if must_include_fe or must_include_re and not columns:
+        if (must_include_fe is not None or must_include_re is not None) and (columns is None):
             raise ValueError(
                 "'columns' must be provided when 'not_regularized_fe' or 'not_regularized_re' are provided")
 
