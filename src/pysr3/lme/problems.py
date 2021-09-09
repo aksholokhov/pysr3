@@ -463,7 +463,7 @@ class LMEProblem(Problem):
                 raise ValueError("obs_var is not an array or int/float.")
 
             group_variances = variance
-            group_errors = np.random.randn(group_size) * np.sqrt(variance)
+            group_errors = np.random.normal(loc=0, scale=np.sqrt(variance), size=group_size)
             group_answers = group_fixed_features.dot(beta) + group_random_features.dot(random_effects) + group_errors
 
             true_group_labels[start: start + group_size] = i

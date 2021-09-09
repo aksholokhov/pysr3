@@ -34,9 +34,10 @@ class TestSelectCovariates(unittest.TestCase):
                     with self.subTest(model_name=model_name):
                         true_beta = true_gamma = np.array([1, 0, 1])
                         problem, _ = LMEProblem.generate(**problem_parameters, seed=i,
-                                                                             beta=true_beta, gamma=true_gamma)
+                                                         beta=true_beta, gamma=true_gamma)
                         x, y, labels = problem.to_x_y()
                         data = pd.DataFrame(x, columns=["group", "x1", "x2", "x3", "variance"])
+                        # TODO: figure it out
                         data["se"] = np.sqrt(data["variance"])
                         data["target"] = y
                         select_covariates(df=data,
@@ -45,7 +46,7 @@ class TestSelectCovariates(unittest.TestCase):
                                               "random_effects": ["x1", "x2", "x3"]
                                           },
                                           target="target",
-                                          se="se",
+                                          variance="se",
                                           group="group",
                                           model_name=model_name
                                           )

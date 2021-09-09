@@ -153,8 +153,8 @@ class LinearLMEOracle:
             self.omega_cholesky_inv = []
             gamma_mat = np.diag(gamma)
             invert_upper_triangular: Callable[[np.ndarray], np.ndarray] = get_lapack_funcs("trtri")
-            for _, _, z, stds in self.problem:
-                omega = np.diag(stds)
+            for _, _, z, obs_vars in self.problem:
+                omega = np.diag(obs_vars)
                 if len(gamma) > 0:
                     omega += z.dot(gamma_mat).dot(z.T)
                 el = np.linalg.cholesky(omega)
@@ -1369,12 +1369,10 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
 
             if line_search:
-                res = sp.optimize.minimize(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-                                           x0=np.array([0]),
-                                           method="TNC",
-                                           jac=lambda alpha: 2 * F(x + alpha * direction, mu).dot(
-                                               dF(x + alpha * direction).dot(direction)),
-                                           bounds=[(0, max_step_len)])
+                res = sp.optimize.minimize_scalar(fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+                                                  method='bounded',
+                                                  bounds=(0, max_step_len),
+                                                  tol=1e-2)
                 step_len = res.x
             else:
                 step_len = 0.99 * max_step_len
