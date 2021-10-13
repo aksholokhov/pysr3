@@ -1,74 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Models Overview &mdash; PySR3 0.3.1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Community Guidelines" href="community_guidelines.html" />
     <link rel="prev" title="Quickstart with pysr3" href="quickstart.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> PySR3
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,18 +37,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
@@ -114,81 +64,40 @@
 <li class="toctree-l1"><a class="reference internal" href="source/modules.html">Modules</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PySR3</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Models Overview</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/models_overview.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="models-overview">
-<h1>Models Overview<a class="headerlink" href="#models-overview" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="models-overview">
+<h1>Models Overview<a class="headerlink" href="#models-overview" title="Permalink to this headline"></a></h1>
 <p>The library provides both basic and SR3-empowered implementations of
 modern regularized regression algorithms. Below we give an overview of
 available options and give advice on how to choose a model suitable for
 your goals.</p>
-<div class="section" id="table-of-models">
-<h2>Table of Models<a class="headerlink" href="#table-of-models" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="linear-models">
-<h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline">¶</a></h3>
+<section id="table-of-models">
+<h2>Table of Models<a class="headerlink" href="#table-of-models" title="Permalink to this headline"></a></h2>
+<section id="linear-models">
+<h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline"></a></h3>
 <p>Located in <code class="docutils literal notranslate"><span class="pre">pysr3.linear</span></code> submodule</p>
 <table class="docutils align-default">
 <colgroup>
@@ -223,9 +132,9 @@ your goals.</p>
 </table>
 <p>The classes <code class="docutils literal notranslate"><span class="pre">LinearModel</span></code> is a base class that implements core
 functionality.</p>
-</div>
-<div class="section" id="linear-mixed-effects-models">
-<h3>Linear Mixed-Effects Models<a class="headerlink" href="#linear-mixed-effects-models" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="linear-mixed-effects-models">
+<h3>Linear Mixed-Effects Models<a class="headerlink" href="#linear-mixed-effects-models" title="Permalink to this headline"></a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 30%" />
@@ -263,10 +172,10 @@ functionality.</p>
 </table>
 <p>The class <code class="docutils literal notranslate"><span class="pre">LMEModel</span></code> is a base class that implements core
 functionality.</p>
-</div>
-</div>
-<div class="section" id="regularizers">
-<h2>Regularizers<a class="headerlink" href="#regularizers" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="regularizers">
+<h2>Regularizers<a class="headerlink" href="#regularizers" title="Permalink to this headline"></a></h2>
 <p>The library currently implements five popular regularizers: L0, LASSO,
 A-LASSO, CAD, and SCAD. Below we plot the values and the proximal
 mappings for three of them:</p>
@@ -288,8 +197,8 @@ mappings for three of them:</p>
 </pre></div>
 </div>
 <img alt="_images/models_overview_3_0.png" src="_images/models_overview_3_0.png" />
-<div class="section" id="l1-lasso">
-<h3>L1 (LASSO)<a class="headerlink" href="#l1-lasso" title="Permalink to this headline">¶</a></h3>
+<section id="l1-lasso">
+<h3>L1 (LASSO)<a class="headerlink" href="#l1-lasso" title="Permalink to this headline"></a></h3>
 <p>This is a well-known sparsity-promoting regularizer that penalizes the
 loss-funciton with a sum of absolute values of the model’s coefficients:</p>
 <div class="math notranslate nohighlight">
@@ -302,9 +211,9 @@ coefficients. The optimal value is normally set via cross-validation
 grid-search that minimizes an information criterion of the choice (AIC,
 BIC, e.t.c.) on a validation part of the splits. See the example in
 Quickstart tutorial.</p>
-</div>
-<div class="section" id="adaptive-lasso-a-lasso">
-<h3>Adaptive LASSO (A-LASSO)<a class="headerlink" href="#adaptive-lasso-a-lasso" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="adaptive-lasso-a-lasso">
+<h3>Adaptive LASSO (A-LASSO)<a class="headerlink" href="#adaptive-lasso-a-lasso" title="Permalink to this headline"></a></h3>
 <p>Adaptive LASSO uses <span class="math notranslate nohighlight">\(\bar{x}\)</span> – a solution for a non-regularized
 problem – as weights for LASSO penalty:</p>
 <div class="math notranslate nohighlight">
@@ -320,9 +229,9 @@ regularization weights to LASSO model:</p>
 <span class="n">alasso_model</span> <span class="o">=</span> <span class="n">LinearL1Model</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">regularization_weights</span><span class="o">=</span><span class="n">regularization_weights</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="cad">
-<h3>CAD<a class="headerlink" href="#cad" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="cad">
+<h3>CAD<a class="headerlink" href="#cad" title="Permalink to this headline"></a></h3>
 <p>Clipped Absolute Deviation (CAD) penalty is a clipped version of LASSO.
 When the values of the coefficients are less than a hyper-parameter
 <span class="math notranslate nohighlight">\(\rho\)</span> – it works like LASSO, but it does not penalize the
@@ -330,9 +239,9 @@ coefficients that are bigger than that in their absolute value. It
 addresses an issue of LASSO penalizing big coefficients too much.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>, CAD regularizer is implemented as
 <code class="docutils literal notranslate"><span class="pre">pysr3.regularizers.CADRegularizer</span></code>.</p>
-</div>
-<div class="section" id="scad">
-<h3>SCAD<a class="headerlink" href="#scad" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="scad">
+<h3>SCAD<a class="headerlink" href="#scad" title="Permalink to this headline"></a></h3>
 <p>Smooth Clipped Absolute Deviation (SCAD) penalty is a smoothed version
 of SCAD. Instead of imposing a hard threshold, it uses 2-knot smooth
 spline interpolation to connect the flat and the absolute value parts.
@@ -340,10 +249,10 @@ The knots of the spline are located at points <span class="math notranslate nohi
 <span class="math notranslate nohighlight">\(\sigma\rho\)</span>.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>, SCAD regularizer is implemented as
 <code class="docutils literal notranslate"><span class="pre">pysr3.regularizers.CADRegularizer</span></code>.</p>
-</div>
-</div>
-<div class="section" id="regular-pgd-vs-sr3-pgd">
-<h2>Regular PGD vs SR3-PGD<a class="headerlink" href="#regular-pgd-vs-sr3-pgd" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="regular-pgd-vs-sr3-pgd">
+<h2>Regular PGD vs SR3-PGD<a class="headerlink" href="#regular-pgd-vs-sr3-pgd" title="Permalink to this headline"></a></h2>
 <p>Proximal Gradient Descent (PGD) is currently the core numerical solver
 for <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>. It has a very simple form of iteration that requires only
 gradient information of the loss function and the proximal operator of
@@ -363,55 +272,38 @@ parameter <code class="docutils literal notranslate"><span class="pre">ell</span
 parameter values giving tighter relaxations. <code class="docutils literal notranslate"><span class="pre">ell</span></code> can be left to its
 default value or can be found via grid-search simultaneously with
 <span class="math notranslate nohighlight">\(\lambda\)</span>.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="community_guidelines.html" class="btn btn-neutral float-right" title="Community Guidelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart with pysr3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="community_guidelines.html" class="btn btn-neutral float-right" title="Community Guidelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Aleksei Sholokhov.
-
-    </p>
+    <p>&#169; Copyright 2021, Aleksei Sholokhov.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

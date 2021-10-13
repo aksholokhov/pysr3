@@ -1,73 +1,34 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>pysr3.regularizers module &mdash; PySR3 0.3.1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="pysr3.solvers module" href="pysr3.solvers.html" />
     <link rel="prev" title="pysr3.priors module" href="pysr3.priors.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> PySR3
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -75,18 +36,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
@@ -112,81 +62,38 @@
 </li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">PySR3</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="modules.html">pysr3</a> &raquo;</li>
-        
           <li><a href="pysr3.html">pysr3 package</a> &raquo;</li>
-        
       <li>pysr3.regularizers module</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/source/pysr3.regularizers.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="module-pysr3.regularizers">
-<span id="pysr3-regularizers-module"></span><h1>pysr3.regularizers module<a class="headerlink" href="#module-pysr3.regularizers" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="module-pysr3.regularizers">
+<span id="pysr3-regularizers-module"></span><h1>pysr3.regularizers module<a class="headerlink" href="#module-pysr3.regularizers" title="Permalink to this headline"></a></h1>
 <p>Various regularizers (L0, LASSO, CAD, SCAD, etc)</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.regularizers.CADRegularizer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">CADRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">CADRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.regularizers.Regularizer</span></code></a></p>
 <p>Implement Clipped Absolute Deviation (CAD) regularizer</p>
 <p>Creates CAD regularizer.</p>
@@ -200,7 +107,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.CADRegularizer.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.forget" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.forget" title="Permalink to this definition"></a></dt>
 <dd><p>Unlinks all problem-dependent information from the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -211,7 +118,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.CADRegularizer.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.instantiate" title="Permalink to this definition"></a></dt>
 <dd><p>Attach regularization weights</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -225,7 +132,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.CADRegularizer.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.prox" title="Permalink to this definition"></a></dt>
 <dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -242,7 +149,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.CADRegularizer.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.CADRegularizer.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -258,12 +165,12 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.regularizers.DummyRegularizer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">DummyRegularizer</span></span><a class="headerlink" href="#pysr3.regularizers.DummyRegularizer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">DummyRegularizer</span></span><a class="headerlink" href="#pysr3.regularizers.DummyRegularizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.regularizers.Regularizer</span></code></a></p>
 <p>Fake regularizer that has no effect.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.DummyRegularizer.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.DummyRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.DummyRegularizer.prox" title="Permalink to this definition"></a></dt>
 <dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -280,7 +187,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.DummyRegularizer.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.DummyRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.DummyRegularizer.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -296,7 +203,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.regularizers.L0Regularizer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">L0Regularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nnz_tbeta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnz_tgamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_beta_and_gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle" title="pysr3.lme.oracles.LinearLMEOracle"><span class="pre">pysr3.lme.oracles.LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">L0Regularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nnz_tbeta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnz_tgamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">independent_beta_and_gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle" title="pysr3.lme.oracles.LinearLMEOracle"><span class="pre">pysr3.lme.oracles.LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.regularizers.Regularizer</span></code></a></p>
 <p>Implements an L0-type regularizer, where the desired number of non-zero coordinates for
 fixed and random effects is given</p>
@@ -314,7 +221,7 @@ element of beta is non-zero too.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L0Regularizer.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.forget" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.forget" title="Permalink to this definition"></a></dt>
 <dd><p>Unlinks all problem-dependent information from the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -325,7 +232,7 @@ element of beta is non-zero too.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L0Regularizer.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.instantiate" title="Permalink to this definition"></a></dt>
 <dd><p>Attaches weights to the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -339,7 +246,7 @@ element of beta is non-zero too.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L0Regularizer.optimal_tbeta">
-<span class="sig-name descname"><span class="pre">optimal_tbeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.optimal_tbeta" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">optimal_tbeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.optimal_tbeta" title="Permalink to this definition"></a></dt>
 <dd><p>Returns tbeta which minimizes the loss function with all other variables fixed.</p>
 <p>It is a projection of beta on the sparse subspace with no more than k elements, which can be constructed by
 taking k largest elements from beta and setting the rest to be 0.</p>
@@ -355,7 +262,7 @@ taking k largest elements from beta and setting the rest to be 0.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L0Regularizer.optimal_tgamma">
-<span class="sig-name descname"><span class="pre">optimal_tgamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tbeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.optimal_tgamma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">optimal_tgamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tbeta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.optimal_tgamma" title="Permalink to this definition"></a></dt>
 <dd><p>Returns tgamma which minimizes the loss function with all other variables fixed.</p>
 <p>It is a projection of gamma on the sparse subspace with no more than nnz_gamma elements,
 which can be constructed by taking nnz_gamma largest elements from gamma and setting the rest to be 0.
@@ -375,7 +282,7 @@ In addition, it preserves that for all the elements where tbeta = 0 it implies t
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L0Regularizer.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.prox" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.prox" title="Permalink to this definition"></a></dt>
 <dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -392,7 +299,7 @@ In addition, it preserves that for all the elements where tbeta = 0 it implies t
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L0Regularizer.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L0Regularizer.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -408,7 +315,7 @@ In addition, it preserves that for all the elements where tbeta = 0 it implies t
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.regularizers.L1Regularizer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">L1Regularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">L1Regularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.regularizers.Regularizer</span></code></a></p>
 <p>Implements an L1-regularizer, a.k.a. LASSO.
 N.B. Adaptive LASSO is implemented by providing custom weights.</p>
@@ -420,7 +327,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L1Regularizer.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.forget" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.forget" title="Permalink to this definition"></a></dt>
 <dd><p>Unlinks all problem-dependent information from the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -431,7 +338,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L1Regularizer.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.instantiate" title="Permalink to this definition"></a></dt>
 <dd><p>Attach regularization weights</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -445,7 +352,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L1Regularizer.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.prox" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.prox" title="Permalink to this definition"></a></dt>
 <dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -462,7 +369,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.L1Regularizer.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.L1Regularizer.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -478,11 +385,11 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">PositiveQuadrantRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_regularizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">pysr3.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">PositiveQuadrantRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_regularizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">pysr3.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.regularizers.Regularizer</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizer.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer.instantiate" title="Permalink to this definition"></a></dt>
 <dd><p>Attaches weights to the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -496,7 +403,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizer.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer.prox" title="Permalink to this definition"></a></dt>
 <dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -513,7 +420,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizer.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -529,12 +436,12 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.regularizers.Regularizer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">Regularizer</span></span><a class="headerlink" href="#pysr3.regularizers.Regularizer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">Regularizer</span></span><a class="headerlink" href="#pysr3.regularizers.Regularizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Template class for regularizers</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.Regularizer.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.Regularizer.forget" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.Regularizer.forget" title="Permalink to this definition"></a></dt>
 <dd><p>Unlinks all problem-dependent information from the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -545,7 +452,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.Regularizer.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.Regularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.Regularizer.instantiate" title="Permalink to this definition"></a></dt>
 <dd><p>Attaches weights to the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -559,7 +466,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.Regularizer.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.Regularizer.prox" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.Regularizer.prox" title="Permalink to this definition"></a></dt>
 <dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -576,7 +483,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.Regularizer.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#pysr3.regularizers.Regularizer.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#pysr3.regularizers.Regularizer.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -592,7 +499,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.regularizers.SCADRegularizer">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">SCADRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">SCADRegularizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.regularizers.Regularizer</span></code></a></p>
 <p>Implements Smoothly Clipped Absolute Deviations (SCAD) regularizer.</p>
 <p>Creates SCAD regularizer</p>
@@ -607,7 +514,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.SCADRegularizer.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.forget" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.forget" title="Permalink to this definition"></a></dt>
 <dd><p>Unlinks all problem-dependent information from the regularizer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -618,7 +525,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.SCADRegularizer.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.instantiate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.instantiate" title="Permalink to this definition"></a></dt>
 <dd><p>Attach regularization weights</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -632,7 +539,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.SCADRegularizer.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.prox" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.prox" title="Permalink to this definition"></a></dt>
 <dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -649,7 +556,7 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.SCADRegularizer.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.SCADRegularizer.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -663,54 +570,37 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="pysr3.solvers.html" class="btn btn-neutral float-right" title="pysr3.solvers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="pysr3.priors.html" class="btn btn-neutral float-left" title="pysr3.priors module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pysr3.solvers.html" class="btn btn-neutral float-right" title="pysr3.solvers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Aleksei Sholokhov.
-
-    </p>
+    <p>&#169; Copyright 2021, Aleksei Sholokhov.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
