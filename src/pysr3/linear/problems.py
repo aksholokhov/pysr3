@@ -34,8 +34,8 @@ class LinearProblem:
         return LinearProblem(a=a, b=b, regularization_weights=np.ones(num_features))
 
     @staticmethod
-    def from_x_y(x, y, c=None, regularization_weights=None):
-        return LinearProblem(a=x, b=y, c=c, regularization_weights=regularization_weights)
+    def from_x_y(x, y, c=None, obs_std=None, regularization_weights=None):
+        return LinearProblem(a=x, b=y, c=c, obs_std=obs_std, regularization_weights=regularization_weights)
 
     def to_x_y(self):
         return self.a, self.b

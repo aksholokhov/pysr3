@@ -2,6 +2,7 @@ from typing import Set
 
 from pysr3.linear.models import SimpleLinearModel, SimpleLinearModelSR3
 from pysr3.linear.problems import LinearProblem
+from pysr3.glms.problems import PoissonProblem
 from pysr3.regularizers import DummyRegularizer, L1Regularizer
 from pysr3.solvers import PGDSolver
 from pysr3.glms.oracles import GLMOracle
@@ -27,6 +28,39 @@ class SimplePoissonModel(SimpleLinearModel):
             return oracle.bic(**self.coef_)
         else:
             raise ValueError(f"Unknown ic: {ic}")
+
+    def _get_tags(self):
+        tags = super()._get_tags()
+        tags["poor_score"] = True
+        return tags
+
+    def predict_problem(self, problem, **kwargs):
+        """
+        Makes a prediction if .fit was called before and throws an error otherwise.
+
+        Parameters
+        ----------
+        problem :
+            An instance of LMEProblem. Should have the same format as the data
+            which was used for fitting the model. It may contain new groups, in which case
+            the prediction will be formed using the fixed effects only.
+
+        kwargs :
+            for passing debugging parameters
+
+        Returns
+        -------
+        y : np.ndarray
+            Models predictions.
+        """
+        self.check_is_fitted()
+
+        x = self.coef_['x']
+        link_function = PoissonLinkFunction()
+        assert problem.num_features == x.shape[0], \
+            "Number of features is not the same to what it was in the train data."
+
+        return link_function.value(problem.a.dot(x)).astype(int)
 
 
 # class SimplePoissonModelSR3(SimpleLinearModelSR3):

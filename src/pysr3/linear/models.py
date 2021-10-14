@@ -70,7 +70,8 @@ class LinearModel(BaseEstimator, RegressorMixin):
         if len(y.shape) > 1:
             warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
             y = y[:, 0]
-        problem = LinearProblem.from_x_y(x=x, y=y)
+        obs_std = np.ones(len(y))
+        problem = LinearProblem.from_x_y(x=x, y=y, obs_std=obs_std)
         return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start,
                                 regularization_weights=regularization_weights, **kwargs)
 
@@ -170,8 +171,8 @@ class LinearModel(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        problem : LMEProblem
-            An instance of LMEProblem. Should have the same format as the data
+        problem : LinearProblem
+            An instance of LinearProblem. Should have the same format as the data
             which was used for fitting the model. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
 

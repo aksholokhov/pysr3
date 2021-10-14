@@ -30,13 +30,13 @@ class GLMOracle:
         a = self.problem.a
         b = self.problem.b
         return (a.T * (1 / self.problem.obs_std ** 2 * (
-                    self.link_function.gradient(a.dot(x)) - b))).T + self.prior.gradient(x)
+                    self.link_function.gradient(a.dot(x)) - b))).T.sum(axis=0) + self.prior.gradient(x)
 
     def hessian(self, x):
         res = 0
         for i, ai in enumerate(self.problem.a):
             ai = ai.reshape(-1, 1)
-            res = res + (1 / self.problem.obs_std[i] ** 2) * self.link_function.hessian(ai.dot(x)) * ai.dot(ai.T)
+            res = res + (1 / self.problem.obs_std[i] ** 2) * self.link_function.hessian(ai.T.dot(x)) * ai.dot(ai.T)
         return res + self.prior.hessian(x)
 
     def value_function(self, x):
