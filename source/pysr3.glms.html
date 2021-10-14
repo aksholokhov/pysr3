@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pysr3.lme package &mdash; PySR3 0.3.1 documentation</title>
+  <title>pysr3.glms package &mdash; PySR3 0.3.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysr3.lme.model_selectors module" href="pysr3.lme.model_selectors.html" />
-    <link rel="prev" title="pysr3.linear.problems module" href="pysr3.linear.problems.html" /> 
+    <link rel="next" title="pysr3.glms.link_functions module" href="pysr3.glms.link_functions.html" />
+    <link rel="prev" title="pysr3 package" href="pysr3.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,9 +48,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="pysr3.html">pysr3 package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="pysr3.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="pysr3.glms.html">pysr3.glms package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pysr3.glms package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.linear.html">pysr3.linear package</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">pysr3.lme package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.html">pysr3.lme package</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pysr3.html#submodules">Submodules</a></li>
@@ -77,9 +77,9 @@
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="modules.html">pysr3</a> &raquo;</li>
           <li><a href="pysr3.html">pysr3 package</a> &raquo;</li>
-      <li>pysr3.lme package</li>
+      <li>pysr3.glms package</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/source/pysr3.lme.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/source/pysr3.glms.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -87,22 +87,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="pysr3-lme-package">
-<h1>pysr3.lme package<a class="headerlink" href="#pysr3-lme-package" title="Permalink to this headline"></a></h1>
+  <section id="pysr3-glms-package">
+<h1>pysr3.glms package<a class="headerlink" href="#pysr3-glms-package" title="Permalink to this headline"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.model_selectors.html">pysr3.lme.model_selectors module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.models.html">pysr3.lme.models module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.oracles.html">pysr3.lme.oracles module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.priors.html">pysr3.lme.priors module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.problems.html">pysr3.lme.problems module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.glms.link_functions.html">pysr3.glms.link_functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.glms.models.html">pysr3.glms.models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.glms.oracles.html">pysr3.glms.oracles module</a></li>
 </ul>
 </div>
 </section>
-<section id="module-pysr3.lme">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pysr3.lme" title="Permalink to this headline"></a></h2>
+<section id="module-pysr3.glms">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pysr3.glms" title="Permalink to this headline"></a></h2>
 </section>
 </section>
 
@@ -110,8 +108,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pysr3.linear.problems.html" class="btn btn-neutral float-left" title="pysr3.linear.problems module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pysr3.lme.model_selectors.html" class="btn btn-neutral float-right" title="pysr3.lme.model_selectors module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pysr3.html" class="btn btn-neutral float-left" title="pysr3 package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pysr3.glms.link_functions.html" class="btn btn-neutral float-right" title="pysr3.glms.link_functions module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

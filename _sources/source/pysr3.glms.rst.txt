@@ -1,0 +1,20 @@
+pysr3.glms package
+==================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   pysr3.glms.link_functions
+   pysr3.glms.models
+   pysr3.glms.oracles
+
+Module contents
+---------------
+
+.. automodule:: pysr3.glms
+   :members:
+   :undoc-members:
+   :show-inheritance:
