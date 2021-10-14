@@ -10,6 +10,7 @@ Submodules
    pysr3.glms.link_functions
    pysr3.glms.models
    pysr3.glms.oracles
+   pysr3.glms.problems
 
 Module contents
 ---------------

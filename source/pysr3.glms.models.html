@@ -150,6 +150,25 @@ as fixed_step_len=1/L.</p></li>
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModel.instantiate" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.glms.models.SimplePoissonModel.predict_problem">
+<span class="sig-name descname"><span class="pre">predict_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModel.predict_problem" title="Permalink to this definition"></a></dt>
+<dd><p>Makes a prediction if .fit was called before and throws an error otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – An instance of LMEProblem. Should have the same format as the data
+which was used for fitting the model. It may contain new groups, in which case
+the prediction will be formed using the fixed effects only.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y</strong> (<em>np.ndarray</em>) – Models predictions.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
