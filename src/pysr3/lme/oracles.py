@@ -1295,6 +1295,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
                                    regularizer=None, increase_lambdas=False,
                                    line_search=False, prox_step_len=1.0, update_prox_every=1, logger=None,
+                                   do_correction_steps=True,
                                    **kwargs):
         losses_kkt = []
         if len(tgamma) == 0:
@@ -1381,6 +1382,32 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             v = x[:n]
             beta = x[n:-n]
             gamma = x[-n:]
+
+            if do_correction_steps:
+                mu = v.dot(gamma) / n
+
+                F_current = F(x, mu)
+                dF_current = dF(x)
+                direction = np.linalg.solve(dF_current, -F_current)
+                # Determining maximal step size (such that gamma >= 0 and v >= 0)
+                ind_neg_dir = np.where(direction < 0.0)[0]
+                ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n))]
+                max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
+
+                if line_search:
+                    res = sp.optimize.minimize_scalar(
+                        fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
+                        method='bounded',
+                        bounds=(0, max_step_len),
+                        tol=1e-2)
+                    step_len = res.x
+                else:
+                    step_len = 0.99 * max_step_len
+                x = x + step_len * direction
+                # x[x <= 1e-18] = 0  # killing effective zeros
+                v = x[:n]
+                beta = x[n:-n]
+                gamma = x[-n:]
 
             iteration += 1
 
