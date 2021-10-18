@@ -643,6 +643,6 @@ class ElasticRegularizer(Regularizer):
 
     def prox(self, x, alpha):
         if self.other_regularizer:
-            return self.other_regularizer.prox(x / (1 + alpha*self.eps / 2), alpha / (1 + alpha*self.eps / 2))
+            return self.other_regularizer.prox(x / (1 + alpha*self.eps), alpha / (1 + alpha*self.eps))
         else:
-            return x / (1 + alpha*self.eps / 2)
+            return x / (1 + alpha*self.eps)
