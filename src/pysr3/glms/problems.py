@@ -18,7 +18,8 @@ class PoissonProblem(LinearProblem):
         a = np.random.randn(num_objects, num_features)
         a[:, 0] = 1
         x = true_x if true_x is not None else np.random.rand(num_features)
-        b = np.array([np.random.poisson(np.exp(ai.dot(x))) for ai in a])
+        noise = obs_std*np.random.randn(num_objects)
+        b = np.array([np.random.poisson(np.exp(ai.dot(x) + eps)) for ai, eps in zip(a, noise)])
         obs_std = np.ones(num_objects)*obs_std
         return PoissonProblem(a=a, b=b, regularization_weights=np.ones(num_features), obs_std=obs_std)
 

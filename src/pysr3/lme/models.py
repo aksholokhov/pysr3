@@ -29,7 +29,7 @@ from pysr3.lme.problems import LMEProblem
 from pysr3.lme.problems import get_per_group_coefficients
 from pysr3.logger import Logger
 from pysr3.regularizers import Regularizer, L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
-    DummyRegularizer, PositiveQuadrantRegularizer, ElasticRegularizer
+    DummyRegularizer, PositiveQuadrantRegularizerLME, ElasticRegularizer
 from pysr3.solvers import PGDSolver, FakePGDSolver
 
 
@@ -490,7 +490,7 @@ class SimpleLMEModel(LMEModel):
         oracle = LinearLMEOracle(None, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
         elastic_regularizer = ElasticRegularizer(other_regularizer=dummy_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         fixed_step_len = 5e-2 if not self.fixed_step_len else self.fixed_step_len
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
                            fixed_step_len=fixed_step_len)
@@ -660,7 +660,7 @@ class SimpleLMEModelSR3(LMEModel):
                                     warm_start=self.warm_start_oracle, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
         elastic_regularizer = ElasticRegularizer(other_regularizer=dummy_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
     def get_information_criterion(self, x, y, columns_labels=None, ic="muller_ic"):
@@ -773,7 +773,7 @@ class L0LmeModel(SimpleLMEModel):
                                        nnz_tgamma=self.nnz_tgamma,
                                        oracle=oracle)
         elastic_regularizer = ElasticRegularizer(other_regularizer=l0_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -898,7 +898,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                                        nnz_tgamma=self.nnz_tgamma,
                                        oracle=oracle)
         elastic_regularizer = ElasticRegularizer(other_regularizer=l0_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -971,7 +971,7 @@ class L1LmeModel(SimpleLMEModel):
                            fixed_step_len=fixed_step_len)
         l1_regularizer = L1Regularizer(lam=self.lam)
         elastic_regularizer = ElasticRegularizer(other_regularizer=l1_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1067,7 +1067,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
         oracle, regularizer, solver = super().instantiate()
         l1_regularizer = L1Regularizer(lam=self.lam)
         elastic_regularizer = ElasticRegularizer(other_regularizer=l1_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1144,7 +1144,7 @@ class CADLmeModel(SimpleLMEModel):
                            fixed_step_len=fixed_step_len)
         cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
         elastic_regularizer = ElasticRegularizer(other_regularizer=cad_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1244,7 +1244,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
         oracle, regularizer, solver = super().instantiate()
         cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
         elastic_regularizer = ElasticRegularizer(other_regularizer=cad_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1325,7 +1325,7 @@ class SCADLmeModel(SimpleLMEModel):
                            fixed_step_len=fixed_step_len)
         scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
         elastic_regularizer = ElasticRegularizer(other_regularizer=scad_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1429,5 +1429,5 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
         oracle, regularizer, solver = super().instantiate()
         scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
         elastic_regularizer = ElasticRegularizer(other_regularizer=scad_regularizer, eps=self.elastic_eps)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
+        regularizer = PositiveQuadrantRegularizerLME(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver

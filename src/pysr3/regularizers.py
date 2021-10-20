@@ -596,7 +596,7 @@ class DummyRegularizer(Regularizer):
         return x
 
 
-class PositiveQuadrantRegularizer(Regularizer):
+class PositiveQuadrantRegularizerLME(Regularizer):
 
     def __init__(self, other_regularizer: Regularizer = None):
         self.other_regularizer = other_regularizer
@@ -618,6 +618,31 @@ class PositiveQuadrantRegularizer(Regularizer):
     def prox(self, x, alpha):
         y = x.copy()
         y[self.positive_coordinates] = np.clip(x[self.positive_coordinates], 0, None)
+        if self.other_regularizer:
+            return self.other_regularizer.prox(y, alpha)
+        else:
+            return y
+
+
+class PositiveQuadrantRegularizer(Regularizer):
+
+    def __init__(self, other_regularizer: Regularizer = None):
+        self.other_regularizer = other_regularizer
+
+    def instantiate(self, weights, oracle=None, **kwargs):
+        if self.other_regularizer:
+            self.other_regularizer.instantiate(weights=weights, **kwargs)
+
+    def value(self, x):
+        y = np.infty if any(x < 0) else 0
+        if self.other_regularizer:
+            return y + self.other_regularizer.value(x)
+        else:
+            return y
+
+    def prox(self, x, alpha):
+        y = x.copy()
+        y = np.clip(x, 0, None)
         if self.other_regularizer:
             return self.other_regularizer.prox(y, alpha)
         else:

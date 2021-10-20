@@ -188,8 +188,11 @@ class GLMOracleSR3(GLMOracle):
                 x = x + step_len * dx
                 if do_correction_steps and not is_correction_step:
                     mu = np.nan_to_num(v.dot(x[idx_constr_x]) / n, 0)
+                    is_correction_step = True
                 else:
                     mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, 0)
+                    if do_correction_steps:
+                        is_correction_step = False
             else:
                 dx = direction
                 x = x + dx

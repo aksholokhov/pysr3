@@ -272,7 +272,7 @@ class SimpleLinearModelSR3(LinearModel):
                  el: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
-                 stepping: str = "line-search",
+                 stepping: str = "fixed",
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,

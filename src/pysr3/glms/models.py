@@ -3,17 +3,19 @@ from typing import Set
 from pysr3.linear.models import SimpleLinearModel, SimpleLinearModelSR3
 from pysr3.linear.problems import LinearProblem
 from pysr3.glms.problems import PoissonProblem
-from pysr3.regularizers import DummyRegularizer, L1Regularizer
+from pysr3.regularizers import DummyRegularizer, L1Regularizer, PositiveQuadrantRegularizer
 from pysr3.solvers import PGDSolver
 from pysr3.glms.oracles import GLMOracle, GLMOracleSR3
 from pysr3.glms.link_functions import PoissonLinkFunction
 
 
 class SimplePoissonModel(SimpleLinearModel):
+
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
         link_function = PoissonLinkFunction()
         oracle = GLMOracle(problem=None, prior=self.prior, link_function=link_function)
+        regularizer = PositiveQuadrantRegularizer()
         return oracle, regularizer, solver
 
     def get_information_criterion(self, x, y, ic="bic"):
@@ -64,7 +66,9 @@ class SimplePoissonModel(SimpleLinearModel):
 
 
 class SimplePoissonModelSR3(SimpleLinearModelSR3):
-    def __init__(self, constraints=None, **kwargs):
+    def __init__(self,
+                 constraints=None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.constraints=constraints
 
@@ -72,6 +76,7 @@ class SimplePoissonModelSR3(SimpleLinearModelSR3):
         oracle, regularizer, solver = super().instantiate()
         link_function = PoissonLinkFunction()
         oracle = GLMOracleSR3(problem=None, prior=self.prior, link_function=link_function, constraints=self.constraints)
+        regularizer = PositiveQuadrantRegularizer()
         return oracle, regularizer, solver
 
     def _get_tags(self):
@@ -165,7 +170,8 @@ class PoissonL1Model(SimplePoissonModel):
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = L1Regularizer(lam=self.lam)
+        lasso = L1Regularizer(lam=self.lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=lasso)
         return oracle, regularizer, solver
 
 
@@ -175,7 +181,7 @@ class PoissonL1ModelSR3(SimplePoissonModelSR3):
                  el: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
-                 stepping: str = "line-search",
+                 stepping: str = "fixed",
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -222,5 +228,6 @@ class PoissonL1ModelSR3(SimplePoissonModelSR3):
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = L1Regularizer(lam=self.lam)
+        lasso = L1Regularizer(lam=self.lam)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=lasso)
         return oracle, regularizer, solver
