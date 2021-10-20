@@ -120,6 +120,36 @@ as fixed_step_len=1/L.</p></li>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="pysr3.glms.models.PoissonL1ModelSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.glms.models.</span></span><span class="sig-name descname"><span class="pre">PoissonL1ModelSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'line-search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.PoissonL1ModelSR3" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysr3.glms.models.SimplePoissonModelSR3" title="pysr3.glms.models.SimplePoissonModelSR3"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.glms.models.SimplePoissonModelSR3</span></code></a></p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lam</strong> (<em>float</em>) – strength of LASSO regularizer</p></li>
+<li><p><strong>el</strong> (<em>float</em>) – constant for SR3 relaxation. Bigger values correspond to tighter relaxation.</p></li>
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.glms.models.PoissonL1ModelSR3.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.PoissonL1ModelSR3.instantiate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="pysr3.glms.models.SimplePoissonModel">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.glms.models.</span></span><span class="sig-name descname"><span class="pre">SimplePoissonModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_solver</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'line-search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Set</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">('converged',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_step_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModel" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.SimpleLinearModel" title="pysr3.linear.models.SimpleLinearModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.linear.models.SimpleLinearModel</span></code></a></p>
@@ -153,6 +183,60 @@ as fixed_step_len=1/L.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.glms.models.SimplePoissonModel.predict_problem">
 <span class="sig-name descname"><span class="pre">predict_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModel.predict_problem" title="Permalink to this definition"></a></dt>
+<dd><p>Makes a prediction if .fit was called before and throws an error otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – An instance of LMEProblem. Should have the same format as the data
+which was used for fitting the model. It may contain new groups, in which case
+the prediction will be formed using the fixed effects only.</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y</strong> (<em>np.ndarray</em>) – Models predictions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pysr3.glms.models.SimplePoissonModelSR3">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.glms.models.</span></span><span class="sig-name descname"><span class="pre">SimplePoissonModelSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModelSR3" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.SimpleLinearModelSR3" title="pysr3.linear.models.SimpleLinearModelSR3"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.linear.models.SimpleLinearModelSR3</span></code></a></p>
+<p>Initializes the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>el</strong> (<em>float</em>) – constant for SR3 relaxation. Bigger values correspond to tighter relaxation.</p></li>
+<li><p><strong>tol_solver</strong> (<em>float</em>) – tolerance for the stop criterion of PGD solver</p></li>
+<li><p><strong>max_iter_solver</strong> (<em>int</em>) – maximal number of iterations for PGD solver</p></li>
+<li><p><strong>stepping</strong> (<em>str</em>) – step-size policy for PGD. Can be either “line-search” or “fixed”</p></li>
+<li><p><strong>logger_keys</strong> (<em>List[str]</em>) – list of keys for the parameters that the logger should track</p></li>
+<li><p><strong>fixed_step_len</strong> (<em>float</em>) – step-size for PGD algorithm. If “linear-search” is used for stepping
+then the algorithm uses this value as the maximal step possible. Use
+this parameter if you know the Lipschitz-smoothness constant L for your problem
+as fixed_step_len=1/L.</p></li>
+<li><p><strong>prior</strong> (<em>Optional[Prior]</em>) – an instance of Prior class. If None then a non-informative prior is used.</p></li>
+<li><p><strong>practical</strong> (<em>bool</em>) – whether to use a direct efficient value function evaluation method</p></li>
+<li><p><strong>kwargs</strong> – for passing debugging info</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.glms.models.SimplePoissonModelSR3.get_information_criterion">
+<span class="sig-name descname"><span class="pre">get_information_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bic'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModelSR3.get_information_criterion" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.glms.models.SimplePoissonModelSR3.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModelSR3.instantiate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pysr3.glms.models.SimplePoissonModelSR3.predict_problem">
+<span class="sig-name descname"><span class="pre">predict_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.glms.models.SimplePoissonModelSR3.predict_problem" title="Permalink to this definition"></a></dt>
 <dd><p>Makes a prediction if .fit was called before and throws an error otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
