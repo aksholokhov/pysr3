@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   pysr3.glms
    pysr3.linear
    pysr3.lme
 
