@@ -622,3 +622,27 @@ class PositiveQuadrantRegularizer(Regularizer):
             return self.other_regularizer.prox(y, alpha)
         else:
             return y
+
+
+class ElasticRegularizer(Regularizer):
+
+    def __init__(self, eps=0, other_regularizer: Regularizer = None):
+        self.other_regularizer = other_regularizer
+        self.eps = eps
+
+    def instantiate(self, weights, **kwargs):
+        if self.other_regularizer:
+            self.other_regularizer.instantiate(weights=weights, **kwargs)
+
+    def value(self, x):
+        y = self.eps / 2 * np.linalg.norm(x) ** 2
+        if self.other_regularizer:
+            return y + self.other_regularizer.value(x)
+        else:
+            return y
+
+    def prox(self, x, alpha):
+        if self.other_regularizer:
+            return self.other_regularizer.prox(x / (1 + alpha*self.eps), alpha / (1 + alpha*self.eps))
+        else:
+            return x / (1 + alpha*self.eps)

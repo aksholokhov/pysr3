@@ -29,7 +29,7 @@ from pysr3.lme.problems import LMEProblem
 from pysr3.lme.problems import get_per_group_coefficients
 from pysr3.logger import Logger
 from pysr3.regularizers import Regularizer, L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
-    DummyRegularizer, PositiveQuadrantRegularizer
+    DummyRegularizer, PositiveQuadrantRegularizer, ElasticRegularizer
 from pysr3.solvers import PGDSolver, FakePGDSolver
 
 
@@ -438,6 +438,7 @@ class SimpleLMEModel(LMEModel):
                  initializer: str = "None",
                  max_iter_solver: int = 1000,
                  stepping: str = "line-search",
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -476,6 +477,7 @@ class SimpleLMEModel(LMEModel):
         self.logger_keys = logger_keys
         self.fixed_step_len = fixed_step_len
         self.prior = prior
+        self.elastic_eps = elastic_eps
 
     def instantiate(self):
         """
@@ -487,7 +489,8 @@ class SimpleLMEModel(LMEModel):
         """
         oracle = LinearLMEOracle(None, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=dummy_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         fixed_step_len = 5e-2 if not self.fixed_step_len else self.fixed_step_len
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
                            fixed_step_len=fixed_step_len)
@@ -574,6 +577,7 @@ class SimpleLMEModelSR3(LMEModel):
                  max_iter_solver: int = 10000,
                  stepping: str = "fixed",
                  ell: float = 40,
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
@@ -630,6 +634,7 @@ class SimpleLMEModelSR3(LMEModel):
         self.warm_start_oracle = warm_start_oracle
         self.prior = prior
         self.ell = ell
+        self.elastic_eps = elastic_eps
         self.practical = practical
         self.update_prox_every = update_prox_every
 
@@ -654,7 +659,8 @@ class SimpleLMEModelSR3(LMEModel):
                                     n_iter_inner=self.max_iter_oracle,
                                     warm_start=self.warm_start_oracle, prior=self.prior)
         dummy_regularizer = DummyRegularizer()
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=dummy_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=dummy_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
     def get_information_criterion(self, x, y, columns_labels=None, ic="muller_ic"):
@@ -714,6 +720,7 @@ class L0LmeModel(SimpleLMEModel):
                  stepping: str = "line-search",
                  nnz_tbeta: int = None,
                  nnz_tgamma: int = None,
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -753,6 +760,7 @@ class L0LmeModel(SimpleLMEModel):
                          initializer=initializer,
                          max_iter_solver=max_iter_solver,
                          stepping=stepping,
+                         elastic_eps=elastic_eps,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
@@ -764,7 +772,8 @@ class L0LmeModel(SimpleLMEModel):
         l0_regularizer = L0Regularizer(nnz_tbeta=self.nnz_tbeta,
                                        nnz_tgamma=self.nnz_tgamma,
                                        oracle=oracle)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=l0_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=l0_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -804,6 +813,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                  max_iter_solver: int = 1000,
                  stepping: str = "fixed",
                  ell: float = 40,
+                 elastic_eps: float = 1e-4,
                  nnz_tbeta: int = 1,
                  nnz_tgamma: int = 1,
                  logger_keys: Set = ('converged',),
@@ -870,6 +880,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          ell=ell,
+                         elastic_eps=elastic_eps,
                          prior=prior)
         self.nnz_tbeta = nnz_tbeta
         self.nnz_tgamma = nnz_tgamma
@@ -886,7 +897,8 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
         l0_regularizer = L0Regularizer(nnz_tbeta=self.nnz_tbeta,
                                        nnz_tgamma=self.nnz_tgamma,
                                        oracle=oracle)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=l0_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=l0_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -901,6 +913,7 @@ class L1LmeModel(SimpleLMEModel):
                  max_iter_solver: int = 10000,
                  stepping: str = "line-search",
                  lam: float = 0,
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -940,6 +953,7 @@ class L1LmeModel(SimpleLMEModel):
                          stepping=stepping,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
+                         elastic_eps=elastic_eps,
                          prior=prior)
         self.lam = lam
 
@@ -956,7 +970,8 @@ class L1LmeModel(SimpleLMEModel):
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
                            fixed_step_len=fixed_step_len)
         l1_regularizer = L1Regularizer(lam=self.lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=l1_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -973,6 +988,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                  max_iter_solver: int = 10000,
                  stepping: str = "fixed",
                  ell: float = 40,
+                 elastic_eps: float = 1e-4,
                  lam: float = 1,
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
@@ -1036,6 +1052,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          ell=ell,
+                         elastic_eps=elastic_eps,
                          prior=prior)
         self.lam = lam
 
@@ -1049,7 +1066,8 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
         """
         oracle, regularizer, solver = super().instantiate()
         l1_regularizer = L1Regularizer(lam=self.lam)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=l1_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=l1_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1065,6 +1083,7 @@ class CADLmeModel(SimpleLMEModel):
                  stepping: str = "line-search",
                  rho: float = 0.30,
                  lam: float = 1.0,
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -1106,6 +1125,7 @@ class CADLmeModel(SimpleLMEModel):
                          stepping=stepping,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
+                         elastic_eps=elastic_eps,
                          prior=prior)
         self.lam = lam
         self.rho = rho
@@ -1123,7 +1143,8 @@ class CADLmeModel(SimpleLMEModel):
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
                            fixed_step_len=fixed_step_len)
         cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=cad_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1142,6 +1163,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                  ell: float = 40.0,
                  rho: float = 0.3,
                  lam: float = 1.0,
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
@@ -1206,6 +1228,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          ell=ell,
+                         elastic_eps=elastic_eps,
                          prior=prior)
         self.lam = lam
         self.rho = rho
@@ -1220,7 +1243,8 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
         """
         oracle, regularizer, solver = super().instantiate()
         cad_regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=cad_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=cad_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1237,6 +1261,7 @@ class SCADLmeModel(SimpleLMEModel):
                  rho: float = 3.7,  # as per recommendation from (Fan, Li, 2001), p. 1351
                  sigma: float = 0.5,  # same
                  lam: float = 1.0,
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
@@ -1280,6 +1305,7 @@ class SCADLmeModel(SimpleLMEModel):
                          stepping=stepping,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
+                         elastic_eps=elastic_eps,
                          prior=prior)
         self.lam = lam
         self.rho = rho
@@ -1298,7 +1324,8 @@ class SCADLmeModel(SimpleLMEModel):
         solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
                            fixed_step_len=fixed_step_len)
         scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=scad_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
 
 
@@ -1318,6 +1345,7 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                  rho: float = 3.7,  # as per recommendation from (Fan, Li, 2001), p. 1351
                  sigma: float = 0.5,  # same
                  lam: float = 1.0,
+                 elastic_eps: float = 1e-4,
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
@@ -1384,6 +1412,7 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          ell=ell,
+                         elastic_eps=elastic_eps,
                          prior=prior)
         self.lam = lam
         self.rho = rho
@@ -1399,5 +1428,6 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
         """
         oracle, regularizer, solver = super().instantiate()
         scad_regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
-        regularizer = PositiveQuadrantRegularizer(other_regularizer=scad_regularizer)
+        elastic_regularizer = ElasticRegularizer(other_regularizer=scad_regularizer, eps=self.elastic_eps)
+        regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver

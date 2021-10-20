@@ -67,7 +67,7 @@ class TestLmeModels(unittest.TestCase):
             "lam": 0.0,  # we expect the answers to be dense so the regularizers are small
             # "stepping": "line-search",
             "initializer": 'None',
-            "logger_keys": ('converged', 'loss',),
+            "logger_keys": ('converged',),
             "tol_oracle": 1e-4,
             "tol_solver": 1e-6,
             "max_iter_oracle": 1000,
@@ -136,7 +136,7 @@ class TestLmeModels(unittest.TestCase):
             "rho": 0.3,
             "sigma": 0.5,
             # "stepping": "line-search",
-            "logger_keys": ('converged', 'loss', 'vaida_aic', 'jones_bic', 'muller_ic'),
+            "logger_keys": ('converged', 'vaida_aic', 'jones_bic', 'muller_ic'),
             "tol_oracle": 1e-4,
             "tol_solver": 1e-5,
             "max_iter_oracle": 1000,
