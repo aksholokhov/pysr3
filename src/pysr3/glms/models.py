@@ -74,6 +74,11 @@ class SimplePoissonModelSR3(SimpleLinearModelSR3):
         oracle = GLMOracleSR3(problem=None, prior=self.prior, link_function=link_function, constraints=self.constraints)
         return oracle, regularizer, solver
 
+    def _get_tags(self):
+        tags = super()._get_tags()
+        tags["poor_score"] = True
+        return tags
+
     def get_information_criterion(self, x, y, ic="bic"):
         self.check_is_fitted()
         problem = LinearProblem.from_x_y(x, y)

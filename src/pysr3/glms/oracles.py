@@ -95,6 +95,11 @@ class GLMOracleSR3(GLMOracle):
 
     def find_optimal_parameters(self, w, x0=None, regularizer=None, tol=1e-4, max_iter=1000, mu_decay=0.5, logger=None,
                                 do_correction_steps=False, **kwargs):
+        x = x0 if x0 is not None else np.ones(len(w)) / 3
+        step_len = 1 / self.lam
+        x_prev = np.infty
+        iteration = 0
+
         # generate constraints index set and matrix
         constraint_index_set = []
         a = []
@@ -125,34 +130,40 @@ class GLMOracleSR3(GLMOracle):
             i += 1
             j += 1
             a.append(np.array(a_local))
+
         a = sp.linalg.block_diag(*a)
-        idx_constr_a = np.array(idx_constr_a)
-        idx_constr_x = np.array(idx_constr_x)
-        n = len(idx_constr_a)
-        b = np.array(b)
-        a_nnz = a[idx_constr_a, :]
-        b_nnz = b[idx_constr_a]
+        have_constraints = (a != 0).any()
+        if have_constraints:
+            idx_constr_a = np.array(idx_constr_a)
+            idx_constr_x = np.array(idx_constr_x)
+            n = len(idx_constr_a)
+            b = np.array(b)
+            a_nnz = a[idx_constr_a, :]
+            b_nnz = b[idx_constr_a]
+            v = np.ones(n)/5
+            mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, 0)
 
-        x = x0 if x0 is not None else np.ones(len(w))/3
-        v = np.ones(n)/5
-        mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, 0)
+            def G(v, x, mu):
+                return np.concatenate([
+                    v * (b_nnz - a_nnz.dot(x)) - mu,
+                    self.gradient_x(x, w) + (a_nnz * v[:, np.newaxis]).sum(axis=0)
+                ])
 
-        step_len = 1 / self.lam
-        x_prev = np.infty
-        iteration = 0
+            def dG(v, x):
+                return np.block([
+                    [np.diag(b_nnz - a_nnz.dot(x)), -a_nnz * v[:, np.newaxis]],
+                    [a_nnz.T, self.hessian(x) + self.lam * np.eye(len(x))]
+                ])
 
+        else:
+            def G(v, x, mu):
+                return self.gradient_x(x, w)
 
-        def G(v, x, mu):
-            return np.concatenate([
-                v * (b_nnz - a_nnz.dot(x)) - mu,
-                self.gradient_x(x, w) + (a_nnz * v[:, np.newaxis]).sum(axis=0)
-            ])
+            def dG(v, x):
+                return self.hessian(x) + self.lam * np.eye(len(x))
 
-        def dG(v, x):
-            return np.block([
-                [np.diag(b_nnz - a_nnz.dot(x)), -a_nnz * v[:, np.newaxis]],
-                [a_nnz.T, self.hessian(x) + self.lam*np.eye(len(x))]
-            ])
+            v = None
+            mu = None
 
         is_correction_step = False
 
@@ -163,23 +174,25 @@ class GLMOracleSR3(GLMOracle):
             G_current = G(v, x, mu)
             dG_current = dG(v, x)
             direction = np.linalg.solve(dG_current, -G_current)
-            dv = direction[:len(v)]
-            dx = direction[len(v):]
-            # establish the maximum length of step_size based on v+ >= 0
-            ind_neg_dir = np.where(dv < 0.0)[0]
-            max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-v[ind_neg_dir] / dv[ind_neg_dir]))
-            # establish the maximum length of step_size based on Ax+ <= b
-            step_len = max_step_len
-            while any(a.dot(x + step_len*dx) > b):
-                step_len *= 0.9
-
-            x = x + step_len * dx
-            v = v + step_len * dv
-
-            if do_correction_steps and not is_correction_step:
-                mu = np.nan_to_num(v.dot(x[idx_constr_x]) / n, 0)
+            if have_constraints:
+                # establish the maximum length of step_size based on v+ >= 0
+                dv = direction[:len(v)]
+                dx = direction[len(v):]
+                ind_neg_dir = np.where(dv < 0.0)[0]
+                max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-v[ind_neg_dir] / dv[ind_neg_dir]))
+                # establish the maximum length of step_size based on Ax+ <= b
+                step_len = max_step_len
+                while any(a.dot(x + step_len*dx) > b):
+                    step_len *= 0.9
+                v = v + step_len * dv
+                x = x + step_len * dx
+                if do_correction_steps and not is_correction_step:
+                    mu = np.nan_to_num(v.dot(x[idx_constr_x]) / n, 0)
+                else:
+                    mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, 0)
             else:
-                mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, 0)
+                dx = direction
+                x = x + dx
 
             iteration += 1
 

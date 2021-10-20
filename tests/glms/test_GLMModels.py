@@ -32,10 +32,11 @@ class TestGLMs(unittest.TestCase):
         }
 
         models_to_test = {
-            #"PoissonSimple": (SimplePoissonModel, {}),
+            "PoissonSimple": (SimplePoissonModel, {}),
             "PoissonL1": (PoissonL1Model, {}),
-            "PoissonL1SR3": (PoissonL1ModelSR3, {"constraints": ([0]*problem_parameters["num_features"],
-                                                                 [10]*problem_parameters["num_features"])})
+            "PoissonL1SR3Constrained": (PoissonL1ModelSR3, {"constraints": ([0]*problem_parameters["num_features"],
+                                                                 [10]*problem_parameters["num_features"])}),
+            "PoissonL1SR3NonConstrained": (PoissonL1ModelSR3, {})
         }
 
         default_params = {
