@@ -208,8 +208,8 @@ class GLMOracleSR3(GLMOracle):
 
     def aic(self, x):
         p = sum(x != 0)
-        return super(self).loss(x) + 2 * p
+        return super().loss(x) + 2 * p
 
     def bic(self, x):
         p = sum(x != 0)
-        return super(self).loss(x) + np.log(self.problem.num_objects) * p
+        return super().loss(x) + np.log(self.problem.num_objects) * p

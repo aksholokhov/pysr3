@@ -15,11 +15,11 @@ class PoissonProblem(LinearProblem):
                  true_x=None,
                  seed=42):
         np.random.seed(seed)
-        a = np.random.randn(num_objects, num_features)
+        a = 3*np.random.randn(num_objects, num_features) / num_features
         a[:, 0] = 1
         x = true_x if true_x is not None else np.random.rand(num_features)
         noise = obs_std*np.random.randn(num_objects)
-        b = np.array([np.random.poisson(np.exp(ai.dot(x) + eps)) for ai, eps in zip(a, noise)])
+        b = np.array([np.random.poisson(np.exp(ai.dot(x) + eps*0.1)) for ai, eps in zip(a, noise)])
         obs_std = np.ones(num_objects)*obs_std
         return PoissonProblem(a=a, b=b, regularization_weights=np.ones(num_features), obs_std=obs_std)
 

@@ -85,21 +85,21 @@ class TestGLMs(unittest.TestCase):
     def test_solving_sparse_problem(self):
 
         problem_parameters = {
-            "num_objects": 200,
+            "num_objects": 400,
             "num_features": 20,
-            "obs_std": 0.1,
+            "obs_std": 1,
         }
 
         models_to_test = {
-            "PoissonL1": (PoissonL1Model, {"lam": 5e4}),
+          #  "PoissonL1": (PoissonL1Model, {"lam": 5e4}),
             "PoissonL1SR3": (PoissonL1ModelSR3, {"constraints": ([0]*problem_parameters["num_features"],
                                                                  [10]*problem_parameters["num_features"])})
         }
         trials = 5
 
         default_params = {
-            "el": 2,
-            "lam": 0.1,
+            "el": 1,
+            "lam": 0.3,
             "rho": 0.3,
             "logger_keys": ('converged'),
             "tol_solver": 1e-6,
@@ -145,6 +145,6 @@ class TestGLMs(unittest.TestCase):
                         self.assertGreaterEqual(max_rmse, rmse,
                                            msg=f"{model_name}: MSE is too big: {rmse} > {max_rmse} (seed={seed})")
                         self.assertGreaterEqual(selection_accuracy, min_selection_accuracy,
-                                           msg=f"{model_name}: Fixed Effects Selection Accuracy is too small: {selection_accuracy} < {min_selection_accuracy}  (seed={seed})")
+                                           msg=f"{model_name}: Feature Selection Accuracy is too small: {selection_accuracy} < {min_selection_accuracy}  (seed={seed})")
 
         return None
