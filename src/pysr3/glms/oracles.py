@@ -12,9 +12,13 @@ class GLMOracle:
         self.problem = problem
         self.prior = prior if prior else NonInformativePrior()
         self.link_function = link_function if link_function else IdentityLinkFunction
+        self.mean_std = None
+        if problem is not None:
+            self.instantiate(problem)
 
     def instantiate(self, problem):
         self.problem = problem
+        self.mean_std = np.mean(problem.obs_std if problem.obs_std is not None else 1)
         self.prior.instantiate(problem)
 
     def forget(self):
@@ -24,21 +28,24 @@ class GLMOracle:
     def loss(self, x):
         a = self.problem.a
         b = self.problem.b
-        return (1 / self.problem.obs_std ** 2 * (
-                self.link_function.value(a.dot(x)) - b * a.dot(x))).sum() + self.prior.loss(x)
+        stds = self.problem.obs_std / self.mean_std     # normalize stds to avoid numerical instability
+        return (1 / stds ** 2 * (
+                self.link_function.value(a.dot(x)) - b * a.dot(x))).sum()/self.mean_std**2 + self.prior.loss(x)
 
     def gradient(self, x):
         a = self.problem.a
         b = self.problem.b
-        return (a.T * (1 / self.problem.obs_std ** 2 * (
-                self.link_function.gradient(a.dot(x)) - b))).T.sum(axis=0) + self.prior.gradient(x)
+        stds = self.problem.obs_std / self.mean_std
+        return (a.T * (1 / stds ** 2 * (
+                self.link_function.gradient(a.dot(x)) - b))).T.sum(axis=0)/self.mean_std**2 + self.prior.gradient(x)
 
     def hessian(self, x):
         res = 0
+        stds = self.problem.obs_std / self.mean_std
         for i, ai in enumerate(self.problem.a):
             ai = ai.reshape(-1, 1)
-            res = res + (1 / self.problem.obs_std[i] ** 2) * self.link_function.hessian(ai.T.dot(x)) * ai.dot(ai.T)
-        return res + self.prior.hessian(x)
+            res = res + (1 / stds[i] ** 2) * self.link_function.hessian(ai.T.dot(x)) * ai.dot(ai.T)
+        return res/self.mean_std**2 + self.prior.hessian(x)
 
     def value_function(self, x):
         return self.loss(x)
@@ -64,23 +71,24 @@ class GLMOracleSR3(GLMOracle):
         self.constraints = constraints
         self.lam = lam
         self.practical = practical
+        if problem is not None:
+            self.instantiate(problem)
 
     def instantiate(self, problem):
         self.problem = problem
+        self.mean_std = np.mean(problem.obs_std)
         if self.constraints is None:
             self.constraints = ([-np.infty]*problem.num_features, [np.infty]*problem.num_features)
         self.prior.instantiate(problem)
 
     def forget(self):
         self.problem = None
+        self.mean_std = None
         self.prior.forget()
 
     def loss(self, x, w=None):
-        a = self.problem.a
-        b = self.problem.b
         return (super().loss(x) +
-                + self.lam / 2 * np.linalg.norm(x - w, ord=2) ** 2
-                + self.prior.loss(x))
+                + self.lam / 2 * np.linalg.norm(x - w, ord=2) ** 2)
 
     def gradient_x(self, x, w):
         return super().gradient(x) + self.lam * (x - w)
