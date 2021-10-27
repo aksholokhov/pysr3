@@ -63,8 +63,7 @@ class TestLinearModels(unittest.TestCase):
             with self.subTest(i=i):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
-                        problem = LinearProblem.generate(**problem_parameters, seed=i)
-                        _, y = problem.to_x_y()
+                        problem = LinearProblem.generate(**problem_parameters, seed=i, true_x=np.arange(problem_parameters["num_features"]) + 1)
 
                         model_params = default_params.copy()
                         model_params.update(local_params)
@@ -72,7 +71,11 @@ class TestLinearModels(unittest.TestCase):
                         model = model_constructor(**model_params)
                         model.fit_problem(problem)
 
-                        y_pred = model.predict_problem(problem)
+                        test_problem = LinearProblem.generate(**problem_parameters, seed=i+1,
+                                                         true_x=np.arange(problem_parameters["num_features"]) + 1)
+                        _, y = test_problem.to_x_y()
+
+                        y_pred = model.predict_problem(test_problem)
                         explained_variance = explained_variance_score(y, y_pred)
                         mse = mean_squared_error(y, y_pred)
 
@@ -98,23 +101,23 @@ class TestLinearModels(unittest.TestCase):
             "SCAD": (LinearSCADModel, {"lam": 1, "rho": 3.7, "sigma": 2.5}),
             "L1_SR3": (LinearL1ModelSR3, {"lam": 0.1}),
             "L1_SR3P": (LinearL1ModelSR3, {"lam": 0.1, "practical": True}),
-            "CAD_SR3": (LinearCADModelSR3, {"rho": 0.5}),
-            "CAD_SR3P": (LinearCADModelSR3, {"rho": 0.5, "practical": True}),
+            "CAD_SR3": (LinearCADModelSR3, {"lam": 0.1, "rho": 0.5,}),
+            "CAD_SR3P": (LinearCADModelSR3, {"lam": 0.1, "rho": 0.5, "practical": True}),
             "SCAD_SR3": (LinearSCADModelSR3, {"lam": 0.2, "rho": 3.7, "sigma": 0.5}),
             "SCAD_SR3P": (LinearSCADModelSR3, {"lam": 0.2, "rho": 3.7, "sigma": 0.5, "practical": True})
         }
         trials = 5
 
         problem_parameters = {
-            "num_objects": 100,
+            "num_objects": 300,
             "num_features": 20,
             "obs_std": 0.1,
         }
 
         default_params = {
-            "el": 1,
+            "el": 5,
             "lam": 1,
-            "rho": 0.3,
+            "rho": 1,
             "logger_keys": ('converged', 'loss',),
             "tol_solver": 1e-6,
             "max_iter_solver": 5000
@@ -128,7 +131,7 @@ class TestLinearModels(unittest.TestCase):
             with self.subTest(i=i):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
-                        seed = i + 42
+                        seed = i
                         np.random.seed(seed)
                         true_x = np.random.choice(2, size=problem_parameters["num_features"], p=np.array([0.5, 0.5]))
                         if sum(true_x) == 0:
@@ -137,7 +140,6 @@ class TestLinearModels(unittest.TestCase):
                         problem = LinearProblem.generate(**problem_parameters,
                                                          true_x=true_x,
                                                          seed=seed)
-                        x, y = problem.to_x_y()
 
                         model_params = default_params.copy()
                         model_params.update(local_params)
@@ -145,12 +147,17 @@ class TestLinearModels(unittest.TestCase):
                         model = model_constructor(**model_params)
                         model.fit_problem(problem)
 
-                        y_pred = model.predict_problem(problem)
+                        test_problem = LinearProblem.generate(**problem_parameters,
+                                                         true_x=true_x,
+                                                         seed=seed+1)
+                        _, y = test_problem.to_x_y()
+
+                        y_pred = model.predict_problem(test_problem)
                         explained_variance = explained_variance_score(y, y_pred)
                         mse = mean_squared_error(y, y_pred)
 
                         coefficients = model.coef_
-                        maybe_x = coefficients["x"]
+                        maybe_x = coefficients["x"][1:]     # the intercept was not used in data generation
                         selection_accuracy = accuracy_score(true_x, abs(maybe_x) > 1e-2)
 
                         self.assertGreater(explained_variance, min_explained_variance,

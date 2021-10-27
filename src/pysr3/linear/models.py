@@ -10,6 +10,7 @@ from pysr3.linear.problems import LinearProblem
 from pysr3.logger import Logger
 from pysr3.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer, Regularizer
 from pysr3.solvers import PGDSolver, FakePGDSolver
+from pysr3.preprocessors import Preprocessor
 
 
 class LinearModel(BaseEstimator, RegressorMixin):
@@ -71,15 +72,13 @@ class LinearModel(BaseEstimator, RegressorMixin):
             warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
             y = y[:, 0]
         obs_std = np.ones(len(y))
-        problem = LinearProblem.from_x_y(x=x, y=y, obs_std=obs_std)
-        return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start,
-                                regularization_weights=regularization_weights, **kwargs)
+        problem = LinearProblem.from_x_y(x=x, y=y, obs_std=obs_std, regularization_weights=regularization_weights)
+        return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
 
     def fit_problem(self,
                     problem: LinearProblem,
                     initial_parameters: dict = None,
                     warm_start=False,
-                    regularization_weights=None,
                     **kwargs):
         """
         Fits the model to a provided problem
@@ -106,16 +105,18 @@ class LinearModel(BaseEstimator, RegressorMixin):
         -------
             self
         """
+        normalized_problem, normalization_parameters = Preprocessor.normalize(problem)
+        self.normalization_parameters_ = normalization_parameters
+        problem_complete = Preprocessor.add_intercept(normalized_problem)
+
         oracle, regularizer, solver = self.instantiate()
-        oracle.instantiate(problem)
-        if regularization_weights is None:
-            regularization_weights = np.ones(problem.num_features)
-        regularizer.instantiate(weights=regularization_weights)
+        oracle.instantiate(problem_complete)
+        regularizer.instantiate(weights=problem_complete.regularization_weights)
 
         if initial_parameters is None:
             initial_parameters = {}
 
-        x = np.ones(problem.num_features)
+        x = np.ones(problem_complete.num_features)
         if warm_start:
             x = initial_parameters.get("x0", x)
 
@@ -187,11 +188,13 @@ class LinearModel(BaseEstimator, RegressorMixin):
         self.check_is_fitted()
 
         x = self.coef_['x']
+        problem_scaled, _ = Preprocessor.normalize(problem, **self.normalization_parameters_)
+        problem_with_intercept = Preprocessor.add_intercept(problem_scaled)
 
-        assert problem.num_features == x.shape[0], \
+        assert problem_with_intercept.num_features == x.shape[0], \
             "Number of features is not the same to what it was in the train data."
 
-        return problem.a.dot(x)
+        return problem_with_intercept.a.dot(x)
 
     def check_is_fitted(self):
         """

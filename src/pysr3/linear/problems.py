@@ -16,22 +16,30 @@ class LinearProblem:
         self.b = np.array(b, dtype='float64')
         self.num_objects = a.shape[0]
         self.num_features = a.shape[1]
-        self.c = c if c else np.eye(self.num_features)
+        self.c = c if c is not None else np.eye(self.num_features)
         self.obs_std = obs_std
         self.regularization_weights = regularization_weights
 
     @staticmethod
     def generate(num_objects=100,
                  num_features=10,
+                 add_intercept=False,
                  obs_std=0.1,
                  true_x=None,
                  seed=42):
         np.random.seed(seed)
-        a = np.random.rand(num_objects, num_features)
-        a[:, 0] = 1
-        x = true_x if true_x is not None else np.random.rand(num_features)
-        b = a.dot(x) + obs_std * np.random.randn(num_objects)
-        return LinearProblem(a=a, b=b, regularization_weights=np.ones(num_features))
+        n = num_features + int(add_intercept)
+        if true_x is not None:
+            assert len(true_x) == n, "true_x should have length of num_features + ?intercept"
+        a = np.random.rand(num_objects, n)
+        if add_intercept:
+            a[:, 0] = 1
+        x = true_x if true_x is not None else np.random.rand(n)
+        b = a.dot(x) + obs_std * obs_std*np.random.randn(num_objects)
+        regularization_weights = np.ones(num_features)
+        if add_intercept:
+            regularization_weights = np.c_[np.zeros(1), regularization_weights]
+        return LinearProblem(a=a, b=b, regularization_weights=regularization_weights, obs_std=obs_std)
 
     @staticmethod
     def from_x_y(x, y, c=None, obs_std=None, regularization_weights=None):
