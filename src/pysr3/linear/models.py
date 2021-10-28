@@ -116,7 +116,7 @@ class LinearModel(BaseEstimator, RegressorMixin):
         if initial_parameters is None:
             initial_parameters = {}
 
-        x = np.ones(problem_complete.num_features)
+        x = np.ones(problem_complete.num_features) / problem.num_features
         if warm_start:
             x = initial_parameters.get("x0", x)
 

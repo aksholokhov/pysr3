@@ -95,8 +95,10 @@ class PGDSolver:
                 while step_len > 1e-14:
                     y = x + step_len * direction
                     z = regularizer.prox(y, step_len)
-                    if oracle.value_function(z) <= oracle.value_function(x) - direction.dot(z - x) + (
-                            1 / (2 * step_len)) * np.linalg.norm(z - x) ** 2:
+                    lhs = oracle.value_function(z)
+                    rhs = oracle.value_function(x) - direction.dot(z - x) + (
+                            1 / (2 * step_len)) * np.linalg.norm(z - x) ** 2
+                    if np.isfinite(lhs) and np.isfinite(rhs) and lhs <= rhs:
                         break
                     else:
                         step_len *= 0.5

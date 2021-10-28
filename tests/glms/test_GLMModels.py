@@ -27,15 +27,16 @@ class TestGLMs(unittest.TestCase):
         problem_parameters = {
             "num_objects": 100,
             "num_features": 10,
-            "true_x": np.ones(10)/2,
+            "true_x": np.ones(10) / 10,
             "obs_std": 0.1,
         }
 
         models_to_test = {
             "PoissonSimple": (SimplePoissonModel, {}),
             "PoissonL1": (PoissonL1Model, {}),
-            "PoissonL1SR3Constrained": (PoissonL1ModelSR3, {"constraints": ([0]*problem_parameters["num_features"],
-                                                                 [10]*problem_parameters["num_features"])}),
+            "PoissonL1SR3Constrained": (
+            PoissonL1ModelSR3, {"constraints": ([-3] * (problem_parameters["num_features"] + 1),
+                                                [3] * (problem_parameters["num_features"] + 1))}),
             "PoissonL1SR3NonConstrained": (PoissonL1ModelSR3, {})
         }
 
@@ -87,19 +88,19 @@ class TestGLMs(unittest.TestCase):
         problem_parameters = {
             "num_objects": 400,
             "num_features": 20,
-            "obs_std": 1,
+            "obs_std": 0.1,
         }
 
         models_to_test = {
-          #  "PoissonL1": (PoissonL1Model, {"lam": 5e4}),
-            "PoissonL1SR3": (PoissonL1ModelSR3, {"constraints": ([0]*problem_parameters["num_features"],
-                                                                 [10]*problem_parameters["num_features"])})
+            "PoissonL1": (PoissonL1Model, {"lam": 5}),
+            "PoissonL1SR3": (PoissonL1ModelSR3, {"constraints": ([-3] * (problem_parameters["num_features"] + 1),
+                                                [3] * (problem_parameters["num_features"] + 1))})
         }
         trials = 5
 
         default_params = {
             "el": 1,
-            "lam": 0.3,
+            "lam": 1e-3,
             "rho": 0.3,
             "logger_keys": ('converged'),
             "tol_solver": 1e-6,
@@ -119,6 +120,7 @@ class TestGLMs(unittest.TestCase):
                         true_x = np.random.choice(2, size=problem_parameters["num_features"], p=np.array([0.5, 0.5]))
                         if sum(true_x) == 0:
                             true_x[0] = 1
+                        true_x = 5*true_x / sum(true_x)
 
                         problem = PoissonProblem.generate(**problem_parameters,
                                                           true_x=true_x,
@@ -135,16 +137,16 @@ class TestGLMs(unittest.TestCase):
                         # probably not the best score for a discrete distribution
                         explained_variance = explained_variance_score(y, y_pred)
                         rmse = np.mean(((y - y_pred) / (y_pred + 1)) ** 2)
-
+                        iters = model.logger_.get("iteration")
                         coefficients = model.coef_
-                        maybe_x = coefficients["x"]
-                        selection_accuracy = accuracy_score(true_x, abs(maybe_x) > 1e-2)
+                        maybe_x = coefficients["x"][1:]  # intercept was not used for problem generation
+                        selection_accuracy = accuracy_score(abs(true_x) > 1e-2, abs(maybe_x) > 1e-2)
 
                         # self.assertGreaterEqual(explained_variance, min_explained_variance,
                         #                    msg=f"{model_name}: Explained variance is too small: {explained_variance} < {min_explained_variance} (seed={seed})")
                         self.assertGreaterEqual(max_rmse, rmse,
-                                           msg=f"{model_name}: MSE is too big: {rmse} > {max_rmse} (seed={seed})")
+                                                msg=f"{model_name}: MSE is too big: {rmse} > {max_rmse} (seed={seed})")
                         self.assertGreaterEqual(selection_accuracy, min_selection_accuracy,
-                                           msg=f"{model_name}: Feature Selection Accuracy is too small: {selection_accuracy} < {min_selection_accuracy}  (seed={seed})")
+                                                msg=f"{model_name}: Feature Selection Accuracy is too small: {selection_accuracy} < {min_selection_accuracy}  (seed={seed})")
 
         return None

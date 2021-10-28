@@ -661,7 +661,7 @@ class ElasticRegularizer(Regularizer):
             self.other_regularizer.instantiate(weights=weights, **kwargs)
 
     def value(self, x):
-        y = np.sum(self.weights * self.eps / 2 * x * x)
+        y = np.sum(self.eps / 2 * x * x)
         if self.other_regularizer:
             return y + self.other_regularizer.value(x)
         else:
@@ -669,7 +669,7 @@ class ElasticRegularizer(Regularizer):
 
     def prox(self, x, alpha):
         if self.other_regularizer:
-            return self.other_regularizer.prox(x / (1 + alpha * self.eps * self.weights),
-                                               alpha / (1 + alpha * self.eps * self.weights))
+            return self.other_regularizer.prox(x / (1 + alpha * self.eps),
+                                               alpha / (1 + alpha * self.eps))
         else:
-            return x / (1 + alpha * self.eps * self.weights)
+            return x / (1 + alpha * self.eps)

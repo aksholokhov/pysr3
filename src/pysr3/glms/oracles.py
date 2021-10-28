@@ -103,7 +103,7 @@ class GLMOracleSR3(GLMOracle):
 
     def find_optimal_parameters(self, w, x0=None, regularizer=None, tol=1e-4, max_iter=1000, mu_decay=0.5, logger=None,
                                 do_correction_steps=False, **kwargs):
-        x = x0 if x0 is not None else np.ones(len(w)) / 3
+        x = x0 if x0 is not None else np.ones(len(w)) / len(w)
         step_len = 1 / self.lam
         x_prev = np.infty
         iteration = 0

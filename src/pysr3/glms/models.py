@@ -7,6 +7,7 @@ from pysr3.regularizers import DummyRegularizer, L1Regularizer, PositiveQuadrant
 from pysr3.solvers import PGDSolver
 from pysr3.glms.oracles import GLMOracle, GLMOracleSR3
 from pysr3.glms.link_functions import PoissonLinkFunction
+from pysr3.preprocessors import Preprocessor
 
 
 class SimplePoissonModel(SimpleLinearModel):
@@ -23,7 +24,6 @@ class SimplePoissonModel(SimpleLinearModel):
         problem = LinearProblem.from_x_y(x, y)
         link_function = PoissonLinkFunction()
         oracle = GLMOracle(problem=problem, prior=self.prior, link_function=link_function)
-        oracle.instantiate(problem)
         if ic == "aic":
             return oracle.aic(**self.coef_)
         elif ic == "bic":
@@ -58,11 +58,15 @@ class SimplePoissonModel(SimpleLinearModel):
         self.check_is_fitted()
 
         x = self.coef_['x']
-        link_function = PoissonLinkFunction()
-        assert problem.num_features == x.shape[0], \
+        problem_scaled, _ = Preprocessor.normalize(problem, **self.normalization_parameters_)
+        problem_with_intercept = Preprocessor.add_intercept(problem_scaled)
+
+        assert problem_with_intercept.num_features == x.shape[0], \
             "Number of features is not the same to what it was in the train data."
 
-        return link_function.value(problem.a.dot(x)).astype(int)
+        link_function = PoissonLinkFunction()
+
+        return link_function.value(problem_with_intercept.a.dot(x)).astype(int)
 
 
 class SimplePoissonModelSR3(SimpleLinearModelSR3):
@@ -118,11 +122,15 @@ class SimplePoissonModelSR3(SimpleLinearModelSR3):
         self.check_is_fitted()
 
         x = self.coef_['x']
-        link_function = PoissonLinkFunction()
-        assert problem.num_features == x.shape[0], \
+        problem_scaled, _ = Preprocessor.normalize(problem, **self.normalization_parameters_)
+        problem_with_intercept = Preprocessor.add_intercept(problem_scaled)
+
+        assert problem_with_intercept.num_features == x.shape[0], \
             "Number of features is not the same to what it was in the train data."
 
-        return link_function.value(problem.a.dot(x)).astype(int)
+        link_function = PoissonLinkFunction()
+
+        return link_function.value(problem_with_intercept.a.dot(x)).astype(int)
 
 
 class PoissonL1Model(SimplePoissonModel):

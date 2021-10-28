@@ -11,21 +11,26 @@ class PoissonProblem(LinearProblem):
     @staticmethod
     def generate(num_objects=100,
                  num_features=10,
+                 add_intercept=False,
                  obs_std=0.1,
                  true_x=None,
                  seed=42):
         np.random.seed(seed)
-        a = 3*np.random.randn(num_objects, num_features) / num_features
-        a[:, 0] = 1
+        n = num_features + int(add_intercept)
+        a = np.random.rand(num_objects, n)
+        if add_intercept:
+            a[:, 0] = 1
+        if true_x is not None:
+            assert len(true_x) == n, "true_x should have length of num_features + ?intercept"
         x = true_x if true_x is not None else np.random.rand(num_features)
         noise = obs_std*np.random.randn(num_objects)
-        b = np.array([np.random.poisson(np.exp(ai.dot(x) + eps*0.1)) for ai, eps in zip(a, noise)])
-        obs_std = np.ones(num_objects)*obs_std
-        return PoissonProblem(a=a, b=b, regularization_weights=np.ones(num_features), obs_std=obs_std)
+        b = np.array([np.random.poisson(np.exp(ai.dot(x) + eps)) for ai, eps in zip(a, noise)])
+        obs_std = obs_std*np.ones(num_objects)
+        return PoissonProblem(a=a, b=b, obs_std=obs_std, regularization_weights=np.ones(num_features))
 
     @staticmethod
-    def from_x_y(x, y, c=None, regularization_weights=None):
-        return PoissonProblem(a=x, b=y, c=c, regularization_weights=regularization_weights)
+    def from_x_y(x, y, c=None, obs_std=None, regularization_weights=None):
+        return PoissonProblem(a=x, b=y, c=c, obs_std=obs_std, regularization_weights=regularization_weights)
 
     @staticmethod
     def from_dataframe(data: pd.DataFrame,
