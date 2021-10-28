@@ -18,6 +18,7 @@ Submodules
    :maxdepth: 4
 
    pysr3.logger
+   pysr3.preprocessors
    pysr3.priors
    pysr3.regularizers
    pysr3.solvers
