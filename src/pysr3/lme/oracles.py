@@ -1350,8 +1350,9 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
         correction_steps_left = num_correction_steps_per_iteration
 
-        logger.add("mu_effective", [])
-        logger.add("mu", [])
+        if logger:
+            logger.add("mu_effective", [])
+            logger.add("mu", [])
 
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
