@@ -39,10 +39,10 @@ class TestLmeModels(unittest.TestCase):
             "L1": (L1LmeModel, {"stepping": "line-search"}),
             "CAD": (CADLmeModel, {"stepping": "line-search"}),
             "SCAD": (SCADLmeModel, {"stepping": "line-search", "rho": 3.7, "sigma": 2.5}),
-            "L0SR3": (L0LmeModelSR3, {}),
-            "L1SR3": (L1LmeModelSR3, {}),
-            "CADSR3": (CADLmeModelSR3, {}),
-            "SCADSR3": (SCADLmeModelSR3, {"rho": 3.7, "sigma": 2.5})
+            "L0SR3": (L0LmeModelSR3, {"practical": True}),
+            "L1SR3": (L1LmeModelSR3, {"practical": True}),
+            "CADSR3": (CADLmeModelSR3, {"practical": True}),
+            "SCADSR3": (SCADLmeModelSR3, {"rho": 3.7, "sigma": 2.5, "practical": True})
         }
 
         trials = 3
@@ -111,14 +111,14 @@ class TestLmeModels(unittest.TestCase):
     def test_solving_sparse_problem(self):
 
         models_to_test = {
-            "L0": (L0LmeModel, {"stepping": "line-search"}),
-            "L1": (L1LmeModel, {"stepping": "line-search"}),
-            "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
-            "SCAD": (SCADLmeModel, {"rho": 3.7, "lam": 10, "stepping": "line-search"}),
-            "L0_SR3": (L0LmeModelSR3, {}),
-            "L1_SR3": (L1LmeModelSR3, {}),
-            "CAD_SR3": (CADLmeModelSR3, {"rho": 0.3}),
-            "SCAD_SR3": (SCADLmeModelSR3, {"rho": 3.7})
+            # "L0": (L0LmeModel, {"stepping": "line-search"}),
+            # "L1": (L1LmeModel, {"stepping": "line-search"}),
+            # "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
+            # "SCAD": (SCADLmeModel, {"rho": 3.7, "lam": 10, "stepping": "line-search"}),
+            "L0_SR3": (L0LmeModelSR3, {"practical": True}),
+            "L1_SR3": (L1LmeModelSR3, {"practical": True}),
+            "CAD_SR3": (CADLmeModelSR3, {"rho": 0.3, "practical": True}),
+            "SCAD_SR3": (SCADLmeModelSR3, {"rho": 3.7, "practical": True})
         }
 
         trials = 2
@@ -130,9 +130,9 @@ class TestLmeModels(unittest.TestCase):
         }
 
         default_params = {
-            "ell": 80,
+            "ell": 2,
             "initializer": "EM",
-            "lam": 5,
+            "lam": 0.1,
             "rho": 0.3,
             "sigma": 0.5,
             # "stepping": "line-search",

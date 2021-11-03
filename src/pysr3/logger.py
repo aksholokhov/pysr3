@@ -32,7 +32,8 @@ class Logger:
         self
         """
         for key in self.keys:
-            self.dict[key].append(parameters.get(key, None))
+            if type(self.dict[key]) == list:
+                self.dict[key].append(parameters.get(key, None))
         return self
 
     def add(self, key, value):
@@ -51,6 +52,8 @@ class Logger:
 
         """
         self.dict[key] = value
+        if key not in self.keys:
+            self.keys = self.keys + tuple([key])
         return self
 
     def append(self, key, value):
