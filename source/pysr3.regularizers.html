@@ -50,7 +50,6 @@
 <li class="toctree-l3"><a class="reference internal" href="pysr3.html#subpackages">Subpackages</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="pysr3.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="pysr3.logger.html">pysr3.logger module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pysr3.preprocessors.html">pysr3.preprocessors module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.priors.html">pysr3.priors module</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">pysr3.regularizers module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.solvers.html">pysr3.solvers module</a></li>
@@ -473,57 +472,6 @@ N.B. Adaptive LASSO is implemented by providing custom weights.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizer.value">
 <span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizer.value" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the value for the regularizer at the point x</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>ndarray</em>) – point</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>the value of the regularizer</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizerLME">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.regularizers.</span></span><span class="sig-name descname"><span class="pre">PositiveQuadrantRegularizerLME</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_regularizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">pysr3.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizerLME" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.regularizers.Regularizer</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizerLME.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizerLME.instantiate" title="Permalink to this definition"></a></dt>
-<dd><p>Attaches weights to the regularizer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>kwargs</strong> – whatever is needed for the regularizer to work</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>None</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizerLME.prox">
-<span class="sig-name descname"><span class="pre">prox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizerLME.prox" title="Permalink to this definition"></a></dt>
-<dd><p>Return the value of the proximal operator evaluated at the point x and the step parameter alpha.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>ndarray</em>) – point.</p></li>
-<li><p><strong>alpha</strong> – step parameter.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>result of the application of the proximal operator to x</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pysr3.regularizers.PositiveQuadrantRegularizerLME.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.regularizers.PositiveQuadrantRegularizerLME.value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the value for the regularizer at the point x</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

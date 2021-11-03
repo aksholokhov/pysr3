@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   pysr3.glms
    pysr3.linear
    pysr3.lme
 
@@ -18,7 +17,6 @@ Submodules
    :maxdepth: 4
 
    pysr3.logger
-   pysr3.preprocessors
    pysr3.priors
    pysr3.regularizers
    pysr3.solvers
