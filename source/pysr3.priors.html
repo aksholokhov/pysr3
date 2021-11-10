@@ -93,7 +93,7 @@
 <p>Prior distributions for model parameters</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.priors.GaussianPrior">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.priors.</span></span><span class="sig-name descname"><span class="pre">GaussianPrior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.GaussianPrior" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.priors.</span></span><span class="sig-name descname"><span class="pre">GaussianPrior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.GaussianPrior" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Implements Gaussian Prior for various models</p>
 <p>Creates GaussianPrior</p>
@@ -171,7 +171,7 @@ with the columns of a particular dataset.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.priors.NonInformativePrior">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.priors.</span></span><span class="sig-name descname"><span class="pre">NonInformativePrior</span></span><a class="headerlink" href="#pysr3.priors.NonInformativePrior" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.priors.</span></span><span class="sig-name descname"><span class="pre">NonInformativePrior</span></span><a class="headerlink" href="#pysr3.priors.NonInformativePrior" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pysr3.priors.Prior" title="pysr3.priors.Prior"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysr3.priors.Prior</span></code></a></p>
 <p>Implements a non-informative prior</p>
 <p>Creates NonInformativePrior</p>
@@ -188,7 +188,7 @@ with the columns of a particular dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.priors.NonInformativePrior.gradient">
-<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.NonInformativePrior.gradient" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.NonInformativePrior.gradient" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluates the gradient of the prior with respect to the vector of fixed effects</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -199,7 +199,7 @@ with the columns of a particular dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.priors.NonInformativePrior.hessian">
-<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">hessian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.NonInformativePrior.hessian" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hessian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.NonInformativePrior.hessian" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluates Hessian of the prior with respect to the vector of random effects</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -224,7 +224,7 @@ with the columns of a particular dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.priors.NonInformativePrior.loss">
-<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.NonInformativePrior.loss" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.priors.NonInformativePrior.loss" title="Permalink to this definition"></a></dt>
 <dd><p>Value of the prior at beta, gamma.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -237,7 +237,7 @@ with the columns of a particular dataset.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.priors.Prior">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pysr3.priors.</span></span><span class="sig-name descname"><span class="pre">Prior</span></span><a class="headerlink" href="#pysr3.priors.Prior" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.priors.</span></span><span class="sig-name descname"><span class="pre">Prior</span></span><a class="headerlink" href="#pysr3.priors.Prior" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 </dd></dl>
 
