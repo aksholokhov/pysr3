@@ -25,7 +25,7 @@ from sklearn.exceptions import DataConversionWarning, NotFittedError
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
 
 from pysr3.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
-from pysr3.lme.problems import LMEProblem
+from pysr3.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
 from pysr3.lme.problems import get_per_group_coefficients
 from pysr3.logger import Logger
 from pysr3.regularizers import Regularizer, L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
@@ -204,11 +204,15 @@ class LMEModel(BaseEstimator, RegressorMixin):
         if fe_regularization_weights is None:
             if problem.fe_regularization_weights is None:
                 fe_regularization_weights = np.ones(problem.num_fixed_features)
+                if problem.intercept_label == FIXED or problem.intercept_label == FIXED_RANDOM:
+                    fe_regularization_weights[0] = 0
             else:
                 fe_regularization_weights = problem.fe_regularization_weights
         if re_regularization_weights is None:
             if problem.re_regularization_weights is None:
                 re_regularization_weights = np.ones(problem.num_random_features)
+                if problem.intercept_label == RANDOM or problem.intercept_label == FIXED_RANDOM:
+                    re_regularization_weights[0] = 0
             else:
                 re_regularization_weights = problem.re_regularization_weights
         regularizer.instantiate(weights=oracle.beta_gamma_to_x(beta=fe_regularization_weights,
