@@ -35,6 +35,8 @@ class LinearModel(BaseEstimator, RegressorMixin):
             initial_parameters: dict = None,
             warm_start=False,
             regularization_weights=None,
+            obs_std=None,
+            sample_weight=None,
             **kwargs):
         """
         Fits a Linear Model to the given data.
@@ -66,12 +68,27 @@ class LinearModel(BaseEstimator, RegressorMixin):
             Fitted regression model.
         """
         check_X_y(x, y)
+        if sample_weight is not None and type(sample_weight) == np.ndarray:
+            if len(y) != len(sample_weight):
+                raise ValueError("Sample weights should be the same length as y")
+            if sample_weight.shape != y.shape:
+                raise ValueError("Sample weights should be the same shape as y")
+
+            idx_non_zero_sample_weights = np.where(sample_weight != 0)
+            x = x[idx_non_zero_sample_weights]
+            y = y[idx_non_zero_sample_weights]
+            sample_weight = sample_weight[idx_non_zero_sample_weights]
+
         x = np.array(x)
         y = np.array(y)
         if len(y.shape) > 1:
             warnings.warn("y with more than one dimension is not supported. First column taken.", DataConversionWarning)
             y = y[:, 0]
-        obs_std = np.ones(len(y))
+        if obs_std is None:
+            if sample_weight is not None and type(sample_weight) == np.ndarray:
+                obs_std = 1/sample_weight
+            else:
+                obs_std = np.ones(len(y))
         problem = LinearProblem.from_x_y(x=x, y=y, obs_std=obs_std, regularization_weights=regularization_weights)
         return self.fit_problem(problem, initial_parameters=initial_parameters, warm_start=warm_start, **kwargs)
 
