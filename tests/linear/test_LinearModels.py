@@ -49,7 +49,7 @@ class TestLinearModels(unittest.TestCase):
 
         default_params = {
             "el": 1,
-            "lam": 0.0,  # we expect the answers to be dense so the regularizers are small
+            "alpha": 0.0,  # we expect the answers to be dense so the regularizers are small
             # "stepping": "line-search",
             "logger_keys": ('converged', 'loss',),
             "tol_solver": 1e-6,
@@ -96,15 +96,15 @@ class TestLinearModels(unittest.TestCase):
     def test_solving_sparse_problem(self):
 
         models_to_test = {
-            "L1": (LinearL1Model, {"lam": 2}),
+            "L1": (LinearL1Model, {"alpha": 2}),
             "CAD": (LinearCADModel, {"rho": 0.5}),
-            "SCAD": (LinearSCADModel, {"lam": 1, "rho": 3.7, "sigma": 2.5}),
-            "L1_SR3": (LinearL1ModelSR3, {"lam": 0.1}),
-            "L1_SR3P": (LinearL1ModelSR3, {"lam": 0.1, "practical": True}),
-            "CAD_SR3": (LinearCADModelSR3, {"lam": 0.1, "rho": 0.5,}),
-            "CAD_SR3P": (LinearCADModelSR3, {"lam": 0.1, "rho": 0.5, "practical": True}),
-            "SCAD_SR3": (LinearSCADModelSR3, {"lam": 0.2, "rho": 3.7, "sigma": 0.5}),
-            "SCAD_SR3P": (LinearSCADModelSR3, {"lam": 0.2, "rho": 3.7, "sigma": 0.5, "practical": True})
+            "SCAD": (LinearSCADModel, {"alpha": 1, "rho": 3.7, "sigma": 2.5}),
+            "L1_SR3": (LinearL1ModelSR3, {"alpha": 0.1}),
+            "L1_SR3P": (LinearL1ModelSR3, {"alpha": 0.1, "practical": True}),
+            "CAD_SR3": (LinearCADModelSR3, {"alpha": 0.1, "rho": 0.5,}),
+            "CAD_SR3P": (LinearCADModelSR3, {"alpha": 0.1, "rho": 0.5, "practical": True}),
+            "SCAD_SR3": (LinearSCADModelSR3, {"alpha": 0.2, "rho": 3.7, "sigma": 0.5}),
+            "SCAD_SR3P": (LinearSCADModelSR3, {"alpha": 0.2, "rho": 3.7, "sigma": 0.5, "practical": True})
         }
         trials = 5
 
@@ -116,7 +116,7 @@ class TestLinearModels(unittest.TestCase):
 
         default_params = {
             "el": 5,
-            "lam": 1,
+            "alpha": 1,
             "rho": 1,
             "logger_keys": ('converged', 'loss',),
             "tol_solver": 1e-6,

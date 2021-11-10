@@ -145,15 +145,6 @@ class LinearModel(BaseEstimator, RegressorMixin):
             Data matrix. Should have the same format as the data which was used for fitting the model:
             the number of columns and the columns' labels should be the same. It may contain new groups, in which case
             the prediction will be formed using the fixed effects only.
-        columns_labels : Optional[List[int]]
-            List of column labels. There shall be only one column of group labels and answers STDs,
-            and overall n columns with fixed effects (1 or 3) and k columns of random effects (2 or 3).
-
-                - 1 : fixed effect
-                - 2 : random effect
-                - 3 : both fixed and random,
-                - 0 : groups labels
-                - 4 : answers standard deviations
 
         Returns
         -------
@@ -350,7 +341,7 @@ class SimpleLinearModelSR3(LinearModel):
 
 class LinearL1Model(SimpleLinearModel):
     def __init__(self,
-                 lam: float = 0,
+                 alpha: float = 0,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
                  stepping: str = "line-search",
@@ -363,7 +354,7 @@ class LinearL1Model(SimpleLinearModel):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of LASSO prior
         tol_solver: float
             tolerance for the stop criterion of PGD solver
@@ -389,17 +380,17 @@ class LinearL1Model(SimpleLinearModel):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
-        self.lam = lam
+        self.alpha = alpha
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = L1Regularizer(lam=self.lam)
+        regularizer = L1Regularizer(lam=self.alpha)
         return oracle, regularizer, solver
 
 
 class LinearCADModel(SimpleLinearModel):
     def __init__(self,
-                 lam: float = 0.,
+                 alpha: float = 0.,
                  rho: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
@@ -413,7 +404,7 @@ class LinearCADModel(SimpleLinearModel):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of CAD regularizer
         rho: float
             cut-off amplitude above which the coefficients are not penalized
@@ -441,18 +432,18 @@ class LinearCADModel(SimpleLinearModel):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
-        self.lam = lam
+        self.alpha = alpha
         self.rho = rho
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
+        regularizer = CADRegularizer(lam=self.alpha, rho=self.rho)
         return oracle, regularizer, solver
 
 
 class LinearSCADModel(SimpleLinearModel):
     def __init__(self,
-                 lam: float = 0.,
+                 alpha: float = 0.,
                  rho: float = 3.7,
                  sigma: float = 1.,
                  tol_solver: float = 1e-5,
@@ -467,7 +458,7 @@ class LinearSCADModel(SimpleLinearModel):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of SCAD regularizer
         rho: float, rho > 1
             first knot of the SCAD spline
@@ -497,19 +488,19 @@ class LinearSCADModel(SimpleLinearModel):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
-        self.lam = lam
+        self.alpha = alpha
         self.rho = rho
         self.sigma = sigma
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
+        regularizer = SCADRegularizer(lam=self.alpha, rho=self.rho, sigma=self.sigma)
         return oracle, regularizer, solver
 
 
 class LinearL1ModelSR3(SimpleLinearModelSR3):
     def __init__(self,
-                 lam: float = 0.,
+                 alpha: float = 0.,
                  el: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
@@ -524,7 +515,7 @@ class LinearL1ModelSR3(SimpleLinearModelSR3):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of LASSO regularizer
         el: float
             constant for SR3 relaxation. Bigger values correspond to tighter relaxation.
@@ -554,17 +545,17 @@ class LinearL1ModelSR3(SimpleLinearModelSR3):
                          fixed_step_len=fixed_step_len,
                          prior=prior,
                          practical=practical)
-        self.lam = lam
+        self.alpha = alpha
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = L1Regularizer(lam=self.lam)
+        regularizer = L1Regularizer(lam=self.alpha)
         return oracle, regularizer, solver
 
 
 class LinearCADModelSR3(SimpleLinearModelSR3):
     def __init__(self,
-                 lam: float = 0.,
+                 alpha: float = 0.,
                  rho: float = 1.,
                  el: float = 1.,
                  tol_solver: float = 1e-5,
@@ -580,7 +571,7 @@ class LinearCADModelSR3(SimpleLinearModelSR3):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of CAD regularizer
         rho: float
             cut-off amplitude above which the coefficients are not penalized
@@ -612,18 +603,18 @@ class LinearCADModelSR3(SimpleLinearModelSR3):
                          fixed_step_len=fixed_step_len,
                          prior=prior,
                          practical=practical)
-        self.lam = lam
+        self.alpha = alpha
         self.rho = rho
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = CADRegularizer(lam=self.lam, rho=self.rho)
+        regularizer = CADRegularizer(lam=self.alpha, rho=self.rho)
         return oracle, regularizer, solver
 
 
 class LinearSCADModelSR3(SimpleLinearModelSR3):
     def __init__(self,
-                 lam: float = 0.,
+                 alpha: float = 0.,
                  rho: float = 2.,
                  sigma: float = 1.,
                  el: float = 1.,
@@ -640,7 +631,7 @@ class LinearSCADModelSR3(SimpleLinearModelSR3):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of SCAD regularizer
         rho: float, rho > 1
             first knot of the SCAD spline
@@ -674,11 +665,11 @@ class LinearSCADModelSR3(SimpleLinearModelSR3):
                          fixed_step_len=fixed_step_len,
                          prior=prior,
                          practical=practical)
-        self.lam = lam
+        self.alpha = alpha
         self.rho = rho
         self.sigma = sigma
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
+        regularizer = SCADRegularizer(lam=self.alpha, rho=self.rho, sigma=self.sigma)
         return oracle, regularizer, solver

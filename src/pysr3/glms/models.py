@@ -135,7 +135,7 @@ class SimplePoissonModelSR3(SimpleLinearModelSR3):
 
 class PoissonL1Model(SimplePoissonModel):
     def __init__(self,
-                 lam: float = 0,
+                 alpha: float = 0,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
                  stepping: str = "line-search",
@@ -148,7 +148,7 @@ class PoissonL1Model(SimplePoissonModel):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of LASSO prior
         tol_solver: float
             tolerance for the stop criterion of PGD solver
@@ -174,18 +174,18 @@ class PoissonL1Model(SimplePoissonModel):
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
                          prior=prior)
-        self.lam = lam
+        self.alpha = alpha
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        lasso = L1Regularizer(lam=self.lam)
+        lasso = L1Regularizer(lam=self.alpha)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=lasso)
         return oracle, regularizer, solver
 
 
 class PoissonL1ModelSR3(SimplePoissonModelSR3):
     def __init__(self,
-                 lam: float = 0.,
+                 alpha: float = 0.,
                  el: float = 1.,
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
@@ -201,7 +201,7 @@ class PoissonL1ModelSR3(SimplePoissonModelSR3):
 
         Parameters
         ----------
-        lam: float
+        alpha: float
             strength of LASSO regularizer
         el: float
             constant for SR3 relaxation. Bigger values correspond to tighter relaxation.
@@ -232,10 +232,10 @@ class PoissonL1ModelSR3(SimplePoissonModelSR3):
                          prior=prior,
                          practical=practical,
                          constraints=constraints)
-        self.lam = lam
+        self.alpha = alpha
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        lasso = L1Regularizer(lam=self.lam)
+        lasso = L1Regularizer(lam=self.alpha)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=lasso)
         return oracle, regularizer, solver

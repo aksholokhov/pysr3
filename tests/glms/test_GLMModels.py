@@ -42,7 +42,7 @@ class TestGLMs(unittest.TestCase):
 
         default_params = {
             "el": 1,
-            "lam": 0.0,  # we expect the answers to be dense so the regularizers are small
+            "alpha": 0.0,  # we expect the answers to be dense so the regularizers are small
             # "stepping": "line-search",
             "logger_keys": ('converged', 'loss',),
             "tol_solver": 1e-6,
@@ -92,7 +92,7 @@ class TestGLMs(unittest.TestCase):
         }
 
         models_to_test = {
-            "PoissonL1": (PoissonL1Model, {"lam": 5}),
+            "PoissonL1": (PoissonL1Model, {"alpha": 5}),
             "PoissonL1SR3": (PoissonL1ModelSR3, {"constraints": ([-3] * (problem_parameters["num_features"] + 1),
                                                 [3] * (problem_parameters["num_features"] + 1))})
         }
@@ -100,7 +100,7 @@ class TestGLMs(unittest.TestCase):
 
         default_params = {
             "el": 1,
-            "lam": 1e-3,
+            "alpha": 1e-3,
             "rho": 0.3,
             "logger_keys": ('converged'),
             "tol_solver": 1e-6,
