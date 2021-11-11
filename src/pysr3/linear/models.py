@@ -15,7 +15,7 @@ from pysr3.preprocessors import Preprocessor
 
 class LinearModel(BaseEstimator, RegressorMixin):
 
-    def __init__(self, logger_keys=None):
+    def __init__(self, logger_keys=None, fit_intercept=True):
         """
         Initializes a linear model.
 
@@ -25,6 +25,7 @@ class LinearModel(BaseEstimator, RegressorMixin):
             Set of values that the logger is supposed to log
         """
         self.logger_keys = logger_keys
+        self.fit_intercept = fit_intercept
 
     def instantiate(self) -> Tuple[Optional[LinearOracle], Optional[Regularizer], Optional[PGDSolver]]:
         raise NotImplementedError("LinearModel is a base abstract class that should be used only for inheritance.")
@@ -124,7 +125,10 @@ class LinearModel(BaseEstimator, RegressorMixin):
         """
         normalized_problem, normalization_parameters = Preprocessor.normalize(problem)
         self.normalization_parameters_ = normalization_parameters
-        problem_complete = Preprocessor.add_intercept(normalized_problem)
+        if self.fit_intercept:
+            problem_complete = Preprocessor.add_intercept(normalized_problem)
+        else:
+            problem_complete = normalized_problem
 
         oracle, regularizer, solver = self.instantiate()
         oracle.instantiate(problem_complete)
@@ -146,9 +150,12 @@ class LinearModel(BaseEstimator, RegressorMixin):
         else:
             self.n_iter_ = 0
 
-        self.coef_ = {
-            "x": optimal_x,
-        }
+        if self.fit_intercept:
+            self.intercept_ = optimal_x[0]
+            self.coef_ = optimal_x[1:]
+        else:
+            self.intercept_ = 0
+
         if "aic" in self.logger_.keys:
             self.logger_.add("aic", oracle.aic(optimal_x))
         if "bic" in self.logger_.keys:
@@ -200,14 +207,18 @@ class LinearModel(BaseEstimator, RegressorMixin):
         """
         self.check_is_fitted()
 
-        x = self.coef_['x']
+        x = self.coef_
         problem_scaled, _ = Preprocessor.normalize(problem, **self.normalization_parameters_)
-        problem_with_intercept = Preprocessor.add_intercept(problem_scaled)
+        if self.fit_intercept:
+            problem_complete = Preprocessor.add_intercept(problem_scaled)
+            x = np.concatenate([[self.intercept_], x])
+        else:
+            problem_complete = problem_scaled
 
-        assert problem_with_intercept.num_features == x.shape[0], \
+        assert problem_complete.num_features == x.shape[0], \
             "Number of features is not the same to what it was in the train data."
 
-        return problem_with_intercept.a.dot(x)
+        return problem_complete.a.dot(x)
 
     def check_is_fitted(self):
         """

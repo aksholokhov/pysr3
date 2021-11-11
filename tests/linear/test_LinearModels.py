@@ -157,7 +157,7 @@ class TestLinearModels(unittest.TestCase):
                         mse = mean_squared_error(y, y_pred)
 
                         coefficients = model.coef_
-                        maybe_x = coefficients["x"][1:]     # the intercept was not used in data generation
+                        maybe_x = coefficients     # the intercept was not used in data generation
                         selection_accuracy = accuracy_score(true_x, abs(maybe_x) > 1e-2)
 
                         self.assertGreater(explained_variance, min_explained_variance,

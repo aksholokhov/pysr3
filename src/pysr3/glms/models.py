@@ -1,5 +1,7 @@
 from typing import Set
 
+import numpy as np
+
 from pysr3.linear.models import SimpleLinearModel, SimpleLinearModelSR3
 from pysr3.linear.problems import LinearProblem
 from pysr3.glms.problems import PoissonProblem
@@ -55,18 +57,22 @@ class SimplePoissonModel(SimpleLinearModel):
         y : np.ndarray
             Models predictions.
         """
+
         self.check_is_fitted()
-
-        x = self.coef_['x']
+        x = self.coef_
         problem_scaled, _ = Preprocessor.normalize(problem, **self.normalization_parameters_)
-        problem_with_intercept = Preprocessor.add_intercept(problem_scaled)
+        if self.fit_intercept:
+            problem_complete = Preprocessor.add_intercept(problem_scaled)
+            x = np.concatenate([[self.intercept_], x])
+        else:
+            problem_complete = problem_scaled
 
-        assert problem_with_intercept.num_features == x.shape[0], \
+        assert problem_complete.num_features == x.shape[0], \
             "Number of features is not the same to what it was in the train data."
 
         link_function = PoissonLinkFunction()
 
-        return link_function.value(problem_with_intercept.a.dot(x)).astype(int)
+        return link_function.value(problem_complete.a.dot(x)).astype(int)
 
 
 class SimplePoissonModelSR3(SimpleLinearModelSR3):
@@ -121,16 +127,20 @@ class SimplePoissonModelSR3(SimpleLinearModelSR3):
         """
         self.check_is_fitted()
 
-        x = self.coef_['x']
+        x = self.coef_
         problem_scaled, _ = Preprocessor.normalize(problem, **self.normalization_parameters_)
-        problem_with_intercept = Preprocessor.add_intercept(problem_scaled)
+        if self.fit_intercept:
+            problem_complete = Preprocessor.add_intercept(problem_scaled)
+            x = np.concatenate([[self.intercept_], x])
+        else:
+            problem_complete = problem_scaled
 
-        assert problem_with_intercept.num_features == x.shape[0], \
+        assert problem_complete.num_features == x.shape[0], \
             "Number of features is not the same to what it was in the train data."
 
         link_function = PoissonLinkFunction()
 
-        return link_function.value(problem_with_intercept.a.dot(x)).astype(int)
+        return link_function.value(problem_complete.a.dot(x)).astype(int)
 
 
 class PoissonL1Model(SimplePoissonModel):

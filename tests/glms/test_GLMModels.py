@@ -139,7 +139,7 @@ class TestGLMs(unittest.TestCase):
                         rmse = np.mean(((y - y_pred) / (y_pred + 1)) ** 2)
                         iters = model.logger_.get("iteration")
                         coefficients = model.coef_
-                        maybe_x = coefficients["x"][1:]  # intercept was not used for problem generation
+                        maybe_x = coefficients # intercept was not used for problem generation
                         selection_accuracy = accuracy_score(abs(true_x) > 1e-2, abs(maybe_x) > 1e-2)
 
                         # self.assertGreaterEqual(explained_variance, min_explained_variance,
