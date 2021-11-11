@@ -72,7 +72,7 @@ class SimplePoissonModel(SimpleLinearModel):
 
         link_function = PoissonLinkFunction()
 
-        return link_function.value(problem_complete.a.dot(x)).astype(int)
+        return link_function.value(problem_complete.a.dot(x))
 
 
 class SimplePoissonModelSR3(SimpleLinearModelSR3):
@@ -80,12 +80,12 @@ class SimplePoissonModelSR3(SimpleLinearModelSR3):
                  constraints=None,
                  **kwargs):
         super().__init__(**kwargs)
-        self.constraints=constraints
+        self.constraints = constraints
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
         link_function = PoissonLinkFunction()
-        oracle = GLMOracleSR3(problem=None, prior=self.prior, link_function=link_function, constraints=self.constraints)
+        oracle = GLMOracleSR3(problem=None, prior=self.prior, lam=self.el, link_function=link_function, constraints=self.constraints)
         regularizer = PositiveQuadrantRegularizer()
         return oracle, regularizer, solver
 
@@ -140,7 +140,7 @@ class SimplePoissonModelSR3(SimpleLinearModelSR3):
 
         link_function = PoissonLinkFunction()
 
-        return link_function.value(problem_complete.a.dot(x)).astype(int)
+        return link_function.value(problem_complete.a.dot(x))
 
 
 class PoissonL1Model(SimplePoissonModel):
@@ -241,7 +241,8 @@ class PoissonL1ModelSR3(SimplePoissonModelSR3):
                          fixed_step_len=fixed_step_len,
                          prior=prior,
                          practical=practical,
-                         constraints=constraints)
+                         constraints=constraints,
+                         **kwargs)
         self.alpha = alpha
 
     def instantiate(self):

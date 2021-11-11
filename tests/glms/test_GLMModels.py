@@ -14,7 +14,7 @@ class TestGLMs(unittest.TestCase):
         models_to_test = {
             "PoissonSimple": SimplePoissonModel(),
             "PoissonL1": PoissonL1Model(),
-            "PoissonL1SR3": PoissonL1ModelSR3()
+            "PoissonL1SR3": PoissonL1ModelSR3(practical=True)
 
         }
         for name, model in models_to_test.items():
@@ -35,8 +35,9 @@ class TestGLMs(unittest.TestCase):
             "PoissonSimple": (SimplePoissonModel, {}),
             "PoissonL1": (PoissonL1Model, {}),
             "PoissonL1SR3Constrained": (
-            PoissonL1ModelSR3, {"constraints": ([-3] * (problem_parameters["num_features"] + 1),
-                                                [3] * (problem_parameters["num_features"] + 1))}),
+                PoissonL1ModelSR3, {"practical": True,
+                                    "constraints": ([-3] * (problem_parameters["num_features"] + 1),
+                                                    [3] * (problem_parameters["num_features"] + 1))}),
             "PoissonL1SR3NonConstrained": (PoissonL1ModelSR3, {})
         }
 
@@ -86,24 +87,27 @@ class TestGLMs(unittest.TestCase):
     def test_solving_sparse_problem(self):
 
         problem_parameters = {
-            "num_objects": 400,
+            "num_objects": 500,
             "num_features": 20,
             "obs_std": 0.1,
         }
 
         models_to_test = {
             "PoissonL1": (PoissonL1Model, {"alpha": 5}),
-            "PoissonL1SR3": (PoissonL1ModelSR3, {"constraints": ([-3] * (problem_parameters["num_features"] + 1),
-                                                [3] * (problem_parameters["num_features"] + 1))})
+            "PoissonL1SR3": (PoissonL1ModelSR3, {
+                "fit_intercept": True,
+                "practical": True,
+                "constraints": ([-5] * (problem_parameters["num_features"]+1),
+                                                                 [5] * (problem_parameters["num_features"]+1))})
         }
         trials = 5
 
         default_params = {
             "el": 1,
-            "alpha": 1e-3,
+            "alpha": 0.5,
             "rho": 0.3,
-            "logger_keys": ('converged'),
-            "tol_solver": 1e-6,
+            "logger_keys": ('converged', ),
+            "tol_solver": 1e-8,
             "max_iter_solver": 5000
         }
 
@@ -120,7 +124,7 @@ class TestGLMs(unittest.TestCase):
                         true_x = np.random.choice(2, size=problem_parameters["num_features"], p=np.array([0.5, 0.5]))
                         if sum(true_x) == 0:
                             true_x[0] = 1
-                        true_x = 5*true_x / sum(true_x)
+                        true_x = 5 * true_x / sum(true_x)
 
                         problem = PoissonProblem.generate(**problem_parameters,
                                                           true_x=true_x,
@@ -138,8 +142,7 @@ class TestGLMs(unittest.TestCase):
                         explained_variance = explained_variance_score(y, y_pred)
                         rmse = np.mean(((y - y_pred) / (y_pred + 1)) ** 2)
                         iters = model.logger_.get("iteration")
-                        coefficients = model.coef_
-                        maybe_x = coefficients # intercept was not used for problem generation
+                        maybe_x = model.coef_  # intercept was not used for problem generation
                         selection_accuracy = accuracy_score(abs(true_x) > 1e-2, abs(maybe_x) > 1e-2)
 
                         # self.assertGreaterEqual(explained_variance, min_explained_variance,

@@ -14,8 +14,12 @@ class Logger:
         list_of_keys: set[str]
             list of keys for the logger
         """
-        self.keys = list_of_keys
-        self.dict = {key: [] for key in list_of_keys}
+        if list_of_keys is not None and len(list_of_keys) > 0:
+            self.keys = list_of_keys
+            self.dict = {key: [] for key in list_of_keys}
+        else:
+            self.dict = {}
+            self.keys = ()
 
     def log(self, parameters):
         """

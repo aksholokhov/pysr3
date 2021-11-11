@@ -24,7 +24,7 @@ class PoissonProblem(LinearProblem):
             assert len(true_x) == n, "true_x should have length of num_features + ?intercept"
         x = true_x if true_x is not None else np.random.rand(num_features)
         noise = obs_std*np.random.randn(num_objects)
-        b = np.array([np.random.poisson(np.exp(ai.dot(x) + eps)) for ai, eps in zip(a, noise)])
+        b = np.array([np.exp(ai.dot(x) + eps) for ai, eps in zip(a, noise)]).astype(int)
         obs_std = obs_std*np.ones(num_objects)
         return PoissonProblem(a=a, b=b, obs_std=obs_std, regularization_weights=np.ones(num_features))
 

@@ -28,16 +28,16 @@ class GLMOracle:
     def loss(self, x):
         a = self.problem.a
         b = self.problem.b
-        stds = self.problem.obs_std / self.mean_std     # normalize stds to avoid numerical instability
+        stds = self.problem.obs_std / self.mean_std  # normalize stds to avoid numerical instability
         return (1 / stds ** 2 * (
-                self.link_function.value(a.dot(x)) - b * a.dot(x))).sum()/self.mean_std**2 + self.prior.loss(x)
+                self.link_function.value(a.dot(x)) - b * a.dot(x))).sum() / self.mean_std ** 2 + self.prior.loss(x)
 
     def gradient(self, x):
         a = self.problem.a
         b = self.problem.b
         stds = self.problem.obs_std / self.mean_std
         return (a.T * (1 / stds ** 2 * (
-                self.link_function.gradient(a.dot(x)) - b))).T.sum(axis=0)/self.mean_std**2 + self.prior.gradient(x)
+                self.link_function.gradient(a.dot(x)) - b))).T.sum(axis=0) / self.mean_std ** 2 + self.prior.gradient(x)
 
     def hessian(self, x):
         res = 0
@@ -45,7 +45,7 @@ class GLMOracle:
         for i, ai in enumerate(self.problem.a):
             ai = ai.reshape(-1, 1)
             res = res + (1 / stds[i] ** 2) * self.link_function.hessian(ai.T.dot(x)) * ai.dot(ai.T)
-        return res/self.mean_std**2 + self.prior.hessian(x)
+        return res / self.mean_std ** 2 + self.prior.hessian(x)
 
     def value_function(self, x):
         return self.loss(x)
@@ -78,7 +78,7 @@ class GLMOracleSR3(GLMOracle):
         self.problem = problem
         self.mean_std = np.mean(problem.obs_std)
         if self.constraints is None:
-            self.constraints = ([-np.infty]*problem.num_features, [np.infty]*problem.num_features)
+            self.constraints = ([-np.infty] * problem.num_features, [np.infty] * problem.num_features)
         self.prior.instantiate(problem)
 
     def forget(self):
@@ -101,9 +101,10 @@ class GLMOracleSR3(GLMOracle):
         x = self.find_optimal_parameters(w, **kwargs)
         return -self.lam * (x - w)
 
-    def find_optimal_parameters(self, w, x0=None, regularizer=None, tol=1e-4, max_iter=1000, mu_decay=0.5, logger=None,
-                                do_correction_steps=False, **kwargs):
-        x = x0 if x0 is not None else np.ones(len(w)) / len(w)
+    def find_optimal_parameters(self, w, x0=None, regularizer=None, tol=1e-4, max_iter=1000, logger=None,
+                                update_prox_every=1,
+                                num_correction_steps_per_iteration=4, mu_decay=0.5, **kwargs):
+        x = x0 if x0 is not None else np.copy(w)+0.5
         step_len = 1 / self.lam
         x_prev = np.infty
         iteration = 0
@@ -116,11 +117,11 @@ class GLMOracleSR3(GLMOracle):
         idx_constr_x = []
         i = 0
         j = 0
-        for l, r in zip(*self.constraints):
+        for el, r in zip(*self.constraints):
             a_local = []
-            if -np.infty < l:
+            if -np.infty < el:
                 a_local.append([-1])
-                b.append(-l)
+                b.append(-el)
                 idx_constr_a.append(i)
                 idx_constr_x.append(j)
             else:
@@ -148,8 +149,8 @@ class GLMOracleSR3(GLMOracle):
             b = np.array(b)
             a_nnz = a[idx_constr_a, :]
             b_nnz = b[idx_constr_a]
-            v = np.ones(n)/5
-            mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, 0)
+            v = np.ones(n) / 5
+            mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, nan=0)
 
             def G(v, x, mu):
                 return np.concatenate([
@@ -173,10 +174,12 @@ class GLMOracleSR3(GLMOracle):
             v = None
             mu = None
 
-        is_correction_step = False
+        correction_steps_left = num_correction_steps_per_iteration
 
-        while np.linalg.norm(x - x_prev) > tol \
-                and iteration < max_iter:
+        while (have_constraints and correction_steps_left > 0) or (step_len != 0 \
+                                                                   and iteration < max_iter \
+                                                                   and (np.linalg.norm(x - x_prev) > tol
+                                                                        or np.linalg.norm(G(v, x, mu)) > tol)):
             x_prev = x
             # get new direction
             G_current = G(v, x, mu)
@@ -190,22 +193,28 @@ class GLMOracleSR3(GLMOracle):
                 max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-v[ind_neg_dir] / dv[ind_neg_dir]))
                 # establish the maximum length of step_size based on Ax+ <= b
                 step_len = max_step_len
-                while any(a.dot(x + step_len*dx) > b):
+                while any(a.dot(x + step_len * dx) > b):
                     step_len *= 0.9
                 v = v + step_len * dv
                 x = x + step_len * dx
-                if do_correction_steps and not is_correction_step:
-                    mu = np.nan_to_num(v.dot(x[idx_constr_x]) / n, 0)
-                    is_correction_step = True
+                if correction_steps_left > 0:
+                    mu = np.nan_to_num(v.dot(x[idx_constr_x]) / n, nan=0)
+                    correction_steps_left -= 1
+                    continue
                 else:
-                    mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, 0)
-                    if do_correction_steps:
-                        is_correction_step = False
+                    mu = np.nan_to_num(mu_decay * v.dot(x[idx_constr_x]) / n, nan=0)
+                    correction_steps_left = num_correction_steps_per_iteration
+                    mu_effective = mu * mu_decay
             else:
+                # TODO: Add damping factor. Right now it's just a pure newton iteration
+                step_len = 1
                 dx = direction
-                x = x + dx
+                x = x + step_len * dx
 
             iteration += 1
+
+            if regularizer and update_prox_every > 0 and iteration % update_prox_every == 0:
+                w = regularizer.prox(x, alpha=step_len)
 
             if logger and len(logger.keys) > 0:
                 logger.log(locals())

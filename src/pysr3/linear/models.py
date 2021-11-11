@@ -15,7 +15,7 @@ from pysr3.preprocessors import Preprocessor
 
 class LinearModel(BaseEstimator, RegressorMixin):
 
-    def __init__(self, logger_keys=None, fit_intercept=True):
+    def __init__(self, logger_keys=None, fit_intercept=True, **kwargs):
         """
         Initializes a linear model.
 
@@ -137,7 +137,7 @@ class LinearModel(BaseEstimator, RegressorMixin):
         if initial_parameters is None:
             initial_parameters = {}
 
-        x = np.ones(problem_complete.num_features) / problem.num_features
+        x = np.zeros(problem_complete.num_features)
         if warm_start:
             x = initial_parameters.get("x0", x)
 
@@ -155,6 +155,7 @@ class LinearModel(BaseEstimator, RegressorMixin):
             self.coef_ = optimal_x[1:]
         else:
             self.intercept_ = 0
+            self.coef_ = optimal_x
 
         if "aic" in self.logger_.keys:
             self.logger_.add("aic", oracle.aic(optimal_x))
@@ -300,7 +301,6 @@ class SimpleLinearModelSR3(LinearModel):
                  tol_solver: float = 1e-5,
                  max_iter_solver: int = 1000,
                  stepping: str = "fixed",
-                 logger_keys: Set = ('converged',),
                  fixed_step_len=None,
                  prior=None,
                  practical=False,
@@ -332,12 +332,11 @@ class SimpleLinearModelSR3(LinearModel):
         kwargs:
             for passing debugging info
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.el = el
         self.tol_solver = tol_solver
         self.max_iter_solver = max_iter_solver
         self.stepping = stepping
-        self.logger_keys = logger_keys
         self.fixed_step_len = fixed_step_len
         self.practical = practical
         self.prior = prior
