@@ -141,6 +141,11 @@ class LinearModel(BaseEstimator, RegressorMixin):
 
         optimal_x = solver.optimize(x, oracle=oracle, regularizer=regularizer, logger=self.logger_)
 
+        if "iteration" in self.logger_.keys:
+            self.n_iter_ = self.logger_.get("iteration")
+        else:
+            self.n_iter_ = 0
+
         self.coef_ = {
             "x": optimal_x,
         }
