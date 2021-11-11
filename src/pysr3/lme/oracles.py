@@ -1295,7 +1295,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
                                    regularizer=None, increase_lambdas=False,
                                    line_search=False, prox_step_len=1.0, update_prox_every=1, logger=None,
-                                   do_correction_steps=True,
+                                   num_correction_steps_per_iteration=4, mu_decay=0.5,
                                    **kwargs):
         losses_kkt = []
         if len(tgamma) == 0:
@@ -1348,10 +1348,16 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
         tbeta_tgamma_convergence = False
 
+        correction_steps_left = num_correction_steps_per_iteration
+
+        if logger:
+            logger.add("mu_effective", [])
+            logger.add("mu", [])
+
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
-                and np.linalg.norm(F(x, mu)) > self.tol_inner \
-                and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                and (np.linalg.norm(F(x, mu)) > self.tol_inner
+                     or np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
                      or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
                      or np.linalg.norm(beta - prev_beta) > self.tol_inner
                      or np.linalg.norm(gamma - prev_gamma) > self.tol_inner
@@ -1383,51 +1389,32 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             beta = x[n:-n]
             gamma = x[-n:]
 
-            if do_correction_steps:
-                mu = v.dot(gamma) / n
-
-                F_current = F(x, mu)
-                dF_current = dF(x)
-                direction = np.linalg.solve(dF_current, -F_current)
-                # Determining maximal step size (such that gamma >= 0 and v >= 0)
-                ind_neg_dir = np.where(direction < 0.0)[0]
-                ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n))]
-                max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
-
-                if line_search:
-                    res = sp.optimize.minimize_scalar(
-                        fun=lambda alpha: np.linalg.norm(F(x + alpha * direction, mu)) ** 2,
-                        method='bounded',
-                        bounds=(0, max_step_len),
-                        tol=1e-2)
-                    step_len = res.x
-                else:
-                    step_len = 0.99 * max_step_len
-                x = x + step_len * direction
-                # x[x <= 1e-18] = 0  # killing effective zeros
-                v = x[:n]
-                beta = x[n:-n]
-                gamma = x[-n:]
-
             iteration += 1
 
-            # optimize other components
+            # decide on the new size of mu
+            if correction_steps_left > 0:
+                # do correction steps without tightening the barrier relaxation
+                mu = v.dot(gamma) / n
+                correction_steps_left -= 1
+                continue
+            else:
+                # adjust barrier relaxation
+                mu = mu_decay * v.dot(gamma) / n
+                correction_steps_left = num_correction_steps_per_iteration
+                # figure out which mu the problem actually got solved for
+                mu_effective = v.dot(gamma) / n
+
+            # do projection step if needed
             if regularizer and update_prox_every > 0 and iteration % update_prox_every == 0:
                 tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
                 tbeta, tgamma = self.x_to_beta_gamma(tx)
 
-            # adjust barrier relaxation
-            mu = 0.1 * v.dot(gamma) / n
-
+            # tighten SR3 relaxation if needed
             if increase_lambdas:
                 self.lb = 1.2 * (1 + self.lb)
                 self.lg = 1.2 * (1 + self.lg)
-                tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) > self.tol_inner
-                                            or np.linalg.norm(gamma - tgamma) > self.tol_inner)
-                # optimize other components (that was happening once at the end only, moved to each iteration
-            if regularizer and update_prox_every > 0 and iteration < update_prox_every:
-                tx = regularizer.prox(self.beta_gamma_to_x(beta=beta, gamma=gamma), alpha=prox_step_len)
-                tbeta, tgamma = self.x_to_beta_gamma(tx)
+                tbeta_tgamma_convergence = (np.linalg.norm(beta - tbeta) < self.tol_inner
+                                            or np.linalg.norm(gamma - tgamma) < self.tol_inner)
 
             if logger and len(logger.keys) > 0:
                 logger.log(locals())
