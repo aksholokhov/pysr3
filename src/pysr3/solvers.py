@@ -188,9 +188,7 @@ class FakePGDSolver:
                                            **kwargs)
         if 'loss' in logger.keys:
             loss = oracle.value_function(x) + regularizer.value(x)
-
-        if len(logger.keys) > 0:
-            logger.log(locals())
+            logger.add('loss', loss)
 
         logger.add("converged", True)
         return x
