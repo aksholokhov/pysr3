@@ -1,0 +1,7 @@
+pysr3.glms.oracles module
+=========================
+
+.. automodule:: pysr3.glms.oracles
+   :members:
+   :undoc-members:
+   :show-inheritance:
