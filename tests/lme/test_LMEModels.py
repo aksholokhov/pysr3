@@ -111,10 +111,10 @@ class TestLmeModels(unittest.TestCase):
     def test_solving_sparse_problem(self):
 
         models_to_test = {
-            # "L0": (L0LmeModel, {"stepping": "line-search"}),
-            # "L1": (L1LmeModel, {"stepping": "line-search"}),
-            # "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
-            # "SCAD": (SCADLmeModel, {"rho": 3.7, "lam": 10, "stepping": "line-search"}),
+            "L0": (L0LmeModel, {"stepping": "line-search"}),
+            "L1": (L1LmeModel, {"stepping": "line-search"}),
+            "CAD": (CADLmeModel, {"rho": 0.3, "stepping": "line-search"}),
+            "SCAD": (SCADLmeModel, {"rho": 3.7, "lam": 10, "stepping": "line-search"}),
             "L0_SR3": (L0LmeModelSR3, {"practical": True}),
             "L1_SR3": (L1LmeModelSR3, {"practical": True}),
             "CAD_SR3": (CADLmeModelSR3, {"rho": 0.3, "practical": True}),
@@ -248,7 +248,8 @@ class TestLmeModels(unittest.TestCase):
             "tol_oracle": 1e-6,
             "tol_solver": 1e-6,
             "max_iter_oracle": 1,
-            "max_iter_solver": 1
+            "max_iter_solver": 1,
+            "practical": True
         }
 
         problem, true_model_parameters = LMEProblem.generate(**problem_parameters, seed=42)

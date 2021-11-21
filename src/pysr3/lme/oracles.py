@@ -1295,7 +1295,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
                                    regularizer=None, increase_lambdas=False,
                                    line_search=False, prox_step_len=1.0, update_prox_every=1, logger=None,
-                                   num_correction_steps_per_iteration=4, mu_decay=0.5,
+                                   central_path_neighbourhood_target=0.5, mu_decay=0.5,
                                    **kwargs):
         losses_kkt = []
         if len(tgamma) == 0:
@@ -1315,6 +1315,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         # The packing of variables is x = [v (dual for gamma), beta, gamma]
         # All Lagrange gradients (F) and hessians (dF) have the same order of blocks.
         x = np.concatenate([v, beta, gamma])
+
         mu = 0.1 * v.dot(gamma) / n
         step_len = 1
         iteration = 0
@@ -1348,16 +1349,14 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
         tbeta_tgamma_convergence = False
 
-        correction_steps_left = num_correction_steps_per_iteration
-
         if logger:
             logger.add("mu_effective", [])
             logger.add("mu", [])
 
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
-                and (np.linalg.norm(F(x, mu)) > self.tol_inner
-                     or np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
+                and np.linalg.norm(F(x, mu)) > self.tol_inner \
+                and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
                      or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
                      or np.linalg.norm(beta - prev_beta) > self.tol_inner
                      or np.linalg.norm(gamma - prev_gamma) > self.tol_inner
@@ -1391,16 +1390,12 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
             iteration += 1
 
-            # decide on the new size of mu
-            if correction_steps_left > 0:
+            if np.linalg.norm(gamma*v - gamma.dot(v)/n) > central_path_neighbourhood_target*gamma.dot(v)/n:
                 # do correction steps without tightening the barrier relaxation
-                mu = v.dot(gamma) / n
-                correction_steps_left -= 1
                 continue
             else:
                 # adjust barrier relaxation
                 mu = mu_decay * v.dot(gamma) / n
-                correction_steps_left = num_correction_steps_per_iteration
                 # figure out which mu the problem actually got solved for
                 mu_effective = v.dot(gamma) / n
 
