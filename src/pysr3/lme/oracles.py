@@ -1303,10 +1303,10 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             gamma = tgamma
             return beta, gamma, tbeta, tgamma, losses_kkt
 
-        n = len(gamma)
-        I = np.eye(n)
+        q = len(gamma)
+        I = np.eye(q)
         Zb = np.zeros((len(gamma), len(beta)))
-        v = np.ones(n)
+        v = np.ones(q)
 
         if self.warm_start:
             beta = self.warm_start_ip.get("beta", beta)
@@ -1316,7 +1316,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         # All Lagrange gradients (F) and hessians (dF) have the same order of blocks.
         x = np.concatenate([v, beta, gamma])
 
-        mu = 0.1 * v.dot(gamma) / n
+        mu = 0.1 * v.dot(gamma) / q
         step_len = 1
         iteration = 0
 
@@ -1328,7 +1328,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             ])
 
         def F(x, mu):
-            return F_coord(x[:n], x[n:-n], x[-n:], mu)
+            return F_coord(x[:q], x[q:-q], x[-q:], mu)
 
         def dF_coord(v, b, g):
             return np.block([
@@ -1340,7 +1340,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             ])
 
         def dF(x):
-            return dF_coord(x[:n], x[n:-n], x[-n:])
+            return dF_coord(x[:q], x[q:-q], x[-q:])
 
         prev_tbeta = np.infty
         prev_tgamma = np.infty
@@ -1371,7 +1371,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             direction = np.linalg.solve(dF_current, -F_current)
             # Determining maximal step size (such that gamma >= 0 and v >= 0)
             ind_neg_dir = np.where(direction < 0.0)[0]
-            ind_neg_dir = ind_neg_dir[(ind_neg_dir < n) | (ind_neg_dir >= (len(x) - n))]
+            ind_neg_dir = ind_neg_dir[(ind_neg_dir < q) | (ind_neg_dir >= (len(x) - q))]
             max_step_len = min(1, 1 if len(ind_neg_dir) == 0 else np.min(-x[ind_neg_dir] / direction[ind_neg_dir]))
 
             if line_search:
@@ -1384,20 +1384,20 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 step_len = 0.99 * max_step_len
             x = x + step_len * direction
             # x[x <= 1e-18] = 0  # killing effective zeros
-            v = x[:n]
-            beta = x[n:-n]
-            gamma = x[-n:]
+            v = x[:q]
+            beta = x[q:-q]
+            gamma = x[-q:]
 
             iteration += 1
 
-            if np.linalg.norm(gamma*v - gamma.dot(v)/n) > central_path_neighbourhood_target*gamma.dot(v)/n:
+            if np.linalg.norm(gamma*v - gamma.dot(v)/q) > central_path_neighbourhood_target*gamma.dot(v)/q:
                 # do correction steps without tightening the barrier relaxation
                 continue
             else:
                 # adjust barrier relaxation
-                mu = mu_decay * v.dot(gamma) / n
+                mu = mu_decay * v.dot(gamma) / q
                 # figure out which mu the problem actually got solved for
-                mu_effective = v.dot(gamma) / n
+                mu_effective = v.dot(gamma) / q
 
             # do projection step if needed
             if regularizer and update_prox_every > 0 and iteration % update_prox_every == 0:
