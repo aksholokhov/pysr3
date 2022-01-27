@@ -1356,6 +1356,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
                 and np.linalg.norm(F(x, mu)) > self.tol_inner \
+                and mu > self.tol_inner \
                 and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
                      or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
                      or np.linalg.norm(beta - prev_beta) > self.tol_inner
