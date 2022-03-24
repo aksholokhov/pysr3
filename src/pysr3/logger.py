@@ -32,7 +32,7 @@ class Logger:
         self
         """
         for key in self.keys:
-            if type(self.dict[key]) == list:
+            if type(self.dict[key]) == list and (key in parameters):
                 self.dict[key].append(parameters.get(key, None))
         return self
 
