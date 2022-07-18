@@ -127,7 +127,7 @@ class FakePGDSolver:
     This class is designed for the situations where the oracle can provide the optimal
     solution by itself, e.g. when it's accessible analytically.
     It's also used for PracticalSR3 methods, when the relaxed variables are
-    updated together with the original ones inside of the oracle's subroutine.
+    updated together with the original ones inside the oracle's subroutine.
     """
 
     def __init__(self, tol=1e-4, max_iter=1000, fixed_step_len=1, update_prox_every=1):

@@ -587,6 +587,8 @@ class SimpleLMEModelSR3(LMEModel):
                  practical=False,
                  update_prox_every=1,
                  fixed_step_len=None,
+                 take_only_positive_part=True,
+                 take_expected_value=False,
                  prior=None,
                  **kwargs):
         """
@@ -640,6 +642,8 @@ class SimpleLMEModelSR3(LMEModel):
         self.ell = ell
         self.elastic_eps = elastic_eps
         self.practical = practical
+        self.take_only_positive_part = take_only_positive_part
+        self.take_expected_value = take_expected_value
         self.update_prox_every = update_prox_every
 
     def instantiate(self):
@@ -659,9 +663,13 @@ class SimpleLMEModelSR3(LMEModel):
         else:
             solver = PGDSolver(tol=self.tol_solver, max_iter=self.max_iter_solver, stepping=self.stepping,
                                fixed_step_len=fixed_step_len)
-        oracle = LinearLMEOracleSR3(None, lb=self.ell, lg=self.ell, tol_inner=self.tol_oracle,
+        oracle = LinearLMEOracleSR3(None, lb=self.ell, lg=self.ell,
+                                    tol_inner=self.tol_oracle,
                                     n_iter_inner=self.max_iter_oracle,
-                                    warm_start=self.warm_start_oracle, prior=self.prior)
+                                    warm_start=self.warm_start_oracle,
+                                    take_only_positive_part=self.take_only_positive_part,
+                                    take_expected_value=self.take_expected_value,
+                                    prior=self.prior)
         dummy_regularizer = DummyRegularizer()
         elastic_regularizer = ElasticRegularizer(other_regularizer=dummy_regularizer, eps=self.elastic_eps)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
@@ -823,6 +831,8 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
+                 take_only_positive_part=True,
+                 take_expected_value=False,
                  update_prox_every=1,
                  fixed_step_len=None,
                  prior=None,
@@ -880,6 +890,8 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                          stepping=stepping,
                          warm_start_oracle=warm_start_oracle,
                          practical=practical,
+                         take_only_positive_part=take_only_positive_part,
+                         take_expected_value=take_expected_value,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
@@ -997,6 +1009,8 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
+                 take_only_positive_part=True,
+                 take_expected_value=False,
                  update_prox_every=1,
                  fixed_step_len=None,
                  prior=None,
@@ -1052,6 +1066,8 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                          stepping=stepping,
                          warm_start_oracle=warm_start_oracle,
                          practical=practical,
+                         take_only_positive_part=take_only_positive_part,
+                         take_expected_value=take_expected_value,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
@@ -1171,6 +1187,8 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
+                 take_only_positive_part=True,
+                 take_expected_value=False,
                  update_prox_every=1,
                  fixed_step_len=None,
                  prior=None,
@@ -1228,6 +1246,8 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                          stepping=stepping,
                          warm_start_oracle=warm_start_oracle,
                          practical=practical,
+                         take_only_positive_part=take_only_positive_part,
+                         take_expected_value=take_expected_value,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,
@@ -1353,6 +1373,8 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
+                 take_only_positive_part=True,
+                 take_expected_value=False,
                  update_prox_every=1,
                  fixed_step_len=None,
                  prior=None,
@@ -1412,6 +1434,8 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                          stepping=stepping,
                          warm_start_oracle=warm_start_oracle,
                          practical=practical,
+                         take_only_positive_part=take_only_positive_part,
+                         take_expected_value=take_expected_value,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
                          fixed_step_len=fixed_step_len,

@@ -242,7 +242,8 @@ class LinearLMEOracle:
             grad_gamma += 1 / 2 * np.sum(el_z ** 2, axis=0) - 1 / 2 * el_z.T.dot(el_inv.dot(xi)) ** 2
         return grad_gamma + self.prior.gradient_gamma(beta, gamma)
 
-    def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, take_only_positive_part=False, **kwargs) -> np.ndarray:
+    def hessian_gamma(self, beta: np.ndarray, gamma: np.ndarray, take_only_positive_part=False,
+                      take_expected_value=False, **kwargs) -> np.ndarray:
         """
         Returns the Hessian of the loss function with respect to gamma ∇²_𝛄[ℒ](β, 𝛄).
 
@@ -254,6 +255,8 @@ class LinearLMEOracle:
             Vector of estimates of random effects.
         take_only_positive_part: bool
             Whether to return only the positive-definite part of Hessian
+        take_expected_value: bool
+            Whether to return the expected value of the hessian
         kwargs :
             Not used, left for future and for passing debug/experimental parameters
 
@@ -269,9 +272,17 @@ class LinearLMEOracle:
             xi = y - x.dot(beta)
             el_z = el_inv.dot(z)
             el_xi = el_inv.dot(xi).reshape((len(xi), 1))
-            hessian += ((0 if take_only_positive_part else -el_z.T.dot(el_z)) + 2 * (
-                el_z.T.dot(el_xi).dot(el_xi.T).dot(el_z))) * (
-                           el_z.T.dot(el_z))
+            if take_only_positive_part:
+                hessian += 2 * (
+                    el_z.T.dot(el_xi).dot(el_xi.T).dot(el_z)) * (
+                               el_z.T.dot(el_z))
+            elif take_expected_value:
+                hessian += el_z.T.dot(el_z) ** 2
+            else:
+                hessian += (-el_z.T.dot(el_z) + 2 * (
+                    el_z.T.dot(el_xi).dot(el_xi.T).dot(el_z))) * (
+                               el_z.T.dot(el_z))
+
         return 1 / 2 * hessian + self.prior.hessian_gamma(beta, gamma)
 
     def optimal_gamma_pgd(self, beta: np.ndarray, gamma: np.ndarray, log_progress=False, **kwargs):
@@ -991,7 +1002,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
        """
 
-    def __init__(self, problem: Optional[LMEProblem], lb=0.1, lg=0.1, warm_start=True, **kwargs):
+    def __init__(self, problem: Optional[LMEProblem], lb=0.1, lg=0.1, warm_start=True, take_only_positive_part=True,
+                 take_expected_value=False, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -1010,6 +1022,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         self.lg = lg
         self.warm_start = warm_start
         self.warm_start_ip = {}
+        self.take_only_positive_part = take_only_positive_part
+        self.take_expected_value = take_expected_value
 
     def loss(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
         """
@@ -1336,7 +1350,9 @@ class LinearLMEOracleSR3(LinearLMEOracle):
                 [Zb.T, self.hessian_beta(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs),
                  self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs)],
                 [-I, self.hessian_beta_gamma(b, g, tbeta=tbeta, tgamma=tgamma, **kwargs).T,
-                 self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma, take_only_positive_part=True, **kwargs)]
+                 self.hessian_gamma(b, g, tbeta=tbeta, tgamma=tgamma,
+                                    take_only_positive_part=self.take_only_positive_part,
+                                    take_expected_value=self.take_expected_value, **kwargs)]
             ])
 
         def dF(x):
@@ -1391,7 +1407,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
             iteration += 1
 
-            if np.linalg.norm(gamma*v - gamma.dot(v)/q) > central_path_neighbourhood_target*gamma.dot(v)/q:
+            if np.linalg.norm(gamma * v - gamma.dot(v) / q) > central_path_neighbourhood_target * gamma.dot(v) / q:
                 # do correction steps without tightening the barrier relaxation
                 continue
             else:
