@@ -1371,8 +1371,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
         while step_len != 0 \
                 and iteration < self.n_iter_inner \
-                and np.linalg.norm(F(x, mu)) > self.tol_inner \
-                and mu > self.tol_inner \
+                and (np.linalg.norm(F(x, mu)) > self.tol_inner or mu > self.tol_inner) \
                 and (np.linalg.norm(tbeta - prev_tbeta) > self.tol_inner
                      or np.linalg.norm(tgamma - prev_tgamma) > self.tol_inner
                      or np.linalg.norm(beta - prev_beta) > self.tol_inner
@@ -1436,6 +1435,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
             self.warm_start_ip["gamma"] = gamma
 
         if logger:
+            logger.add("good_stopping_reason", np.linalg.norm(F(x, mu)) < self.tol_inner and mu < self.tol_inner)
             logger.add("iteration", iteration)
 
         return beta, gamma, tbeta, tgamma, losses_kkt
