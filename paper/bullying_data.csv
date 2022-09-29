@@ -1,0 +1,78 @@
+author,cohort,log_effect_size,log_effect_size_se,intercept,time,cv_symptoms,cv_unadjusted,cv_b_parent_only,cv_or,cv_multi_reg,cv_low_threshold_bullying,cv_baseline_adjust,cv_anx,cv_selection_bias,cv_child_baseline,attrition,age_start,percent_female,age_mean,age_sd
+Kaltiala-Heino 2010,Adolescent Mental Health Cohort Study (AMHC),1.341846008,0.345360637,1,2,1,0,0,0,0,0,0,0,1,0,0.631,15,0,15.5,0.4
+Kaltiala-Heino 2010,Adolescent Mental Health Cohort Study (AMHC),0.509644927,0.458869962,1,2,1,0,0,0,0,0,0,0,1,0,0.631,15,1,15.5,0.4
+Zwierzynska 2013,Avon Longitudinal Study of Parents and Children (ALSPAC),0.550257853,0.508385321,1,3,1,0,0,0,0,0,0,0,1,1,0.358934474,8.5,0.518689057,NA,NA
+Zwierzynska 2013,Avon Longitudinal Study of Parents and Children (ALSPAC),0.550257853,0.508385321,1,5,1,0,0,0,0,0,0,0,1,1,0.358934474,8.5,0.518689057,NA,NA
+Zwierzynska 2013,Avon Longitudinal Study of Parents and Children (ALSPAC),0.550257853,0.508385321,1,4,0,0,0,0,0,0,0,0,1,1,0.358934474,8.5,0.518689057,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.982415494,0.134125778,1,4.83,0,1,0,0,1,0,1,0,1,0,0.390172565,13,0.545,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.763698837,0.204445477,1,4.83,0,0,0,0,1,0,0,0,1,0,0.390172565,13,0.545,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.641590694,0.162449563,1,9.83,0,1,0,0,1,0,1,0,1,1,0.390172565,8,0.545,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.294011996,0.189960643,1,9.83,0,0,0,0,1,0,1,0,1,1,0.390172565,8,0.545,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.47654469,0.143063455,1,7.83,0,1,0,0,1,0,1,0,1,1,0.390172565,10,0.545,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.152635246,0.181212941,1,7.83,0,0,0,0,1,0,1,0,1,1,0.390172565,10,0.545,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.957854851,0.135677931,1,4.83,0,1,0,0,1,0,1,0,1,0,0.390172565,13,0.545,NA,NA
+Bowes 2015,Avon Longitudinal Study of Parents and Children (ALSPAC),0.859127612,0.162031573,1,4.83,0,0,0,0,1,0,1,0,1,0,0.390172565,13,0.545,NA,NA
+Lereya 2015a,Avon Longitudinal Study of Parents and Children (ALSPAC),0.766862218,0.119752641,1,7.5,0,1,0,0,0,0,1,0,1,1,0.786083956,10.5,0.556135122,NA,NA
+Lereya 2015a,Avon Longitudinal Study of Parents and Children (ALSPAC),0.766862218,0.119752641,1,7.5,0,0,0,0,0,0,1,0,1,1,0.786083956,10.5,0.556135122,NA,NA
+Lereya 2015b,Avon Longitudinal Study of Parents and Children (ALSPAC),0.405798386,0.156696333,1,8,0,0,0,0,0,0,0,0,1,1,0.786083956,10,0.557181175,NA,NA
+Lereya 2015b,Avon Longitudinal Study of Parents and Children (ALSPAC),0.60168957,0.169729843,1,5,0,0,0,0,0,0,0,0,1,0,0.786083956,13,0.557181175,NA,NA
+Stapinski 2014,Avon Longitudinal Study of Parents and Children (ALSPAC),1.007818424,0.155855828,1,5,0,1,0,0,1,0,1,0,1,0,0.584568299,13,0.508215206,NA,NA
+Takizawa 2014,British National Child Development Study,0.431782416,0.2222728,1,36,0,0,1,1,1,0,0,0,1,1,0.78,9,0.510272071,NA,NA
+Schoon 1997,British National Child Development Study,0.368936785,0.073860195,1,26,1,1,1,0,0,1,1,0,1,1,0.643214286,7,0.510272071,NA,NA
+Schoon 1997,British National Child Development Study,0.643108638,0.130415832,1,26,1,1,1,0,0,0,1,0,1,1,0.643214286,7,0.510272071,NA,NA
+Rothon 2011,East London Adolescents: Community Health Survey (RELACHS),0.244591883,0.1104646,1,2,1,1,0,0,0,1,1,0,1,1,0.656181419,12.5,0.51787649,13.20987451,0.233356172
+Rothon 2011,East London Adolescents: Community Health Survey (RELACHS),0.323025085,0.181435986,1,2,1,1,0,0,0,1,1,0,1,1,0.656181419,12.5,0,13.20987451,0.233356172
+Rothon 2011,East London Adolescents: Community Health Survey (RELACHS),-0.129197938,0.212409814,1,2,1,1,0,0,0,1,1,0,1,1,0.656181419,12.5,1,13.20987451,0.233356172
+Haavisto 2004,From a Boy to a Man (part of the Epidemiological Multicenter Child Psychiatric Study),0.477289523,0.120534744,1,10,1,1,0,0,0,0,1,0,1,1,0.797012899,8,0,NA,NA
+Sourander 2007,From a Boy to a Man (part of the Epidemiological Multicenter Child Psychiatric Study),0.814479466,0.473073419,1,12.5,0,1,0,0,0,0,1,0,0,1,0.862186015,8,0,NA,NA
+Klomek 2008,From a Boy to a Man (part of the Epidemiological Multicenter Child Psychiatric Study),0.978250932,0.628213617,1,10,1,0,0,0,1,0,0,0,1,0,0.797012899,8,0,NA,NA
+Patton 2008,International Youth Development Study,0.09531018,0.074701238,1,1,1,0,0,1,0,1,0,0,0,1,0.978,12,1,NA,NA
+Hemphill 2011,International Youth Development Study,0.09376353,0.108184111,1,4,1,1,0,0,0,1,1,0,0,0,0.95505618,13.15,0.52,12.9,0.4
+Hemphill 2011,International Youth Development Study,-0.084142768,0.122381031,1,4,1,0,0,0,0,1,1,0,0,0,0.95505618,13.15,0.52,12.9,0.4
+Hemphill 2011,International Youth Development Study,0.491153388,0.108584788,1,1,1,1,0,0,0,1,1,0,0,0,0.87628866,13.15,0.52,12.9,0.4
+Hemphill 2011,International Youth Development Study,0.424940885,0.119140078,1,1,1,0,0,0,0,1,1,0,0,0,0.87628866,13.15,0.52,12.9,0.4
+Farrington 2011,Pittsburgh Youth Study,0.2390169,0.118952147,1,1.5,1,0,0,1,0,1,1,0,1,1,0.82,12,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.708035793,0.114731172,1,1.5,1,0,1,1,0,1,1,0,1,1,0.82,12,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.476234179,0.232749546,1,1.5,1,0,0,1,0,1,1,0,1,1,0.82,12,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.3074847,0.106510489,1,1.5,1,1,0,1,0,1,1,0,1,1,0.82,12,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.741937345,0.098974255,1,1.5,1,1,0,1,0,1,1,0,1,1,0.82,12,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.524728529,0.218460059,1,1.5,1,1,0,1,0,1,1,0,1,1,0.82,12,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.419368013,0.158622532,1,1.5,1,0,0,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.436058973,0.199022674,1,3.5,1,0,0,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.309834877,0.219316125,1,5.5,1,0,0,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,-0.219898821,0.225169393,1,2,1,0,0,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,-0.056147161,0.238578947,1,4,1,0,0,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,-0.332121714,0.391611047,1,2,1,0,0,0,0,1,1,0,1,0,0.82,13.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.498226588,0.160941185,1,1.5,1,0,1,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.615347788,0.19711689,1,3.5,1,0,1,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.567924036,0.21190372,1,5.5,1,0,1,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.515872865,0.183578476,1,2,1,0,1,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.546327894,0.198707877,1,4,1,0,1,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.270027137,0.239634666,1,2,1,0,1,0,0,1,1,0,1,0,0.82,13.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.433274809,0.14298543,1,1.5,1,1,0,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.374662199,0.179512592,1,3.5,1,1,0,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.333682635,0.200713812,1,5.5,1,1,0,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.015479571,0.18580253,1,2,1,1,0,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.044590883,0.208465399,1,4,1,1,0,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,-0.206163531,0.324830634,1,2,1,1,0,0,0,1,1,0,1,0,0.82,13.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.456855064,0.142273733,1,1.5,1,1,1,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.602401567,0.172201612,1,3.5,1,1,1,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.449609577,0.196873023,1,5.5,1,1,1,0,0,1,1,0,1,1,0.82,10,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.557441998,0.155833287,1,2,1,1,1,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.61334611,0.174071358,1,4,1,1,1,0,0,1,1,0,1,1,0.82,11.5,0,NA,NA
+Farrington 2011,Pittsburgh Youth Study,0.5525624,0.176111252,1,2,1,1,1,0,0,1,1,0,1,0,0.82,13.5,0,NA,NA
+Moore 2014,Raine Study (Western Australia Pregnancy Cohort),0.547138266,0.188779642,1,3,1,0,0,0,0,1,0,0,0,0,0.854226973,14,0.4,NA,NA
+Silberg 2016,Virginia Twin Study of Adolescent Behavioral Development (VTSABD),0.184236389,0.110465148,1,10.5,0,1,0,0,0,1,1,0,1,1,0.817,12.5,0.536407767,NA,NA
+Sigurdson 2015,Youth and Mental Health Study,0.421863254,0.225316737,1,12,1,0,0,0,0,0,0,0,1,0,0.5,14.75,0.567,13.7,0.58
+Stapinski 2014,Avon Longitudinal Study of Parents and Children (ALSPAC),0.823780628,0.197531907,1,5,0,0,0,0,1,0,0,1,1,0,0.584568299,13,0.508215206,NA,NA
+Lereya 2015b,Avon Longitudinal Study of Parents and Children (ALSPAC),0.291250697,0.13578431,1,8,0,0,0,0,0,0,0,1,1,1,0.786083956,10,0.557181175,NA,NA
+Lereya 2015b,Avon Longitudinal Study of Parents and Children (ALSPAC),0.590228127,0.144506024,1,5,0,0,0,0,0,0,0,1,1,0,0.786083956,13,0.557181175,NA,NA
+Lereya 2015a,Avon Longitudinal Study of Parents and Children (ALSPAC),0.475861439,0.102977628,1,7.5,0,0,0,0,0,0,1,1,1,1,0.786083956,10.5,0.556135122,NA,NA
+Stapinski 2014,Avon Longitudinal Study of Parents and Children (ALSPAC),0.959196953,0.13803218,1,5,0,1,0,0,1,0,1,1,1,0,0.584568299,13,0.508215206,NA,NA
+Lereya 2015a,Avon Longitudinal Study of Parents and Children (ALSPAC),0.475861439,0.102977628,1,7.5,0,1,0,0,0,0,1,1,1,1,0.786083956,10.5,0.556135122,NA,NA
+Zwierzynska 2013,Avon Longitudinal Study of Parents and Children (ALSPAC),0.236572972,0.372057008,1,4,0,0,0,0,0,0,0,1,1,1,0.358934474,8.5,0.518689057,NA,NA
+Takizawa 2014,British National Child Development Study,0.292669614,0.147409937,1,36,0,0,1,1,1,0,0,1,1,1,0.78,9,0.510272071,NA,NA
+Sourander 2007,From a Boy to a Man (part of the Epidemiological Multicenter Child Psychiatric Study),1.034606959,0.397487984,1,12.5,0,1,0,0,0,0,1,1,0,1,0.862186015,8,0,NA,NA
+Schoon 1997,British National Child Development Study,0.765467842,0.065116279,1,26,1,1,1,0,1,0,1,0,1,1,0.643214286,7,0.510272071,NA,NA
+Schoon 1997,British National Child Development Study,0.871293366,0.087866109,1,26,1,1,1,0,1,0,1,0,1,1,0.643214286,7,0,NA,NA
+Schoon 1997,British National Child Development Study,0.688134639,0.090452261,1,26,1,1,1,0,1,0,1,0,1,1,0.643214286,7,1,NA,NA

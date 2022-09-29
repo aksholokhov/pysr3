@@ -817,6 +817,15 @@ class LMEProblem(Problem):
                                    must_include_re=not_regularized_re)
 
 
+    def to_dataframe(self):
+        x, y, column_labels = self.to_x_y()
+        data = pd.DataFrame(x, columns=column_labels)
+        data['target'] = y
+        return data
+
+
+
+
 class LMEStratifiedShuffleSplit:
     """
     Class that generates shuffle splits of the dataset that are stratified by groups
