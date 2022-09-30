@@ -11,6 +11,3 @@ The folder `synthetic_data` contains 100 CSV tables. The rows are observations (
 * `fixed`, `random`, or `fixed+random` -- features a.k.a. covariates. 
 
 The names of feature columns indicate whether they factor into the model as `fixed` effects, `random` effects, or both (`fixed+random`).
-
-## Chapter 4.2 Bullying Data
-The data from Chapter 4.2 is in `bullying_data.csv` file. See Appendix B.2 for the description and the meaning of features, as well as the [original GBD study](https://www.healthdata.org/results/gbd_summaries/2019/bullying-victimization-level-3-risk).
