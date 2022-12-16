@@ -30,8 +30,7 @@ bibliography: paper.bib
 
 Feature selection is a core step in regression modeling. As new types of data becomes readily available, current
 datasets include more information that may be related to key research questions. However, in predictive modeling,
-the presence of irrelevant features can hamper stability of estimation, validity of inference, prediction accuracy, and qualitative conclusions of the
-research. Reliable feature selection is therefore key in a wide range of regression settings.
+the presence of irrelevant features can hamper stability of estimation, validity of inference, prediction accuracy, and qualitative conclusions of the research. Reliable feature selection is therefore key in a wide range of regression settings.
 
 While feature selection has been a hot topic with a lot of research [@Buscemi2019Survey, @miao2016survey, @li2020survey],
 there is no known universal approach that would outperform all other strategies in every setting, leading to many suggested approaches and
@@ -57,12 +56,7 @@ to accommodate future work, for example newly proposed regularizers, without for
 numerical solvers. At the same time, these universal solvers must effectively handle ill-conditioned problems,
 that are very common in raw real-world datasets.
 
-PySR3 package implements a variety of feature selection methods for linear and linear mixed-effects regression via a universal an easy-to-use interface. 
-These methods use Sparse Relaxed Regularized Regression (SR3) -- a relaxation technique that boosts performance of most regularization strategies in presence of ill-conditioned data.
-This technique is regularizer- and loss-agnostic, and can be extended to a wide class of models ([@Zheng2020]).
-The package includes widely used regularizers (LASSO, Adaptive LASSO, SCAD), as well as recently developed
-ones (CAD, L0). 
-
+ 
 The library is built to make it as easy as possible to add new loss functions, constraints, 
 information criteria, and regularization strategies. Moreover, all PySR3 models fully adhere the standards and 
 interface requirements of `sklearn` ([@sklearn_api]), providing a familiar interface to users. 

@@ -1,6 +1,6 @@
 ![](https://img.shields.io/pypi/l/pysr3)
 ![](https://img.shields.io/pypi/v/pysr3)
-![](https://img.shields.io/github/workflow/status/aksholokhov/pysr3/Testing%20and%20Coverage/sr3)
+![](https://img.shields.io/github/actions/workflow/status/aksholokhov/pysr3/testing_and_coverage.yml?branch=master)
 [![](https://img.shields.io/badge/docs-up-green)](https://aksholokhov.github.io/pysr3/)
 ![](https://img.shields.io/codecov/c/github/aksholokhov/pysr3/sr3?flag=unittests)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b)](https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/pysr3&amp;utm_campaign=Badge_Grade)
