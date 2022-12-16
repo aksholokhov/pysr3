@@ -52,8 +52,8 @@ class TestSelectCovariates(unittest.TestCase):
                                           )
                         with open('sel_covs.yaml', 'r') as f:
                             answers = yaml.safe_load(f)
-                        self.assertEquals(tuple(answers['fixed_effects']), ("x1", "x3"))
-                        self.assertEquals(tuple(answers['random_effects']), ("x1", "x3"))
+                        self.assertEqual(tuple(answers['fixed_effects']), ("x1", "x3"))
+                        self.assertEqual(tuple(answers['random_effects']), ("x1", "x3"))
                 if Path('sel_covs.yaml').exists():
                     Path('sel_covs.yaml').unlink()
 
