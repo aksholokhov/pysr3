@@ -130,7 +130,7 @@ class LinearModel(BaseEstimator, RegressorMixin):
         if "bic" in self.logger_.keys:
             self.logger_.add("bic", oracle.bic(optimal_x))
         self.n_features_in_ = problem.num_features
-
+        oracle.forget()
         return self
 
     def predict(self, x, **kwargs):

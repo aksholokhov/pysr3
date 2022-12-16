@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 from sklearn.metrics import mean_squared_error, explained_variance_score, accuracy_score
 from sklearn.utils.estimator_checks import check_estimator
 
@@ -51,7 +52,7 @@ class TestLinearModels(unittest.TestCase):
             "el": 1,
             "lam": 0.0,  # we expect the answers to be dense so the regularizers are small
             # "stepping": "line-search",
-            "logger_keys": ('converged', 'loss',),
+            "logger_keys": ('converged', 'loss', 'aic', 'bic'),
             "tol_solver": 1e-6,
             "max_iter_solver": 1000
         }
@@ -64,15 +65,21 @@ class TestLinearModels(unittest.TestCase):
                 for model_name, (model_constructor, local_params) in models_to_test.items():
                     with self.subTest(model_name=model_name):
                         problem = LinearProblem.generate(**problem_parameters, seed=i)
-                        _, y = problem.to_x_y()
+                        x, y = problem.to_x_y()
 
+                        features_labels = [f'x{i}' for i in range(problem_parameters['num_features'])]
+                        data = pd.DataFrame(x, columns=features_labels)
+                        data['y'] = y
+                        data['std'] = 1
+                        problem2 = LinearProblem.from_dataframe(data, features=features_labels,
+                                                                target='y', obs_std='std')
                         model_params = default_params.copy()
                         model_params.update(local_params)
 
                         model = model_constructor(**model_params)
-                        model.fit_problem(problem)
+                        model.fit_problem(problem2)
 
-                        y_pred = model.predict_problem(problem)
+                        y_pred = model.predict_problem(problem2)
                         explained_variance = explained_variance_score(y, y_pred)
                         mse = mean_squared_error(y, y_pred)
 
@@ -88,6 +95,11 @@ class TestLinearModels(unittest.TestCase):
                                                   mse,
                                                   max_mse,
                                                   i))
+                        aic = model.get_information_criterion(x, y, ic='aic')
+                        self.assertAlmostEqual(aic, model.logger_.get('aic'))
+                        bic = model.get_information_criterion(x, y, ic='bic')
+                        self.assertAlmostEqual(bic, model.logger_.get('bic'))
+
         return None
 
     def test_solving_sparse_problem(self):
