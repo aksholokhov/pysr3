@@ -2,7 +2,7 @@
 
 .. |image0| image:: https://img.shields.io/pypi/l/PySR3
 .. |image1| image:: https://img.shields.io/pypi/v/PySR3
-.. |image2| image:: https://img.shields.io/github/workflow/status/aksholokhov/pysr3/Testing%20and%20Coverage/master
+.. |image2| image:: https://img.shields.io/github/actions/workflow/status/aksholokhov/pysr3/testing_and_coverage.yml?branch=master
 .. |image3| image:: https://img.shields.io/badge/docs-here-green
    :target: https://aksholokhov.github.io/pysr3/
 .. |codecov| image:: https://codecov.io/gh/aksholokhov/pysr3/branch/master/graph/badge.svg?token=WAA8uIQwjK
