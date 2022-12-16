@@ -14,7 +14,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -70,8 +72,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Quickstart with <code class="docutils literal notranslate"><span class="pre">pysr3</span></code></li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Quickstart with <code class="docutils literal notranslate"><span class="pre">pysr3</span></code></li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -83,7 +85,7 @@
              
   <p><img alt="image0" src="https://img.shields.io/pypi/l/PySR3" /> <img alt="image1" src="https://img.shields.io/pypi/v/PySR3" /> <img alt="image2" src="https://img.shields.io/github/workflow/status/aksholokhov/pysr3/Testing%20and%20Coverage/master" /> <a class="reference external" href="https://aksholokhov.github.io/pysr3/"><img alt="image3" src="https://img.shields.io/badge/docs-here-green" /></a> <a class="reference external" href="https://codecov.io/gh/aksholokhov/pysr3"><img alt="codecov" src="https://codecov.io/gh/aksholokhov/pysr3/branch/master/graph/badge.svg?token=WAA8uIQwjK" /></a> <a class="reference external" href="https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/pysr3&amp;utm_campaign=Badge_Grade"><img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b" /></a></p>
 <section id="quickstart-with-pysr3">
-<h1>Quickstart with <code class="docutils literal notranslate"><span class="pre">pysr3</span></code><a class="headerlink" href="#quickstart-with-pysr3" title="Permalink to this headline"></a></h1>
+<h1>Quickstart with <code class="docutils literal notranslate"><span class="pre">pysr3</span></code><a class="headerlink" href="#quickstart-with-pysr3" title="Permalink to this heading"></a></h1>
 <p>SR3 is a relaxation method designed for accurate feature selection. It
 currently supports:</p>
 <ul class="simple">
@@ -91,14 +93,14 @@ currently supports:</p>
 <li><p>Linear Mixed-Effect Models (L0, LASSO, A-LASSO, CAD, SCAD)</p></li>
 </ul>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>pysr3 can be installed via</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install pysr3
 </pre></div>
 </div>
 </section>
 <section id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h2>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
 <p>Make sure that Python 3.6 or higher is installed. The package has the
 following dependencies, as listed in requirements.txt:</p>
 <ul class="simple">
@@ -110,12 +112,12 @@ following dependencies, as listed in requirements.txt:</p>
 </ul>
 </section>
 <section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <p>pysr3 models are fully compatible to <a class="reference external" href="https://scikit-learn.org/stable/developers/develop.html">sklearn
 standards</a>,
 so you can use them as you normally would use a sklearn model.</p>
 <section id="linear-models">
-<h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline"></a></h3>
+<h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this heading"></a></h3>
 <p>A simple example of using SR3-empowered LASSO for feature selection is
 shown below.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -175,7 +177,7 @@ shown below.</p>
 </div>
 </section>
 <section id="linear-mixed-effects-models">
-<h3>Linear Mixed-Effects Models<a class="headerlink" href="#linear-mixed-effects-models" title="Permalink to this headline"></a></h3>
+<h3>Linear Mixed-Effects Models<a class="headerlink" href="#linear-mixed-effects-models" title="Permalink to this heading"></a></h3>
 <p>Below we show how to use Linear Mixed-Effects (LME) models for
 simultaneous selection of fixed and random effects.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pysr3.lme.models</span> <span class="kn">import</span> <span class="n">L1LmeModelSR3</span>

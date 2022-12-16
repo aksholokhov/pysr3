@@ -14,8 +14,10 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -77,8 +79,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Models Overview</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Models Overview</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/models_overview.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,15 +91,15 @@
            <div itemprop="articleBody">
              
   <section id="models-overview">
-<h1>Models Overview<a class="headerlink" href="#models-overview" title="Permalink to this headline"></a></h1>
+<h1>Models Overview<a class="headerlink" href="#models-overview" title="Permalink to this heading"></a></h1>
 <p>The library provides both basic and SR3-empowered implementations of
 modern regularized regression algorithms. Below we give an overview of
 available options and give advice on how to choose a model suitable for
 your goals.</p>
 <section id="table-of-models">
-<h2>Table of Models<a class="headerlink" href="#table-of-models" title="Permalink to this headline"></a></h2>
+<h2>Table of Models<a class="headerlink" href="#table-of-models" title="Permalink to this heading"></a></h2>
 <section id="linear-models">
-<h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline"></a></h3>
+<h3>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this heading"></a></h3>
 <p>Located in <code class="docutils literal notranslate"><span class="pre">pysr3.linear</span></code> submodule</p>
 <table class="docutils align-default">
 <colgroup>
@@ -134,7 +136,7 @@ your goals.</p>
 functionality.</p>
 </section>
 <section id="linear-mixed-effects-models">
-<h3>Linear Mixed-Effects Models<a class="headerlink" href="#linear-mixed-effects-models" title="Permalink to this headline"></a></h3>
+<h3>Linear Mixed-Effects Models<a class="headerlink" href="#linear-mixed-effects-models" title="Permalink to this heading"></a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 30%" />
@@ -175,7 +177,7 @@ functionality.</p>
 </section>
 </section>
 <section id="regularizers">
-<h2>Regularizers<a class="headerlink" href="#regularizers" title="Permalink to this headline"></a></h2>
+<h2>Regularizers<a class="headerlink" href="#regularizers" title="Permalink to this heading"></a></h2>
 <p>The library currently implements five popular regularizers: L0, LASSO,
 A-LASSO, CAD, and SCAD. Below we plot the values and the proximal
 mappings for three of them:</p>
@@ -198,7 +200,7 @@ mappings for three of them:</p>
 </div>
 <img alt="_images/models_overview_3_0.png" src="_images/models_overview_3_0.png" />
 <section id="l1-lasso">
-<h3>L1 (LASSO)<a class="headerlink" href="#l1-lasso" title="Permalink to this headline"></a></h3>
+<h3>L1 (LASSO)<a class="headerlink" href="#l1-lasso" title="Permalink to this heading"></a></h3>
 <p>This is a well-known sparsity-promoting regularizer that penalizes the
 loss-funciton with a sum of absolute values of the model’s coefficients:</p>
 <div class="math notranslate nohighlight">
@@ -213,7 +215,7 @@ BIC, e.t.c.) on a validation part of the splits. See the example in
 Quickstart tutorial.</p>
 </section>
 <section id="adaptive-lasso-a-lasso">
-<h3>Adaptive LASSO (A-LASSO)<a class="headerlink" href="#adaptive-lasso-a-lasso" title="Permalink to this headline"></a></h3>
+<h3>Adaptive LASSO (A-LASSO)<a class="headerlink" href="#adaptive-lasso-a-lasso" title="Permalink to this heading"></a></h3>
 <p>Adaptive LASSO uses <span class="math notranslate nohighlight">\(\bar{x}\)</span> – a solution for a non-regularized
 problem – as weights for LASSO penalty:</p>
 <div class="math notranslate nohighlight">
@@ -231,7 +233,7 @@ regularization weights to LASSO model:</p>
 </div>
 </section>
 <section id="cad">
-<h3>CAD<a class="headerlink" href="#cad" title="Permalink to this headline"></a></h3>
+<h3>CAD<a class="headerlink" href="#cad" title="Permalink to this heading"></a></h3>
 <p>Clipped Absolute Deviation (CAD) penalty is a clipped version of LASSO.
 When the values of the coefficients are less than a hyper-parameter
 <span class="math notranslate nohighlight">\(\rho\)</span> – it works like LASSO, but it does not penalize the
@@ -241,7 +243,7 @@ addresses an issue of LASSO penalizing big coefficients too much.</p>
 <code class="docutils literal notranslate"><span class="pre">pysr3.regularizers.CADRegularizer</span></code>.</p>
 </section>
 <section id="scad">
-<h3>SCAD<a class="headerlink" href="#scad" title="Permalink to this headline"></a></h3>
+<h3>SCAD<a class="headerlink" href="#scad" title="Permalink to this heading"></a></h3>
 <p>Smooth Clipped Absolute Deviation (SCAD) penalty is a smoothed version
 of SCAD. Instead of imposing a hard threshold, it uses 2-knot smooth
 spline interpolation to connect the flat and the absolute value parts.
@@ -252,7 +254,7 @@ The knots of the spline are located at points <span class="math notranslate nohi
 </section>
 </section>
 <section id="regular-pgd-vs-sr3-pgd">
-<h2>Regular PGD vs SR3-PGD<a class="headerlink" href="#regular-pgd-vs-sr3-pgd" title="Permalink to this headline"></a></h2>
+<h2>Regular PGD vs SR3-PGD<a class="headerlink" href="#regular-pgd-vs-sr3-pgd" title="Permalink to this heading"></a></h2>
 <p>Proximal Gradient Descent (PGD) is currently the core numerical solver
 for <code class="docutils literal notranslate"><span class="pre">pysr3</span></code>. It has a very simple form of iteration that requires only
 gradient information of the loss function and the proximal operator of

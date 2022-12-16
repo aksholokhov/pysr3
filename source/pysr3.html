@@ -14,11 +14,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysr3.glms package" href="pysr3.glms.html" />
+    <link rel="next" title="pysr3.linear package" href="pysr3.linear.html" />
     <link rel="prev" title="pysr3" href="modules.html" /> 
 </head>
 
@@ -48,14 +50,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">pysr3 package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pysr3.glms.html">pysr3.glms package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.linear.html">pysr3.linear package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.lme.html">pysr3.lme package</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.logger.html">pysr3.logger module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pysr3.preprocessors.html">pysr3.preprocessors module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.priors.html">pysr3.priors module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.regularizers.html">pysr3.regularizers module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.solvers.html">pysr3.solvers module</a></li>
@@ -81,9 +81,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">pysr3</a> &raquo;</li>
-      <li>pysr3 package</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">pysr3</a></li>
+      <li class="breadcrumb-item active">pysr3 package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/pysr3.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -94,27 +94,34 @@
            <div itemprop="articleBody">
              
   <section id="pysr3-package">
-<h1>pysr3 package<a class="headerlink" href="#pysr3-package" title="Permalink to this headline"></a></h1>
+<h1>pysr3 package<a class="headerlink" href="#pysr3-package" title="Permalink to this heading"></a></h1>
 <section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline"></a></h2>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.glms.html">pysr3.glms package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pysr3.glms.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.glms.link_functions.html">pysr3.glms.link_functions module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.glms.models.html">pysr3.glms.models module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.glms.oracles.html">pysr3.glms.oracles module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.glms.problems.html">pysr3.glms.problems module</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="pysr3.glms.html#module-pysr3.glms">Module contents</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="pysr3.linear.html">pysr3.linear package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pysr3.linear.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.linear.models.html">pysr3.linear.models module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.linear.oracles.html">pysr3.linear.oracles module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.linear.problems.html">pysr3.linear.problems module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.linear.models.html">pysr3.linear.models module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.LinearCADModel"><code class="docutils literal notranslate"><span class="pre">LinearCADModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.LinearCADModelSR3"><code class="docutils literal notranslate"><span class="pre">LinearCADModelSR3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.LinearL1Model"><code class="docutils literal notranslate"><span class="pre">LinearL1Model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.LinearL1ModelSR3"><code class="docutils literal notranslate"><span class="pre">LinearL1ModelSR3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.LinearModel"><code class="docutils literal notranslate"><span class="pre">LinearModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.LinearSCADModel"><code class="docutils literal notranslate"><span class="pre">LinearSCADModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.LinearSCADModelSR3"><code class="docutils literal notranslate"><span class="pre">LinearSCADModelSR3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.SimpleLinearModel"><code class="docutils literal notranslate"><span class="pre">SimpleLinearModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.models.html#pysr3.linear.models.SimpleLinearModelSR3"><code class="docutils literal notranslate"><span class="pre">SimpleLinearModelSR3</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.linear.oracles.html">pysr3.linear.oracles module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.oracles.html#pysr3.linear.oracles.LinearOracle"><code class="docutils literal notranslate"><span class="pre">LinearOracle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.oracles.html#pysr3.linear.oracles.LinearOracleSR3"><code class="docutils literal notranslate"><span class="pre">LinearOracleSR3</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.linear.problems.html">pysr3.linear.problems module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.linear.problems.html#pysr3.linear.problems.LinearProblem"><code class="docutils literal notranslate"><span class="pre">LinearProblem</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="pysr3.linear.html#module-pysr3.linear">Module contents</a></li>
@@ -122,11 +129,43 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pysr3.lme.html">pysr3.lme package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pysr3.lme.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.model_selectors.html">pysr3.lme.model_selectors module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html">pysr3.lme.models module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html">pysr3.lme.oracles module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html">pysr3.lme.priors module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html">pysr3.lme.problems module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.model_selectors.html">pysr3.lme.model_selectors module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.model_selectors.html#pysr3.lme.model_selectors.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.model_selectors.html#pysr3.lme.model_selectors.select_covariates"><code class="docutils literal notranslate"><span class="pre">select_covariates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html">pysr3.lme.models module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.CADLmeModel"><code class="docutils literal notranslate"><span class="pre">CADLmeModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.CADLmeModelSR3"><code class="docutils literal notranslate"><span class="pre">CADLmeModelSR3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L0LmeModel"><code class="docutils literal notranslate"><span class="pre">L0LmeModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L0LmeModelSR3"><code class="docutils literal notranslate"><span class="pre">L0LmeModelSR3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L1LmeModel"><code class="docutils literal notranslate"><span class="pre">L1LmeModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L1LmeModelSR3"><code class="docutils literal notranslate"><span class="pre">L1LmeModelSR3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel"><code class="docutils literal notranslate"><span class="pre">LMEModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SCADLmeModel"><code class="docutils literal notranslate"><span class="pre">SCADLmeModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SCADLmeModelSR3"><code class="docutils literal notranslate"><span class="pre">SCADLmeModelSR3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModel"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModelSR3"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModelSR3</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html">pysr3.lme.oracles module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html">pysr3.lme.priors module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html">pysr3.lme.problems module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem"><code class="docutils literal notranslate"><span class="pre">LMEProblem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEStratifiedShuffleSplit"><code class="docutils literal notranslate"><span class="pre">LMEStratifiedShuffleSplit</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.Problem"><code class="docutils literal notranslate"><span class="pre">Problem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.get_per_group_coefficients"><code class="docutils literal notranslate"><span class="pre">get_per_group_coefficients()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.random_effects_to_matrix"><code class="docutils literal notranslate"><span class="pre">random_effects_to_matrix()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="pysr3.lme.html#module-pysr3.lme">Module contents</a></li>
@@ -136,19 +175,112 @@
 </div>
 </section>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.logger.html">pysr3.logger module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.preprocessors.html">pysr3.preprocessors module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.priors.html">pysr3.priors module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.regularizers.html">pysr3.regularizers module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.solvers.html">pysr3.solvers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.logger.html">pysr3.logger module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger"><code class="docutils literal notranslate"><span class="pre">Logger</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger.add"><code class="docutils literal notranslate"><span class="pre">Logger.add()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger.append"><code class="docutils literal notranslate"><span class="pre">Logger.append()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger.get"><code class="docutils literal notranslate"><span class="pre">Logger.get()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger.log"><code class="docutils literal notranslate"><span class="pre">Logger.log()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.priors.html">pysr3.priors module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.GaussianPrior"><code class="docutils literal notranslate"><span class="pre">GaussianPrior</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.GaussianPrior.forget"><code class="docutils literal notranslate"><span class="pre">GaussianPrior.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.GaussianPrior.gradient"><code class="docutils literal notranslate"><span class="pre">GaussianPrior.gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.GaussianPrior.hessian"><code class="docutils literal notranslate"><span class="pre">GaussianPrior.hessian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.GaussianPrior.instantiate"><code class="docutils literal notranslate"><span class="pre">GaussianPrior.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.GaussianPrior.loss"><code class="docutils literal notranslate"><span class="pre">GaussianPrior.loss()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.NonInformativePrior"><code class="docutils literal notranslate"><span class="pre">NonInformativePrior</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.NonInformativePrior.forget"><code class="docutils literal notranslate"><span class="pre">NonInformativePrior.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.NonInformativePrior.gradient"><code class="docutils literal notranslate"><span class="pre">NonInformativePrior.gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.NonInformativePrior.hessian"><code class="docutils literal notranslate"><span class="pre">NonInformativePrior.hessian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.NonInformativePrior.instantiate"><code class="docutils literal notranslate"><span class="pre">NonInformativePrior.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.NonInformativePrior.loss"><code class="docutils literal notranslate"><span class="pre">NonInformativePrior.loss()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.priors.html#pysr3.priors.Prior"><code class="docutils literal notranslate"><span class="pre">Prior</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.regularizers.html">pysr3.regularizers module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.CADRegularizer"><code class="docutils literal notranslate"><span class="pre">CADRegularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.CADRegularizer.forget"><code class="docutils literal notranslate"><span class="pre">CADRegularizer.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.CADRegularizer.instantiate"><code class="docutils literal notranslate"><span class="pre">CADRegularizer.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.CADRegularizer.prox"><code class="docutils literal notranslate"><span class="pre">CADRegularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.CADRegularizer.value"><code class="docutils literal notranslate"><span class="pre">CADRegularizer.value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.DummyRegularizer"><code class="docutils literal notranslate"><span class="pre">DummyRegularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.DummyRegularizer.prox"><code class="docutils literal notranslate"><span class="pre">DummyRegularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.DummyRegularizer.value"><code class="docutils literal notranslate"><span class="pre">DummyRegularizer.value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.ElasticRegularizer"><code class="docutils literal notranslate"><span class="pre">ElasticRegularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.ElasticRegularizer.instantiate"><code class="docutils literal notranslate"><span class="pre">ElasticRegularizer.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.ElasticRegularizer.prox"><code class="docutils literal notranslate"><span class="pre">ElasticRegularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.ElasticRegularizer.value"><code class="docutils literal notranslate"><span class="pre">ElasticRegularizer.value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L0Regularizer"><code class="docutils literal notranslate"><span class="pre">L0Regularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L0Regularizer.forget"><code class="docutils literal notranslate"><span class="pre">L0Regularizer.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L0Regularizer.instantiate"><code class="docutils literal notranslate"><span class="pre">L0Regularizer.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L0Regularizer.optimal_tbeta"><code class="docutils literal notranslate"><span class="pre">L0Regularizer.optimal_tbeta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L0Regularizer.optimal_tgamma"><code class="docutils literal notranslate"><span class="pre">L0Regularizer.optimal_tgamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L0Regularizer.prox"><code class="docutils literal notranslate"><span class="pre">L0Regularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L0Regularizer.value"><code class="docutils literal notranslate"><span class="pre">L0Regularizer.value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L1Regularizer"><code class="docutils literal notranslate"><span class="pre">L1Regularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L1Regularizer.forget"><code class="docutils literal notranslate"><span class="pre">L1Regularizer.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L1Regularizer.instantiate"><code class="docutils literal notranslate"><span class="pre">L1Regularizer.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L1Regularizer.prox"><code class="docutils literal notranslate"><span class="pre">L1Regularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.L1Regularizer.value"><code class="docutils literal notranslate"><span class="pre">L1Regularizer.value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.PositiveQuadrantRegularizer"><code class="docutils literal notranslate"><span class="pre">PositiveQuadrantRegularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.PositiveQuadrantRegularizer.instantiate"><code class="docutils literal notranslate"><span class="pre">PositiveQuadrantRegularizer.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.PositiveQuadrantRegularizer.prox"><code class="docutils literal notranslate"><span class="pre">PositiveQuadrantRegularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.PositiveQuadrantRegularizer.value"><code class="docutils literal notranslate"><span class="pre">PositiveQuadrantRegularizer.value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer"><code class="docutils literal notranslate"><span class="pre">Regularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer.forget"><code class="docutils literal notranslate"><span class="pre">Regularizer.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer.instantiate"><code class="docutils literal notranslate"><span class="pre">Regularizer.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer.prox"><code class="docutils literal notranslate"><span class="pre">Regularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer.value"><code class="docutils literal notranslate"><span class="pre">Regularizer.value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.SCADRegularizer"><code class="docutils literal notranslate"><span class="pre">SCADRegularizer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.SCADRegularizer.forget"><code class="docutils literal notranslate"><span class="pre">SCADRegularizer.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.SCADRegularizer.instantiate"><code class="docutils literal notranslate"><span class="pre">SCADRegularizer.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.SCADRegularizer.prox"><code class="docutils literal notranslate"><span class="pre">SCADRegularizer.prox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.SCADRegularizer.value"><code class="docutils literal notranslate"><span class="pre">SCADRegularizer.value()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.solvers.html">pysr3.solvers module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.solvers.html#pysr3.solvers.FakePGDSolver"><code class="docutils literal notranslate"><span class="pre">FakePGDSolver</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.solvers.html#pysr3.solvers.FakePGDSolver.optimize"><code class="docutils literal notranslate"><span class="pre">FakePGDSolver.optimize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.solvers.html#pysr3.solvers.PGDSolver"><code class="docutils literal notranslate"><span class="pre">PGDSolver</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.solvers.html#pysr3.solvers.PGDSolver.optimize"><code class="docutils literal notranslate"><span class="pre">PGDSolver.optimize()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
 <section id="module-pysr3">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pysr3" title="Permalink to this headline"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pysr3" title="Permalink to this heading"></a></h2>
 </section>
 </section>
 
@@ -157,7 +289,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="modules.html" class="btn btn-neutral float-left" title="pysr3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pysr3.glms.html" class="btn btn-neutral float-right" title="pysr3.glms package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pysr3.linear.html" class="btn btn-neutral float-right" title="pysr3.linear package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

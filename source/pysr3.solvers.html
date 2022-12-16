@@ -14,7 +14,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -49,7 +51,6 @@
 <li class="toctree-l3"><a class="reference internal" href="pysr3.html#subpackages">Subpackages</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="pysr3.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="pysr3.logger.html">pysr3.logger module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pysr3.preprocessors.html">pysr3.preprocessors module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.priors.html">pysr3.priors module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.regularizers.html">pysr3.regularizers module</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">pysr3.solvers module</a></li>
@@ -75,10 +76,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">pysr3</a> &raquo;</li>
-          <li><a href="pysr3.html">pysr3 package</a> &raquo;</li>
-      <li>pysr3.solvers module</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">pysr3</a></li>
+          <li class="breadcrumb-item"><a href="pysr3.html">pysr3 package</a></li>
+      <li class="breadcrumb-item active">pysr3.solvers module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/pysr3.solvers.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,7 +90,7 @@
            <div itemprop="articleBody">
              
   <section id="module-pysr3.solvers">
-<span id="pysr3-solvers-module"></span><h1>pysr3.solvers module<a class="headerlink" href="#module-pysr3.solvers" title="Permalink to this headline"></a></h1>
+<span id="pysr3-solvers-module"></span><h1>pysr3.solvers module<a class="headerlink" href="#module-pysr3.solvers" title="Permalink to this heading"></a></h1>
 <p>Implements general purpose numerical solvers, like PGD</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.solvers.FakePGDSolver">
@@ -98,7 +99,7 @@
 <p>This class is designed for the situations where the oracle can provide the optimal
 solution by itself, e.g. when it’s accessible analytically.
 It’s also used for PracticalSR3 methods, when the relaxed variables are
-updated together with the original ones inside of the oracle’s subroutine.</p>
+updated together with the original ones inside the oracle’s subroutine.</p>
 <p>Initializes the solver</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -112,7 +113,7 @@ updated together with the original ones inside of the oracle’s subroutine.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.solvers.FakePGDSolver.optimize">
-<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">pysr3.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger" title="pysr3.logger.Logger"><span class="pre">pysr3.logger.Logger</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.solvers.FakePGDSolver.optimize" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">Regularizer</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger" title="pysr3.logger.Logger"><span class="pre">Logger</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.solvers.FakePGDSolver.optimize" title="Permalink to this definition"></a></dt>
 <dd><p>Solves the optimization problem for</p>
 <p>Loss(x) = oracle(x) + regularizer(x)</p>
 <dl class="field-list simple">
@@ -151,7 +152,7 @@ If stepping=”line-search” then the line-search starts shrinking the step fro
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.solvers.PGDSolver.optimize">
-<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle" title="pysr3.lme.oracles.LinearLMEOracle"><span class="pre">pysr3.lme.oracles.LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">pysr3.regularizers.Regularizer</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger" title="pysr3.logger.Logger"><span class="pre">pysr3.logger.Logger</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.solvers.PGDSolver.optimize" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle" title="pysr3.lme.oracles.LinearLMEOracle"><span class="pre">LinearLMEOracle</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.regularizers.html#pysr3.regularizers.Regularizer" title="pysr3.regularizers.Regularizer"><span class="pre">Regularizer</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.logger.html#pysr3.logger.Logger" title="pysr3.logger.Logger"><span class="pre">Logger</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.solvers.PGDSolver.optimize" title="Permalink to this definition"></a></dt>
 <dd><p>Solves the optimization problem for</p>
 <p>Loss(x) = oracle(x) + regularizer(x)</p>
 <dl class="field-list simple">

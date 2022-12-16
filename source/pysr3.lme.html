@@ -14,7 +14,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -48,7 +50,6 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="pysr3.html">pysr3 package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="pysr3.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="pysr3.glms.html">pysr3.glms package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pysr3.linear.html">pysr3.linear package</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">pysr3.lme package</a></li>
 </ul>
@@ -74,10 +75,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">pysr3</a> &raquo;</li>
-          <li><a href="pysr3.html">pysr3 package</a> &raquo;</li>
-      <li>pysr3.lme package</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">pysr3</a></li>
+          <li class="breadcrumb-item"><a href="pysr3.html">pysr3 package</a></li>
+      <li class="breadcrumb-item active">pysr3.lme package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/pysr3.lme.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -88,21 +89,175 @@
            <div itemprop="articleBody">
              
   <section id="pysr3-lme-package">
-<h1>pysr3.lme package<a class="headerlink" href="#pysr3-lme-package" title="Permalink to this headline"></a></h1>
+<h1>pysr3.lme package<a class="headerlink" href="#pysr3-lme-package" title="Permalink to this heading"></a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.model_selectors.html">pysr3.lme.model_selectors module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.models.html">pysr3.lme.models module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.oracles.html">pysr3.lme.oracles module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.priors.html">pysr3.lme.priors module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.problems.html">pysr3.lme.problems module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.model_selectors.html">pysr3.lme.model_selectors module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.model_selectors.html#pysr3.lme.model_selectors.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.model_selectors.html#pysr3.lme.model_selectors.select_covariates"><code class="docutils literal notranslate"><span class="pre">select_covariates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.models.html">pysr3.lme.models module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.CADLmeModel"><code class="docutils literal notranslate"><span class="pre">CADLmeModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.CADLmeModel.instantiate"><code class="docutils literal notranslate"><span class="pre">CADLmeModel.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.CADLmeModelSR3"><code class="docutils literal notranslate"><span class="pre">CADLmeModelSR3</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.CADLmeModelSR3.instantiate"><code class="docutils literal notranslate"><span class="pre">CADLmeModelSR3.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L0LmeModel"><code class="docutils literal notranslate"><span class="pre">L0LmeModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L0LmeModel.instantiate"><code class="docutils literal notranslate"><span class="pre">L0LmeModel.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L0LmeModelSR3"><code class="docutils literal notranslate"><span class="pre">L0LmeModelSR3</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L0LmeModelSR3.instantiate"><code class="docutils literal notranslate"><span class="pre">L0LmeModelSR3.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L1LmeModel"><code class="docutils literal notranslate"><span class="pre">L1LmeModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L1LmeModel.instantiate"><code class="docutils literal notranslate"><span class="pre">L1LmeModel.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L1LmeModelSR3"><code class="docutils literal notranslate"><span class="pre">L1LmeModelSR3</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.L1LmeModelSR3.instantiate"><code class="docutils literal notranslate"><span class="pre">L1LmeModelSR3.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel"><code class="docutils literal notranslate"><span class="pre">LMEModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel.check_is_fitted"><code class="docutils literal notranslate"><span class="pre">LMEModel.check_is_fitted()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel.fit"><code class="docutils literal notranslate"><span class="pre">LMEModel.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel.fit_problem"><code class="docutils literal notranslate"><span class="pre">LMEModel.fit_problem()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel.instantiate"><code class="docutils literal notranslate"><span class="pre">LMEModel.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel.predict"><code class="docutils literal notranslate"><span class="pre">LMEModel.predict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel.predict_problem"><code class="docutils literal notranslate"><span class="pre">LMEModel.predict_problem()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.LMEModel.score"><code class="docutils literal notranslate"><span class="pre">LMEModel.score()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SCADLmeModel"><code class="docutils literal notranslate"><span class="pre">SCADLmeModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SCADLmeModel.instantiate"><code class="docutils literal notranslate"><span class="pre">SCADLmeModel.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SCADLmeModelSR3"><code class="docutils literal notranslate"><span class="pre">SCADLmeModelSR3</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SCADLmeModelSR3.instantiate"><code class="docutils literal notranslate"><span class="pre">SCADLmeModelSR3.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModel"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModel.get_information_criterion"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModel.get_information_criterion()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModel.instantiate"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModel.instantiate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModelSR3"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModelSR3</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModelSR3.get_information_criterion"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModelSR3.get_information_criterion()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.models.html#pysr3.lme.models.SimpleLMEModelSR3.instantiate"><code class="docutils literal notranslate"><span class="pre">SimpleLMEModelSR3.instantiate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.oracles.html">pysr3.lme.oracles module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.beta_gamma_to_x"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.beta_gamma_to_x()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.demarginalized_loss"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.demarginalized_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.flip_probabilities_beta"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.flip_probabilities_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.forget"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.get_condition_numbers"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.get_condition_numbers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.get_ic"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.get_ic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.gradient_beta"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.gradient_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.gradient_gamma"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.gradient_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.gradient_value_function"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.gradient_value_function()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.hessian_beta"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.hessian_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.hessian_beta_gamma"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.hessian_beta_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.hessian_gamma"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.hessian_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.instantiate"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.joint_gradient"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.joint_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.joint_loss"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.joint_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.jones2010bic"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.jones2010bic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.loss"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.muller_hui_2016ic"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.muller_hui_2016ic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.optimal_beta"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.optimal_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.optimal_gamma"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.optimal_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.optimal_gamma_ip"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.optimal_gamma_ip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.optimal_gamma_pgd"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.optimal_gamma_pgd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.optimal_obs_std"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.optimal_obs_std()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.optimal_random_effects"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.optimal_random_effects()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.vaida2005aic"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.vaida2005aic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.value_function"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.value_function()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracle.x_to_beta_gamma"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracle.x_to_beta_gamma()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.find_optimal_parameters"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.find_optimal_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.find_optimal_parameters_ip"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.find_optimal_parameters_ip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.gradient_beta"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.gradient_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.gradient_gamma"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.gradient_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.gradient_value_function"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.gradient_value_function()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.hessian_beta"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.hessian_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.hessian_gamma"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.hessian_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.joint_gradient"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.joint_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.joint_loss"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.joint_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.jones2010bic"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.jones2010bic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.loss"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.muller_hui_2016ic"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.muller_hui_2016ic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.optimal_beta"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.optimal_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.vaida2005aic"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.vaida2005aic()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.oracles.html#pysr3.lme.oracles.LinearLMEOracleSR3.value_function"><code class="docutils literal notranslate"><span class="pre">LinearLMEOracleSR3.value_function()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.priors.html">pysr3.lme.priors module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.forget"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.gradient_beta"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.gradient_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.gradient_gamma"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.gradient_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.hessian_beta"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.hessian_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.hessian_beta_gamma"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.hessian_beta_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.hessian_gamma"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.hessian_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.instantiate"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.GaussianPriorLME.loss"><code class="docutils literal notranslate"><span class="pre">GaussianPriorLME.loss()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.forget"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.forget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.gradient_beta"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.gradient_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.gradient_gamma"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.gradient_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.hessian_beta"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.hessian_beta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.hessian_beta_gamma"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.hessian_beta_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.hessian_gamma"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.hessian_gamma()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.instantiate"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.instantiate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.priors.html#pysr3.lme.priors.NonInformativePriorLME.loss"><code class="docutils literal notranslate"><span class="pre">NonInformativePriorLME.loss()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysr3.lme.problems.html">pysr3.lme.problems module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem"><code class="docutils literal notranslate"><span class="pre">LMEProblem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem.from_dataframe"><code class="docutils literal notranslate"><span class="pre">LMEProblem.from_dataframe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem.from_x_y"><code class="docutils literal notranslate"><span class="pre">LMEProblem.from_x_y()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem.generate"><code class="docutils literal notranslate"><span class="pre">LMEProblem.generate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem.to_dataframe"><code class="docutils literal notranslate"><span class="pre">LMEProblem.to_dataframe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem.to_x_y"><code class="docutils literal notranslate"><span class="pre">LMEProblem.to_x_y()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEStratifiedShuffleSplit"><code class="docutils literal notranslate"><span class="pre">LMEStratifiedShuffleSplit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEStratifiedShuffleSplit.get_n_splits"><code class="docutils literal notranslate"><span class="pre">LMEStratifiedShuffleSplit.get_n_splits()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEStratifiedShuffleSplit.split"><code class="docutils literal notranslate"><span class="pre">LMEStratifiedShuffleSplit.split()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.Problem"><code class="docutils literal notranslate"><span class="pre">Problem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.Problem.from_x_y"><code class="docutils literal notranslate"><span class="pre">Problem.from_x_y()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.Problem.to_x_y"><code class="docutils literal notranslate"><span class="pre">Problem.to_x_y()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.get_per_group_coefficients"><code class="docutils literal notranslate"><span class="pre">get_per_group_coefficients()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.random_effects_to_matrix"><code class="docutils literal notranslate"><span class="pre">random_effects_to_matrix()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
 <section id="module-pysr3.lme">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pysr3.lme" title="Permalink to this headline"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pysr3.lme" title="Permalink to this heading"></a></h2>
 </section>
 </section>
 
