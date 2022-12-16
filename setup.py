@@ -39,7 +39,7 @@ if __name__ == "__main__":
         package_dir={'': 'src'},
         packages=find_packages(where='src'),
 
-        python_requires='>=3.7',
+        python_requires='>=3.8',
         install_requires=install_requirements,
         tests_require=test_requirements,
         extras_require={

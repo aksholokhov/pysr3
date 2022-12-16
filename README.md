@@ -21,7 +21,7 @@ pysr3 can be installed via
 ```
 
 ## Requirements
-Make sure that Python 3.6 or higher is installed. The package has the following
+Make sure that Python 3.8 or higher is installed. The package has the following
 dependencies, as listed in requirements.txt:
 
 * numpy>=1.21.1
