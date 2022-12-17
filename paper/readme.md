@@ -5,9 +5,9 @@ This folder contains datasets that we used in Chapter 4 of our paper.
 ## Chapter 4.1: Experiments on synthetic data 
 The folder `synthetic_data` contains 100 CSV tables. The rows are observations (objects). Each table has the following columns:
 
-* `group` -- which group does this object belong to 
-* `target` -- target varable a.k.a. observations a.k.a. `y`
-* `variance` -- variance of observation noise 
-* `fixed`, `random`, or `fixed+random` -- features a.k.a. covariates. 
+  * `group` -- which group does this object belong to 
+  * `target` -- target varable a.k.a. observations a.k.a. `y`
+  * `variance` -- variance of observation noise 
+  * `fixed`, `random`, or `fixed+random` -- features a.k.a. covariates. 
 
 The names of feature columns indicate whether they factor into the model as `fixed` effects, `random` effects, or both (`fixed+random`).

@@ -22,7 +22,7 @@ from typing import Set, Optional, Tuple, List
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, check_X_y, check_array
 from sklearn.exceptions import DataConversionWarning, NotFittedError
-from sklearn.utils.validation import check_consistent_length, check_is_fitted
+from sklearn.utils.validation import check_is_fitted
 
 from pysr3.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 from pysr3.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM

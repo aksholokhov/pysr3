@@ -476,7 +476,7 @@ class LinearLMEOracle:
         """
         self._recalculate_cholesky(gamma)
         hessian = np.zeros((self.problem.num_fixed_features, self.problem.num_fixed_features))
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+        for (x, y, _, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
             Lx = L_inv.dot(x)
             hessian += Lx.T.dot(Lx)
         return hessian + self.prior.hessian_beta(beta=beta, gamma=gamma)
