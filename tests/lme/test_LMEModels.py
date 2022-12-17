@@ -8,6 +8,7 @@ from sklearn.utils.fixes import loguniform
 
 from pysr3.lme.models import L0LmeModelSR3, L0LmeModel, L1LmeModel, L1LmeModelSR3, CADLmeModel, CADLmeModelSR3, \
     SCADLmeModel, SCADLmeModelSR3, SimpleLMEModel, SimpleLMEModelSR3
+from pysr3.lme.priors import GaussianPriorLME
 from pysr3.lme.problems import LMEProblem, LMEStratifiedShuffleSplit, FIXED_RANDOM
 from pysr3.lme.problems import random_effects_to_matrix
 
@@ -71,7 +72,8 @@ class TestLmeModels(unittest.TestCase):
             "tol_oracle": 1e-4,
             "tol_solver": 1e-6,
             "max_iter_oracle": 1000,
-            "max_iter_solver": 5000
+            "max_iter_solver": 5000,
+            "prior": GaussianPriorLME(fe_params={"x1": (1, 1)}, re_params={})
         }
 
         max_mse = 0.1

@@ -731,31 +731,33 @@ class LinearLMEOracle:
             random_effects.append(u)
         return np.array(random_effects)
 
-    def optimal_obs_std(self, beta, gamma, **kwargs):
-        """
-        Evaluate the optimal (in the maximal likelihood sense) variances of the observation errors.
-        It assumes that all errors have sigma*I covariance matrices, where sigma is a scalar.
-
-        Parameters
-        ----------
-        beta : np.ndarray, shape = [p]
-            Vector of estimates of fixed effects.
-        gamma : np.ndarray, shape = [q]
-            Vector of estimates of random effects.
-        kwargs :
-            Not used, left for future and for passing debug/experimental parameters
-
-        Returns
-        -------
-        value of sigma -- amplitude of the noise.
-
-        """
-        self._recalculate_cholesky(gamma)
-        result = 0
-        for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
-            r = y - x.dot(beta)
-            result += sum(L_inv.dot(r) ** 2)
-        return result / self.problem.num_obs
+    # NB: the below formula from (Lindstrom, Bates, 1988) can not be applied here
+    # because it assumes that the standard deviation of random effects is sigma*Gamma, and for us it's just Gamma
+    # def optimal_obs_std(self, beta, gamma, **kwargs):
+    #     """
+    #     Evaluate the optimal (in the maximal likelihood sense) variances of the observation errors.
+    #     It assumes that all errors have sigma*I covariance matrices, where sigma is a scalar.
+    #
+    #     Parameters
+    #     ----------
+    #     beta : np.ndarray, shape = [p]
+    #         Vector of estimates of fixed effects.
+    #     gamma : np.ndarray, shape = [q]
+    #         Vector of estimates of random effects.
+    #     kwargs :
+    #         Not used, left for future and for passing debug/experimental parameters
+    #
+    #     Returns
+    #     -------
+    #     value of sigma -- amplitude of the noise.
+    #
+    #     """
+    #     self._recalculate_cholesky(gamma)
+    #     result = 0
+    #     for (x, y, z, stds), L_inv in zip(self.problem, self.omega_cholesky_inv):
+    #         r = y - x.dot(beta)
+    #         result += sum(L_inv.dot(r) ** 2)
+    #     return result / self.problem.num_obs
 
     def _jones2010n_eff(self):
         """

@@ -275,6 +275,7 @@ class TestLinearLMEOracle(TestCase):
         oracle = LinearLMEOracle(problem)
         flip_probabilities = oracle.flip_probabilities_beta(**true_parameters)
         self.assertTrue((0 <= flip_probabilities).all() and (flip_probabilities <= 1).all())
+        oracle.forget()
 
 
 if __name__ == '__main__':

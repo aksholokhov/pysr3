@@ -495,6 +495,8 @@ class LMEProblem(Problem):
 
         #  [group] + [features] + [variance]
         all_columns_labels = [GROUP] + features_labels + [VARIANCE]
+        data['fe_columns'] = (["intercept"] if fit_fixed_intercept else []) + [f"x{i}" for i in fixed_features_idx]
+        data['re_columns'] = (["intercept"] if fit_random_intercept else []) + [f"x{i}" for i in random_features_idx]
         data['column_labels'] = all_columns_labels
         data['intercept_label'] = intercept_label
         data['fe_regularization_weights'] = np.ones(num_fixed_features)
