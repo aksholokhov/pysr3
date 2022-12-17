@@ -123,7 +123,7 @@ def get_model(model: str, problem: LMEProblem):
 
     Returns
     -------
-
+    # TODO: docstring here
     """
     if model == "L0" or model == "L0_SR3":
         selection_spectrum = [{"nnz_tbeta": p, "nnz_tgamma": q} for p in range(1, problem.num_fixed_features) for q in

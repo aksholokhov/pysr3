@@ -225,7 +225,7 @@ class LMEProblem(Problem):
             If None then generates a random list from U[1, 4]^k where k ~ U[1, 10]
 
         fit_fixed_intercept : bool, default is False
-            If True then the the model adds intercept to the set of fixed features. Intercept should not be
+            If True then the model adds intercept to the set of fixed features. Intercept should not be
              in the features_covariance_matrix or features_labels.
 
         fit_random_intercept : bool, default is False
