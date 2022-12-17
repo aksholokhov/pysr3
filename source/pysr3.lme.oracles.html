@@ -519,25 +519,6 @@ adjusted to account for regularization.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_obs_std">
-<span class="sig-name descname"><span class="pre">optimal_obs_std</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_obs_std" title="Permalink to this definition"></a></dt>
-<dd><p>Evaluate the optimal (in the maximal likelihood sense) variances of the observation errors.
-It assumes that all errors have sigma*I covariance matrices, where sigma is a scalar.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>beta</strong> (<em>np.ndarray, shape = [p]</em>) – Vector of estimates of fixed effects.</p></li>
-<li><p><strong>gamma</strong> (<em>np.ndarray, shape = [q]</em>) – Vector of estimates of random effects.</p></li>
-<li><p><strong>kwargs</strong> – Not used, left for future and for passing debug/experimental parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>value of sigma – amplitude of the noise.</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.oracles.LinearLMEOracle.optimal_random_effects">
 <span class="sig-name descname"><span class="pre">optimal_random_effects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#pysr3.lme.oracles.LinearLMEOracle.optimal_random_effects" title="Permalink to this definition"></a></dt>
 <dd><p>Returns set of optimal random effects estimations for given beta and gamma.</p>
