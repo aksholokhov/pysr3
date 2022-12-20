@@ -95,96 +95,277 @@
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.linear.oracles.</span></span><span class="sig-name descname"><span class="pre">LinearOracle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.linear.problems.html#pysr3.linear.problems.LinearProblem" title="pysr3.linear.problems.LinearProblem"><span class="pre">LinearProblem</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.priors.html#pysr3.priors.Prior" title="pysr3.priors.Prior"><span class="pre">Prior</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements a supplementary class that abstracts model. That is, it takes a problem
+and provides losses and gradients with respect to the parameters of the model.</p>
+<p>It separates the model form the optimization routine for better code patterns.
+The solver takes an oracle and optimizes its loss using its gradient, but it does not know which model it optimizes.
+The oracle, in its turn, has no idea how the solution for its model will be obtained.</p>
+<p>Initializes LinearOracle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> (<em>LinearProblem, optional</em>) – an instance of LinearProblem containing the data</p></li>
+<li><p><strong>prior</strong> (<em>Prior</em>) – an instance of Prior for the models’ coefficients, if needed. See the docs for pysr3.priors module.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.aic">
 <span class="sig-name descname"><span class="pre">aic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.aic" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates Akaike information criterion (AIC)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>aic</strong> (<em>float</em>) – AIC</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.bic">
 <span class="sig-name descname"><span class="pre">bic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.bic" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates Bayess information criterion (BIC)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>bic</strong> (<em>float</em>) – BIC</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.forget">
 <span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.forget" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Detaches the problem from the oracle</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.gradient">
 <span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.gradient" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates gradient of Gaussian negative log-likelihood with respect to the given set of models parameters x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gradient</strong> (<em>ndarray (num_features, )</em>) – gradient</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.gradient_value_function">
 <span class="sig-name descname"><span class="pre">gradient_value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.gradient_value_function" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates gradient of the value function with respect to the given set of models parameters x.
+It’s the same as normal gradient if the oracle does not implement an SR3 relaxation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gradient</strong> (<em>ndarray (num_features, )</em>) – gradient</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.hessian">
 <span class="sig-name descname"><span class="pre">hessian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.hessian" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates Hessian of Gaussian negative log-likelihood with respect to the given set of models parameters x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>hessian</strong> (<em>ndarray (num_features, num_features)</em>) – Hessian</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.instantiate" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Attaches the given problem to the oracle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>problem</strong> (<em>LinearProblem</em>) – instance of the problem</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>oracle</strong> (<em>LinearOracle</em>) – oracle for this problem</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.loss">
 <span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.loss" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates Gaussian negative log-likelihood for the given set of models parameters x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss</strong> (<em>float</em>) – loss value</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracle.value_function">
 <span class="sig-name descname"><span class="pre">value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracle.value_function" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates value function for the given set of models parameters x. It’s the same as loss
+if the oracle does not implement an SR3 relaxation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss</strong> (<em>float</em>) – loss value</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.linear.oracles.</span></span><span class="sig-name descname"><span class="pre">LinearOracleSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.linear.problems.html#pysr3.linear.problems.LinearProblem" title="pysr3.linear.problems.LinearProblem"><span class="pre">LinearProblem</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.priors.html#pysr3.priors.Prior" title="pysr3.priors.Prior"><span class="pre">Prior</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.linear.oracles.</span></span><span class="sig-name descname"><span class="pre">LinearOracleSR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.linear.problems.html#pysr3.linear.problems.LinearProblem" title="pysr3.linear.problems.LinearProblem"><span class="pre">LinearProblem</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">practical</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pysr3.priors.html#pysr3.priors.Prior" title="pysr3.priors.Prior"><span class="pre">Prior</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements a supplementary class that abstracts SR3-model. That is, it takes a problem
+and provides losses and gradients with respect to the parameters of the model.</p>
+<p>It separates the model form the optimization routine for better code patterns.
+The solver takes an oracle and optimizes its loss using its gradient, but it does not know which model it optimizes.
+The oracle, in its turn, has no idea how the solution for its model will be obtained.</p>
+<p>Instantiates an oracle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> (<em>LinearProblem, optional</em>) – an instance of LinearProblem containing the data</p></li>
+<li><p><strong>prior</strong> (<em>Prior</em>) – an instance of Prior for the models’ coefficients, if needed. See the docs for pysr3.priors module.</p></li>
+<li><p><strong>lam</strong> (<em>float</em>) – coefficient for the strength SR3-relaxation. It’s NOT the same as the regularization (sparsity)
+coefficient. See the paper for more details.</p></li>
+<li><p><strong>practical</strong> (<em>bool</em>) – whether to use an optimization method that is much faster than the default.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.aic">
 <span class="sig-name descname"><span class="pre">aic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.aic" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates Akaike information criterion (AIC)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>aic</strong> (<em>float</em>) – AIC</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.bic">
 <span class="sig-name descname"><span class="pre">bic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.bic" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates Bayess information criterion (BIC)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>bic</strong> (<em>float</em>) – BIC</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.find_optimal_parameters">
-<span class="sig-name descname"><span class="pre">find_optimal_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.find_optimal_parameters" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">find_optimal_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.find_optimal_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>Implements a “practical” optimization scheme that works faster than just a standard gradient descent.
+This function is meant to be called by pysr3.solvers.FakePGDSolver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x0</strong> (<em>ndarray (num_features, )</em>) – starting point for the optimization</p></li>
+<li><p><strong>regularizer</strong> (<em>Regularizer</em>) – regularizer that implements sparsifiction prior.</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – tolerance for the solver</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – maximum number of iterations</p></li>
+<li><p><strong>kwargs</strong> – other keyword arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – the optimal solution</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.forget">
 <span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.forget" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Detaches the problem from the oracle</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.gradient_value_function">
 <span class="sig-name descname"><span class="pre">gradient_value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.gradient_value_function" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates gradient of the value function with respect to the given set of models parameters x.
+It’s the same as normal gradient if the oracle does not implement an SR3 relaxation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gradient</strong> (<em>ndarray (num_features, )</em>) – gradient</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.instantiate">
 <span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.instantiate" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Attaches the given problem to the oracle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>problem</strong> (<em>LinearProblem</em>) – instance of the problem</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>oracle</strong> (<em>LinearOracleSR3</em>) – oracle for this problem</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.loss">
 <span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.loss" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates Gaussian negative log-likelihood of SR3 relaxation for the given set of models parameters x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p></li>
+<li><p><strong>w</strong> (<em>ndarray (num_features, )</em>) – dual (relaxed) parameters that SR3-relaxation introduces</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss</strong> (<em>float</em>) – loss value</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.oracles.LinearOracleSR3.value_function">
 <span class="sig-name descname"><span class="pre">value_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.oracles.LinearOracleSR3.value_function" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculates value function for the given set of models parameters x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>ndarray (num_features, )</em>) – models parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>loss</strong> (<em>float</em>) – loss value</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

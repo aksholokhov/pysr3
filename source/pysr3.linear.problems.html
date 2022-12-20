@@ -95,25 +95,91 @@
 <dt class="sig sig-object py" id="pysr3.linear.problems.LinearProblem">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.linear.problems.</span></span><span class="sig-name descname"><span class="pre">LinearProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.problems.LinearProblem" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Helper class which implements Linear models’ abstractions over a given dataset.</p>
+<p>It also can generate random problems with specific characteristics.</p>
+<p>Constructs LinearProblem – a helper class that abstracts the data for the models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>ndarray (n, p)</em>) – data matrix</p></li>
+<li><p><strong>b</strong> (<em>ndarray (n, )</em>) – target variable</p></li>
+<li><p><strong>obs_std</strong> (<em>ndarray (n, )</em>) – variances of mean-zero Gaussian noise for each observation</p></li>
+<li><p><strong>regularization_weights</strong> (<em>ndarray (n, )</em>) – observation-specific weights for the regularizer. Inverse-proportional to the objects’ importance.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.problems.LinearProblem.from_dataframe">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_include_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.problems.LinearProblem.from_dataframe" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Creates LinearProblem from a Pandas dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – pandas dataframe with dataset</p></li>
+<li><p><strong>features</strong> (<em>List[str]</em>) – list of column names that should be included as features</p></li>
+<li><p><strong>target</strong> (<em>str</em>) – name of the column containing the observations</p></li>
+<li><p><strong>must_include_features</strong> (<em>List[str]</em>) – list of column names that are not going to be affected by regularization.
+In other words, list of features that receive regularization_weight=0. All others receive 1.</p></li>
+<li><p><strong>obs_std</strong> (<em>float | ndarray (num_objects, )</em>) – variances of mean-zero Gaussian noise for each observation (array) OR for all observations (float)</p></li>
+<li><p><strong>c</strong> (<em>ndarray (p, p), optional</em>) – matrix C for SR3 relaxation, see the paper. If None then an identity is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>problem</strong> (<em>LinearProblem</em>) – problem with the dataset inside</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.problems.LinearProblem.from_x_y">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_x_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.problems.LinearProblem.from_x_y" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Creates a LinearProblem from provided dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray (n, p)</em>) – design matrix with objects being rows and columns being features</p></li>
+<li><p><strong>y</strong> (<em>ndarray (n, )</em>) – vector of observations</p></li>
+<li><p><strong>c</strong> (<em>ndarray (p, p), optional</em>) – matrix C for SR3 relaxation, see the paper. If None then an identity is used.</p></li>
+<li><p><strong>regularization_weights</strong> (<em>ndarray (n, )</em>) – observation-specific weights for the regularizer. Inverse-proportional to the objects’ importance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>problem</strong> (<em>LinearProblem</em>) – problem with provided data inside</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.problems.LinearProblem.generate">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_objects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.problems.LinearProblem.generate" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Generates a random dataset with a linear dependence between observations and features</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_objects</strong> (<em>int</em>) – number of objects (rows) in the dataset</p></li>
+<li><p><strong>num_features</strong> (<em>int</em>) – number of features (columns) in the dataset</p></li>
+<li><p><strong>obs_std</strong> (<em>float | ndarray (num_objects, )</em>) – variances of mean-zero Gaussian noise for each observation (array) OR for all observations (float)</p></li>
+<li><p><strong>true_x</strong> (<em>ndarray (num_features, )</em>) – true vector of coefficients. If None then generates a random one from U[0, 1]^num_features</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – random seed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>problem</strong> (<em>LinearProblem</em>) – generated problem</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.linear.problems.LinearProblem.to_x_y">
 <span class="sig-name descname"><span class="pre">to_x_y</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.linear.problems.LinearProblem.to_x_y" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Converts LinearProblem class to array representation
+:returns: * <strong>x</strong> (<em>ndarray (n, p)</em>) – design matrix with objects being rows and columns being features</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>y</strong> (<em>ndarray (n, )</em>) – vector of observations</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
 
 </dd></dl>
 
