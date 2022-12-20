@@ -116,7 +116,7 @@ class LMEProblem(Problem):
                  re_columns=None,
                  fe_regularization_weights=None,
                  re_regularization_weights=None):
-
+        # TODO: fill the docstring here
         super(LMEProblem, self).__init__()
 
         self.fixed_features = fixed_features
@@ -210,7 +210,7 @@ class LMEProblem(Problem):
 
             u_i ~ 𝒩(0, diag(𝛄)),
 
-            𝜺_i ~ 𝒩(0, diag(variance)
+            𝜺_i ~ 𝒩(0, diag(variance))
 
         Parameters
         ----------
