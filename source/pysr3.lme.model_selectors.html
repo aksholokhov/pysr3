@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pysr3.lme.model_selectors module &mdash; PySR3 0.3.1 documentation</title>
+  <title>pysr3.lme.model_selectors module &mdash; PySR3 0.3.2 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -100,9 +100,16 @@ as well as a suitable parameter grid for various sparsity levels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong></p></li>
-<li><p><strong>problem</strong></p></li>
+<li><p><strong>model</strong> (<em>str</em>) – a name of a model</p></li>
+<li><p><strong>problem</strong> (<em>LMEProblem</em>) – an instance of the problem</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>constructor</strong> (<em>function: params -&gt; model(**params)</em>) – model constructor</p></li>
+<li><p><strong>selection_spectrum</strong> (<em>Dict[str, float]</em>) – points for parameter grid search</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
