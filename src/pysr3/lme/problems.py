@@ -116,7 +116,11 @@ class LMEProblem(Problem):
                  re_columns=None,
                  fe_regularization_weights=None,
                  re_regularization_weights=None):
-        # TODO: fill the docstring here
+        """
+        Constructor for LMEProblem class. It is meant to be used by library's internals.
+        Check out class methods like from_x_y() and from_dataframe() below that are designed
+        to be used by users for creating LMEProblems.
+        """
         super(LMEProblem, self).__init__()
 
         self.fixed_features = fixed_features

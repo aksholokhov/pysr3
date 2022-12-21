@@ -118,13 +118,18 @@ def get_model(model: str, problem: LMEProblem):
 
     Parameters
     ----------
-    model
-    problem
+    model: str
+        a name of a model
+    problem: LMEProblem
+        an instance of the problem
 
     Returns
     -------
+    constructor: function: params -> model(**params)
+        model constructor
+    selection_spectrum: Dict[str, float]
+        points for parameter grid search
     """
-    # TODO: docstring here
     if model == "L0" or model == "L0_SR3":
         selection_spectrum = [{"nnz_tbeta": p, "nnz_tgamma": q} for p in range(1, problem.num_fixed_features) for q in
                               range(1, problem.num_random_features) if p >= q]
