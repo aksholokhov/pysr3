@@ -33,10 +33,10 @@ bibliography: paper.bib
 
 Datasets increasingly contain more and more potential covariates that may be related to different research questions. The presence of irrelevant or weakly relevant features may be counterproductive to modeling, as over-parametrized models may lead to unstable estimates, invalid inference, and low prediction accuracy. Reliable feature selection is key in a wide range of regression settings. 
 
-Feature selection methods are hot topic [@Buscemi2019Survey,@miao2016survey,@li2020survey], 
+Feature selection methods are hot topic [@Buscemi2019Survey],[@miao2016survey],[@li2020survey], 
 with a plethora of numerical approaches and corresponding implementations. However, most of the current state-of-the-art tools custom-tailor their implementation to their mathematical approach (e.g. use an optimization scheme that works only for a particular regularizer). In practice, it forces a practitioner to re-implement their workflow for each method that they want to compare, even when the difference between methods is minor. The absence of universal open source implementation effectively blocks the practitioner from comparing all available methods, thus slowing down the assimilation of research results in the field.
 
-We fill this gap by implementing recently developed universal solvers [@zheng2018unified], [@sholokhov2022relaxation])that (1) work with most popular regularized regression techniques, and (2) improve selection accuracy of each regression techniques through novel relaxation reformulations. To date, the library supports linear models (classic regression) and linear mixed effects models. Because of full compatibility with `sklearn`, all `pysr3` models can be used in pipeline with classic modelling blocks such as data pre-processors, randomized grid search, cross-validation, and quality metrics.
+We fill this gap by implementing recently developed universal solvers [@zheng2018unified], [@sholokhov2022relaxation] that (1) work with most popular regularized regression techniques, and (2) improve selection accuracy of each regression techniques through novel relaxation reformulations. To date, the library supports linear models (classic regression) and linear mixed effects models. Because of full compatibility with `sklearn`, all `pysr3` models can be used in pipeline with classic modelling blocks such as data pre-processors, randomized grid search, cross-validation, and quality metrics.
 
 
 # Statement of Need
