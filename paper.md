@@ -1,11 +1,13 @@
 ---
 title: 'pysr3: A Python Package for Sparse Relaxed Regularized Regression'
+
 tags:
   - Python
   - feature selection
   - linear models
   - mixed-effect models
   - regularization
+
 authors:
   - name: Aleksei Sholokhov
     orcid: 0000-0001-8173-6236
@@ -13,9 +15,10 @@ authors:
   - name: Peng Zheng
     orcid: 0000-0003-1327-4855
     affiliation: 2
-  - name: Aleksander Aravkin
+  - name: Aleksandr Aravkin
     orcid: 0000-0001-5210-132X
     affiliation: "1, 2"
+
 affiliations:
  - name: Department of Applied Mathematics, University of Washington
    index: 1
@@ -28,79 +31,46 @@ bibliography: paper.bib
 
 # Summary
 
-Feature selection is a core step in regression modeling. As new types of data becomes readily available, current
-datasets include more information that may be related to key research questions. However, in predictive modeling,
-the presence of irrelevant features can hamper stability of estimation, validity of inference, prediction accuracy, and qualitative conclusions of the research. Reliable feature selection is therefore key in a wide range of regression settings.
+Datasets increasingly contain more and more potential covariates that may be related to different research questions. The presence of irrelevant or weakly relevant features may be counterproductive to modeling, as over-parametrized models may lead to unstable estimates, invalid inference, and low prediction accuracy. Reliable feature selection is key in a wide range of regression settings. 
 
-While feature selection has been a hot topic with a lot of research [@Buscemi2019Survey, @miao2016survey, @li2020survey],
-there is no known universal approach that would outperform all other strategies in every setting, leading to many suggested approaches and
-corresponding implementations. Current state of the art in the field custom-tailor their numerical implementation to the
-specific loss and the method that they propose. As a result, libraries for use by practitioners are either not provided, or, when
-available, tightly coupled to a particular approach. This gap in open source implementation effectively blocks the
-practitioner from comparing available methods, without (re)implementing complex methods in published papers.
+Feature selection methods is hot topic [@Buscemi2019Survey, @miao2016survey, @li2020survey], 
+with a plethora of numerical approaches and corresponding implementations. 
+Current state of the art methods custom-tailor their numerical implementation to
+specific objectives and corresponding methods. As a result, libraries practitioners are either not available, 
+or tightly coupled to a particular approach (e.g. particular regularizer). 
+This gap in open source implementation effectively blocks the
+practitioner from comparing all available methods, without (re)implementing complex methods in published papers. 
 
-In addition, very few methods are equipped to handle ill-conditioned problems. Ill-conditioning naturally arises
-in real-world datasets due to the presence of correlated and collinear predictors, outliers, and missing values. Poor conditioning 
-adversely affects stability of numerical solvers and limits the maximum size of the datasets that the model can learn from. Therefore, 
-robust solvers that work for a wide spectrum of models are desired.
-
-Here, we fill this gap by creating universal solvers that (1) work with most popular regularized regression techniques, 
-and (2) improve the selection accuracy of all of these techniques through novel relaxation reformulations that can be
-applied to essentially any loss and regularizer.
+We fill this gap by implementing recently developed universal solvers [@zheng2018unified, @sholokhov2022relaxation] that (1) work with most popular regularized regression techniques, and (2) improve selection accuracy of each regression techniques through novel relaxation reformulations. The library works for both linear models (classic regression) and linear mixed effects models. 
 
 # Statement of Need
    
-Practitioners need easy-to-use libraries that allow testing and comparisons of multiple regularization approaches on
-their data, so they can choose the most effective feature selection method for their settings. These libraries should be powerful enough
-to accommodate future work, for example newly proposed regularizers, without forcing the practitioner to re-implement
-numerical solvers. At the same time, these universal solvers must effectively handle ill-conditioned problems,
-that are very common in raw real-world datasets.
+Reliable automated feature selection requires easy-to-use libraries, so that practitioners cna test and compare multiple regularization approaches using their data, can choose the most effective method, and apply the analysis at scale.  These libraries should be flexible and modular enough to accommodate future developments, such as newly proposed regularizers, without forcing the practitioner to implement new solvers for each approach. At the same time, the libraries must be efficient and robust enough to handle common challenges such as ill-conditioned problems that arise in datasets with correlated predictors. The PySR3 library is designed to easily include new loss functions, constraints, information criteria, and regularization strategies. All PySR3 models fully adhere the standards and interface requirements of `sklearn` ([@sklearn_api]), providing a familiar interface to users. 
 
- 
-The library is built to make it as easy as possible to add new loss functions, constraints, 
-information criteria, and regularization strategies. Moreover, all PySR3 models fully adhere the standards and 
-interface requirements of `sklearn` ([@sklearn_api]), providing a familiar interface to users. 
-
-Linear Mixed-Effects (LME) models can be viewed as extensions of standard linear regression to clustered data settings.
-They are a fundamental tool for modeling between-cluster variations of the quantity of interest, and commonly arise in
-cohort studies, longitudinal data analysis, and meta-analysis. Feature selection for linear mixed-effects models
-is harder than for linear regression models due to (a) high non-linearity, (b) correlations between objects 
-in the same group, and (c) presence of two related and qualitatively different types of
-effects to select from: fixed and random effects. 
-To the best of our knowledge, there are no standalone Python packages for mixed-effect feature selection.
+Currently PySR3 models can be used to automatically select features in both linear regression models and linear mixed effects (LME) models, which extend linear regression to clustered data settings. LME models commonly arise in longitudinal data analysis and meta-analysis. Feature selection for linear mixed-effects models is harder than for linear regression models due to  non-linearity of LMEs and within-group correlations. To the best of our knowledge, there are no standalone Python packages for mixed-effect feature selection.
 
 # Core idea and structure of pysr3
 
-At its core, PySR3 uses proximal gradient descent (PGD) method as its numerical solver. This method splits the
-loss-function into a smooth and a non-smooth parts, and needs only the gradient of the smooth part and the proximal
-operator of the non-smooth part to work. The smooth part typically includes the likelihood of the data, whereas the
-non-smooth part captures the sparsity-promoting regularizer. For many widely-used regularizers the proximal operators
-are known in a closed form ([@Zheng2019]). PGD together with a regularized likelihood already offer 
-good performance for many real applications.
+The baseline optimization method of PySR3 is proximal gradient descent (PGD). PGD exploits the fact that most feature selection methods minimize the sum of a smooth loss that captures the negative log likelihood of the data and a non-smooth sparsity promoting regularizer. 
+PGD works well as long as the regularizer has an implementable proximal operator; 
+many widely-used regularizers have proximal operators that are well known and either have efficient numerical routines or closed form solutions ([@zheng2018unified]). 
 
-In addition to baseline PGD models, PySR3 also offers their SR3-relaxations.
-SR3 preconditions the likelihood by relaxing the original formulation, applying partial minimization to the smooth
-piece, and then using PGD on the resulting value function. The effect is of smoothing the level-sets of the likelihood
-while preserving the structure of the problem so that features can be more effectively selected. As a result, PGD on the
-transformed problem converges in fewer iterations, and the variable selection process in the transformed space has
-demonstrably higher selection accuracy and lower rate of false positives across a wide range of regularizers for both linear ([@Zheng2019]) 
-and LME (?) models.
+Each regularizer included in PySR3 can also be used in its relaxed SR3 form ([@zheng2018unified]).   
+SR3 preconditions the likelihood, improving the performance of feature selection methods. 
+PGD on the SR3-transformed problem takes fewer iterations to converge, and the features selected 
+are more accurate and have lower false positive rates across simulated examples for both linear regression ([@zheng2018unified]) and LME ([@sholokhov2022relaxation]) models. 
 
 ![Summary of PySR3 method.\label{fig:lme_summary}](images/summary_picture.png)
 
-Because of full compatibility with `sklearn`, all `pysr3` models can be used in pipeline with classic modelling 
-blocks such as data pre-processors, randomized grid search, cross-validation, and quality metrics. 
+Because of full compatibility with `sklearn`, all `pysr3` models can be used in pipeline with classic modelling blocks such as data pre-processors, randomized grid search, cross-validation, and quality metrics. 
 
-More information about the structure of the library can be found in [documentation](), whereas the mathematical contributions 
-are extensively discussed in [@Zheng2019] for linear and in [?] for linear mixed-effects models respectively.
+More information about the structure of the library can be found in [documentation](), while the mathematical contributions are extensively discussed in [@zheng2018unified] for linear regression and in [@sholokhov2022relaxation,aravkin2022relaxationb] for linear mixed effects models.
 
 
 # Ongoing Research and Dissemination
 
-The manuscript "Feature Selection Methods for Linear Mixed Effects Models" is undergoing a peer-review process.
-Since its introduction in [@Zheng2019], SR3 has been used in multiple applications,
-such as model discovery ([@Mendible2020]), optimal dose management ([@levin2019proof]) and others(?).
-Currently, PySR3 is used for improving reliability of meta-research studies at Institute for Health Metrics and
-Evaluations, University of Washington.
+The manuscripts "A Relaxation Approach to Feature Selection for Linear Mixed Effects Models" 
+and "Analysis of Relaxation Methods for Feature Selection in Mixed Effects Models"
+are undergoing simultaneous peer-review. Since its introduction in [@ zheng2018unified], SR3 has been cited 92 times, and used in model discovery ([@Mendible2020]), optimal dose management ([@levin2019proof]) and inverse problems [@baraldi2019basis]. PySR3 was developed for variable selection in meta-analysis, which is a fundamental problem in risk factor analysis for the Global Burden of Disease study [@murray2020global].  
 
 # References
