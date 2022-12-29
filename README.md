@@ -1,8 +1,8 @@
-![](https://img.shields.io/pypi/l/pysr3)
-![](https://img.shields.io/pypi/v/pysr3)
+![](https://img.shields.io/pypi/l/PySR3)
+![](https://img.shields.io/pypi/v/PySR3)
 ![](https://img.shields.io/github/actions/workflow/status/aksholokhov/pysr3/testing_and_coverage.yml?branch=master)
-[![](https://img.shields.io/badge/docs-up-green)](https://aksholokhov.github.io/pysr3/)
-![](https://img.shields.io/codecov/c/github/aksholokhov/pysr3/sr3?flag=unittests)
+[![](https://img.shields.io/badge/docs-here-green)](https://aksholokhov.github.io/pysr3/)
+[![codecov](https://codecov.io/gh/aksholokhov/pysr3/branch/master/graph/badge.svg?token=WAA8uIQwjK)](https://codecov.io/gh/aksholokhov/pysr3)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b)](https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/pysr3&amp;utm_campaign=Badge_Grade)
 
 # Quickstart with `pysr3`
@@ -20,8 +20,19 @@ pysr3 can be installed via
  pip install pysr3
 ```
 
+
+```python
+from pysr3.__about__ import __version__
+print(f"This tutorial was generated using PySR3 v{__version__}\n"
+     "You might see slightly different numerical results if you are using a different version of the library.")
+```
+
+    This tutorial was generated using PySR3 v0.3.3
+    You might see slightly different numerical results if you are using a different version of the library.
+
+
 ## Requirements
-Make sure that Python 3.8 or higher is installed. The package has the following
+Make sure that Python 3.6 or higher is installed. The package has the following
 dependencies, as listed in requirements.txt:
 
 * numpy>=1.21.1
@@ -48,7 +59,7 @@ seed = 42
 num_objects = 300
 num_features = 500
 np.random.seed(seed)
-# create a vector of true model_name's coefficients
+# create a vector of true model's coefficients
 true_x = np.random.choice(2, size=num_features, p=np.array([0.9, 0.1]))
 # create sample data
 a = 10 * np.random.randn(num_objects, num_features)
@@ -73,7 +84,7 @@ from sklearn.utils.fixes import loguniform
 # Here we use SR3-empowered LASSO, but many other popular regularizers are also available
 # See the glossary of models for more details.
 model = LinearL1ModelSR3()
-# We will search for the best model_name over the range of strengths for the regularizer
+# We will search for the best model over the range of strengths for the regularizer
 params = {
     "lam": loguniform(1e-1, 1e2)
 }
@@ -88,11 +99,11 @@ selector.fit(a, b)
 maybe_x = selector.best_estimator_.coef_['x']
 tn, fp, fn, tp = confusion_matrix(true_x, maybe_x != 0).ravel()
 
-print(f"The model_name found {tp} out of {tp + fn} features correctly, but also chose {fp} extra irrelevant features. \n"
+print(f"The model found {tp} out of {tp + fn} features correctly, but also chose {fp} out of {tn+fp} extra irrelevant features. \n"
       f"The best parameter is {selector.best_params_}")
 ```
 
-    The model found 55 out of 55 features correctly, but also chose 2 extra irrelevant features. 
+    The model found 55 out of 55 features correctly, but also chose 2 out of 445 extra irrelevant features. 
     The best parameter is {'lam': 0.15055187290939537}
 
 
@@ -107,12 +118,12 @@ from pysr3.lme.models import L1LmeModelSR3
 from pysr3.lme.problems import LMEProblem, LMEStratifiedShuffleSplit
 
 problem, true_parameters = LMEProblem.generate(
-    groups_sizes=[10] * 6,  # 6 groups, 10 objects each
+    groups_sizes=[10] * 8,  # 8 groups, 10 objects each
     features_labels=["fixed+random"] * 20,  # 20 features, each one having both fixed and random components
     beta=np.array([0, 1] * 10),  # True beta (fixed effects) has every other coefficient active
     gamma=np.array([0, 0, 0, 1] * 5),  # True gamma (variances of random effects) has every fourth coefficient active
-    obs_var=0.1  # The errors have standard errors of sqrt(0.1) ~= 0.33
-
+    obs_var=0.1,  # The errors have standard errors of sqrt(0.1) ~= 0.33
+    seed=seed    # random seed, for reproducibility
 )
 
 # LMEProblem provides a very convenient representation
@@ -126,31 +137,32 @@ x, y, columns_labels = problem.to_x_y()
 
 
 ```python
-# We use SR3-empowered LASSO model_name, but many other popular models are also available.
+# We use SR3-empowered LASSO model, but many other popular models are also available.
 # See the glossary of models for more details.
-model = L1LmeModelSR3()
+model = L1LmeModelSR3(practical=True)
 
 # We're going to select features by varying the strength of the prior
-# and choosing the model_name that yields the best information criterion
+# and choosing the model that yields the best information criterion
 # on the validation set.
 params = {
-    "lam": loguniform(1e-3, 1e3)
+    "lam": loguniform(1e-3, 1e2),
+    "ell": loguniform(1e-1, 1e2)
 }
 # We use standard functionality of sklearn to perform grid-search.
 selector = RandomizedSearchCV(estimator=model,
                               param_distributions=params,
-                              n_iter=10,  # number of points from parameters space to sample
+                              n_iter=30,  # number of points from parameters space to sample
                               # the class below implements CV-splits for LME models
                               cv=LMEStratifiedShuffleSplit(n_splits=2, test_size=0.5,
                                                            random_state=seed,
                                                            columns_labels=columns_labels),
                               # The function below will evaluate the information criterion
                               # on the test-sets during cross-validation.
-                              # We use IC from Muller2018, but other options (AIC, BIC) are also available
+                              # We use cAIC from Vaida, but other options (BIC, Muller's IC) are also available
                               scoring=lambda clf, x, y: -clf.get_information_criterion(x,
                                                                                        y,
                                                                                        columns_labels=columns_labels,
-                                                                                       ic="muller_ic"),
+                                                                                       ic="vaida_aic"),
                               random_state=seed,
                               n_jobs=20
                               )
@@ -159,16 +171,23 @@ best_model = selector.best_estimator_
 
 maybe_beta = best_model.coef_["beta"]
 maybe_gamma = best_model.coef_["gamma"]
-ftn, ffp, ffn, ftp = confusion_matrix(true_parameters["beta"], abs(maybe_beta) > 1e-2).ravel()
-rtn, rfp, rfn, rtp = confusion_matrix(true_parameters["gamma"], abs(maybe_gamma) > 1e-2).ravel()
+
+# Since the solver stops witin sqrt(tol) from the minimum, we use it as a criterion for whether the feature
+# is selected or not 
+ftn, ffp, ffn, ftp = confusion_matrix(y_true=true_parameters["beta"],
+                                      y_pred=abs(maybe_beta) > np.sqrt(best_model.tol_solver)
+                                     ).ravel()
+rtn, rfp, rfn, rtp = confusion_matrix(y_true=true_parameters["gamma"],
+                                      y_pred=abs(maybe_gamma) > np.sqrt(best_model.tol_solver)
+                                     ).ravel()
 
 print(
-    f"The model_name found {ftp} out of {ftp + ffn} correct fixed features, and also chose {ffp} out of {ftn + ffn} extra irrelevant fixed features. \n"
-    f"It also identified {rtp} out of {rtp + rfn} random effects correctly, and got {rfp} out of {rtn + rfn} non-present random effects. \n"
+    f"The model found {ftp} out of {ftp + ffn} correct fixed features, and also chose {ffp} out of {ftn + ffp} extra irrelevant fixed features. \n"
+    f"It also identified {rtp} out of {rtp + rfn} random effects correctly, and got {rfp} out of {rtn + rfp} non-present random effects. \n"
     f"The best sparsity parameter is {selector.best_params_}")
 ```
 
-    The model found 9 out of 10 correct fixed features, and also chose 2 out of 9 extra irrelevant fixed features. 
+    The model found 10 out of 10 correct fixed features, and also chose 0 out of 10 extra irrelevant fixed features. 
     It also identified 5 out of 5 random effects correctly, and got 0 out of 15 non-present random effects. 
-    The best sparsity parameter is {'lam': 4.0428727350273315}
+    The best sparsity parameter is {'ell': 0.3972110727381912, 'lam': 0.3725393839578885}
 
