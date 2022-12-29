@@ -281,6 +281,9 @@ simultaneous selection of fixed and random effects.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pysr3.lme.models</span> <span class="kn">import</span> <span class="n">L1LmeModelSR3</span>
 <span class="kn">from</span> <span class="nn">pysr3.lme.problems</span> <span class="kn">import</span> <span class="n">LMEProblem</span><span class="p">,</span> <span class="n">LMEStratifiedShuffleSplit</span>
 
+
+<span class="c1"># Here we generate a random linear mixed-effects problem.</span>
+<span class="c1"># To use your own dataset check LMEProblem.from_dataframe and LMEProblem.from_x_y</span>
 <span class="n">problem</span><span class="p">,</span> <span class="n">true_parameters</span> <span class="o">=</span> <span class="n">LMEProblem</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
     <span class="n">groups_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>  <span class="c1"># 8 groups, 10 objects each</span>
     <span class="n">features_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fixed+random&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>  <span class="c1"># 20 features, each one having both fixed and random components</span>
@@ -296,7 +299,10 @@ simultaneous selection of fixed and random effects.</p>
 <span class="c1"># It also can be converted to a more familiar representation</span>
 <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">columns_labels</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">to_x_y</span><span class="p">()</span>
 <span class="c1"># columns_labels describe the roles of the columns in x:</span>
-<span class="c1"># fixed effect, random effect, or both of those, as well as</span>
+<span class="c1"># fixed effect, random effect, or both of those, as well as groups labels and observation standard deviation.</span>
+
+<span class="c1"># You can also convert it to pandas dataframe if you&#39;d like.</span>
+<span class="n">pandas_dataframe</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># We use SR3-empowered LASSO model, but many other popular models are also available.</span>
