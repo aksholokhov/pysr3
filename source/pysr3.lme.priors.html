@@ -1,36 +1,73 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
   <title>pysr3.lme.priors module &mdash; PySR3 0.3.2 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/js/theme.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="pysr3.lme.problems module" href="pysr3.lme.problems.html" />
     <link rel="prev" title="pysr3.lme.oracles module" href="pysr3.lme.oracles.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+
+   
   <div class="wy-grid-for-nav">
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
+
+          
             <a href="../index.html" class="icon icon-home"> PySR3
+          
+
+          
           </a>
+
+          
+            
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -38,7 +75,18 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
@@ -62,43 +110,87 @@
 </li>
 </ul>
 
+            
+          
         </div>
+        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">PySR3</a>
+        
       </nav>
 
+
       <div class="wy-nav-content">
+        
         <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">pysr3</a></li>
-          <li class="breadcrumb-item"><a href="pysr3.html">pysr3 package</a></li>
-          <li class="breadcrumb-item"><a href="pysr3.lme.html">pysr3.lme package</a></li>
-      <li class="breadcrumb-item active">pysr3.lme.priors module</li>
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">pysr3</a> &raquo;</li>
+        
+          <li><a href="pysr3.html">pysr3 package</a> &raquo;</li>
+        
+          <li><a href="pysr3.lme.html">pysr3.lme package</a> &raquo;</li>
+        
+      <li>pysr3.lme.priors module</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
+        
+          
             <a href="../_sources/source/pysr3.lme.priors.rst.txt" rel="nofollow"> View page source</a>
+          
+        
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+            
   <section id="module-pysr3.lme.priors">
-<span id="pysr3-lme-priors-module"></span><h1>pysr3.lme.priors module<a class="headerlink" href="#module-pysr3.lme.priors" title="Permalink to this heading"></a></h1>
+<span id="pysr3-lme-priors-module"></span><h1>pysr3.lme.priors module<a class="headerlink" href="#module-pysr3.lme.priors" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.priors.</span></span><span class="sig-name descname"><span class="pre">GaussianPriorLME</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fe_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">re_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.priors.</span></span><span class="sig-name descname"><span class="pre">GaussianPriorLME</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fe_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">re_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Implements Gaussian Prior for various models</p>
 <p>Creates GaussianPrior</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul>
 <li><p><strong>fe_params</strong> (<em>dict[str: tuple(float, float)]</em>) –</p>
 <dl class="simple">
@@ -112,10 +204,10 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.forget" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.forget" title="Permalink to this definition">¶</a></dt>
 <dd><p>Releases all problem-dependent quantities</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>None</em></p>
 </dd>
 </dl>
@@ -123,13 +215,13 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.gradient_beta">
-<span class="sig-name descname"><span class="pre">gradient_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.gradient_beta" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">gradient_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.gradient_beta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the gradient of the prior with respect to the vector of fixed effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>gradient w.r.t. beta</em></p>
 </dd>
 </dl>
@@ -137,16 +229,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.gradient_gamma">
-<span class="sig-name descname"><span class="pre">gradient_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.gradient_gamma" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">gradient_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.gradient_gamma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the gradient of the prior with respect to the vector of random effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>gradient w.r.t. gamma</em></p>
 </dd>
 </dl>
@@ -154,16 +246,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.hessian_beta">
-<span class="sig-name descname"><span class="pre">hessian_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.hessian_beta" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">hessian_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.hessian_beta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates Hessian of the prior with respect to the vector of fixed effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Hessian w.r.t. (beta, beta)</em></p>
 </dd>
 </dl>
@@ -171,16 +263,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.hessian_beta_gamma">
-<span class="sig-name descname"><span class="pre">hessian_beta_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.hessian_beta_gamma" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">hessian_beta_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.hessian_beta_gamma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the mixed Hessian of the prior with respect to the vector of fixed and random effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Hessian w.r.t. (beta, gamma)</em></p>
 </dd>
 </dl>
@@ -188,16 +280,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.hessian_gamma">
-<span class="sig-name descname"><span class="pre">hessian_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.hessian_gamma" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">hessian_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.hessian_gamma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates Hessian of the prior with respect to the vector of random effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Hessian w.r.t. (gamma, gamma)</em></p>
 </dd>
 </dl>
@@ -205,13 +297,13 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem" title="pysr3.lme.problems.LMEProblem"><span class="pre">LMEProblem</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.instantiate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pysr3.lme.problems.html#pysr3.lme.problems.LMEProblem" title="pysr3.lme.problems.LMEProblem"><span class="pre">LMEProblem</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.instantiate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiates a Gaussian prior with problem-dependent quantities</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>problem</strong> (<em>LMEProblem</em>) – problem to fit</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
@@ -219,16 +311,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.GaussianPriorLME.loss">
-<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.loss" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.GaussianPriorLME.loss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Value of the prior at beta, gamma.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>value of the prior.</em></p>
 </dd>
 </dl>
@@ -238,16 +330,16 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.priors.</span></span><span class="sig-name descname"><span class="pre">NonInformativePriorLME</span></span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pysr3.lme.priors.</span></span><span class="sig-name descname"><span class="pre">NonInformativePriorLME</span></span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="pysr3.priors.html#pysr3.priors.Prior" title="pysr3.priors.Prior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Prior</span></code></a></p>
 <p>Implements a non-informative prior</p>
 <p>Creates NonInformativePrior</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.forget">
-<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.forget" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.forget" title="Permalink to this definition">¶</a></dt>
 <dd><p>Releases all problem-dependent values</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>None</em></p>
 </dd>
 </dl>
@@ -255,16 +347,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.gradient_beta">
-<span class="sig-name descname"><span class="pre">gradient_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.gradient_beta" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">gradient_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.gradient_beta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the gradient of the prior with respect to the vector of fixed effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>gradient w.r.t. beta</em></p>
 </dd>
 </dl>
@@ -272,16 +364,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.gradient_gamma">
-<span class="sig-name descname"><span class="pre">gradient_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.gradient_gamma" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">gradient_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.gradient_gamma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the gradient of the prior with respect to the vector of random effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>gradient w.r.t. gamma</em></p>
 </dd>
 </dl>
@@ -289,16 +381,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.hessian_beta">
-<span class="sig-name descname"><span class="pre">hessian_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.hessian_beta" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">hessian_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.hessian_beta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates Hessian of the prior with respect to the vector of fixed effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Hessian w.r.t. (beta, beta)</em></p>
 </dd>
 </dl>
@@ -306,16 +398,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.hessian_beta_gamma">
-<span class="sig-name descname"><span class="pre">hessian_beta_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.hessian_beta_gamma" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">hessian_beta_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.hessian_beta_gamma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the mixed Hessian of the prior with respect to the vector of fixed and random effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Hessian w.r.t. (beta, gamma)</em></p>
 </dd>
 </dl>
@@ -323,16 +415,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.hessian_gamma">
-<span class="sig-name descname"><span class="pre">hessian_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.hessian_gamma" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">hessian_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.hessian_gamma" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates Hessian of the prior with respect to the vector of random effects</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Hessian w.r.t. (gamma, gamma)</em></p>
 </dd>
 </dl>
@@ -340,13 +432,13 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.instantiate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.instantiate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiates the prior based on the problem</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>problem</strong> (<em>LMEProblem</em>)</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
@@ -354,16 +446,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pysr3.lme.priors.NonInformativePriorLME.loss">
-<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.loss" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pysr3.lme.priors.NonInformativePriorLME.loss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Value of the prior at beta, gamma.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>ndarray</em>) – vector of fixed effects</p></li>
 <li><p><strong>gamma</strong> (<em>ndarray</em>) – vector of random effects</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>value of the prior.</em></p>
 </dd>
 </dl>
@@ -375,33 +467,50 @@
 
 
            </div>
+           
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pysr3.lme.oracles.html" class="btn btn-neutral float-left" title="pysr3.lme.oracles module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="pysr3.lme.problems.html" class="btn btn-neutral float-right" title="pysr3.lme.problems module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pysr3.lme.oracles.html" class="btn btn-neutral float-left" title="pysr3.lme.oracles module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Aleksei Sholokhov.</p>
-  </div>
+    <p>
+        &#169; Copyright 2021, Aleksei Sholokhov.
 
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
         </div>
       </div>
+
     </section>
+
   </div>
-  <script>
+  
+
+  <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
