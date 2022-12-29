@@ -117,6 +117,9 @@ of fixed and random effects.
 from pysr3.lme.models import L1LmeModelSR3
 from pysr3.lme.problems import LMEProblem, LMEStratifiedShuffleSplit
 
+
+# Here we generate a random linear mixed-effects problem.
+# To use your own dataset check LMEProblem.from_dataframe and LMEProblem.from_x_y
 problem, true_parameters = LMEProblem.generate(
     groups_sizes=[10] * 8,  # 8 groups, 10 objects each
     features_labels=["fixed+random"] * 20,  # 20 features, each one having both fixed and random components
@@ -132,7 +135,10 @@ problem, true_parameters = LMEProblem.generate(
 # It also can be converted to a more familiar representation
 x, y, columns_labels = problem.to_x_y()
 # columns_labels describe the roles of the columns in x:
-# fixed effect, random effect, or both of those, as well as
+# fixed effect, random effect, or both of those, as well as groups labels and observation standard deviation.
+
+# You can also convert it to pandas dataframe if you'd like.
+pandas_dataframe = problem.to_dataframe()
 ```
 
 
