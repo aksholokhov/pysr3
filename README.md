@@ -27,7 +27,7 @@ print(f"This tutorial was generated using PySR3 v{__version__}\n"
      "You might see slightly different numerical results if you are using a different version of the library.")
 ```
 
-    This tutorial was generated using PySR3 v0.3.3
+    This tutorial was generated using PySR3 v0.3.2
     You might see slightly different numerical results if you are using a different version of the library.
 
 
@@ -73,11 +73,43 @@ print(f"The dataset has {a.shape[0]} objects and {a.shape[1]} features; \n"
     The vector of true parameters contains 55 non-zero elements out of 500.
 
 
+First, let's fit a model with a fixed parameter lambda:
+
+
+```python
+from pysr3.linear.models import LinearL1ModelSR3
+from sklearn.metrics import confusion_matrix
+lam = 0.1*np.max(np.abs(a.T.dot(b)))
+model = LinearL1ModelSR3(lam=lam, el=1e5)
+```
+
+
+```python
+%%timeit
+model.fit(a, b)
+```
+
+    37.4 ms ± 1.79 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+
+
+
+```python
+maybe_x = model.coef_['x']
+tn, fp, fn, tp = confusion_matrix(true_x, np.abs(maybe_x) > np.sqrt(model.tol_solver)).ravel()
+
+print(f"The model found {tp} out of {tp + fn} features correctly, but also chose {fp} out of {tn+fp} extra irrelevant features. \n")
+```
+
+    The model found 55 out of 55 features correctly, but also chose 5 out of 445 extra irrelevant features. 
+    
+
+
+Now let's see if we can improve it by adding grid-search:
+
 
 ```python
 # Automatic features selection using information criterion
 from pysr3.linear.models import LinearL1ModelSR3
-from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.utils.fixes import loguniform
 
@@ -97,15 +129,36 @@ selector = RandomizedSearchCV(estimator=model,
 
 selector.fit(a, b)
 maybe_x = selector.best_estimator_.coef_['x']
-tn, fp, fn, tp = confusion_matrix(true_x, maybe_x != 0).ravel()
+tn, fp, fn, tp = confusion_matrix(true_x, np.abs(maybe_x) > np.sqrt(model.tol_solver)).ravel()
 
 print(f"The model found {tp} out of {tp + fn} features correctly, but also chose {fp} out of {tn+fp} extra irrelevant features. \n"
       f"The best parameter is {selector.best_params_}")
 ```
 
-    The model found 55 out of 55 features correctly, but also chose 2 out of 445 extra irrelevant features. 
+    The model found 55 out of 55 features correctly, but also chose 1 out of 445 extra irrelevant features. 
     The best parameter is {'lam': 0.15055187290939537}
 
+
+Note that the discovered coefficients will be biased downwards due to L1 regularization.
+
+
+```python
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+indep = list(range(num_features))
+ax.plot(indep, maybe_x, label='Discovered Coefficients')
+ax.plot(indep, true_x, alpha=0.5, label='True Coefficients')
+ax.legend(bbox_to_anchor=(1.05, 1))
+plt.show()
+```
+
+
+    
+![png](README_files/README_16_0.png)
+    
+
+
+You can get rid of the bias by refitting the model using only features that were selected.
 
 ### Linear Mixed-Effects Models
 
@@ -196,4 +249,28 @@ print(
     The model found 10 out of 10 correct fixed features, and also chose 0 out of 10 extra irrelevant fixed features. 
     It also identified 5 out of 5 random effects correctly, and got 0 out of 15 non-present random effects. 
     The best sparsity parameter is {'ell': 0.3972110727381912, 'lam': 0.3725393839578885}
+
+
+
+```python
+fig, axs = plt.subplots(1, 2, figsize=(9, 3), sharey=True)
+
+indep_beta = list(range(np.size(true_parameters["beta"])))
+indep_gamma = list(range(np.size(true_parameters["gamma"])))
+
+axs[0].set_title(r"$\beta$, Fixed Effects")
+axs[0].scatter(indep_beta, maybe_beta, label='Discovered')
+axs[0].scatter(indep_beta, true_parameters["beta"], alpha=0.5, label='True')
+
+axs[1].set_title(r"$\gamma$, Variances of Random Effects")
+axs[1].scatter(indep_gamma, maybe_gamma, label='Discovered')
+axs[1].scatter(indep_gamma, true_parameters["gamma"], alpha=0.5, label='True')
+axs[1].legend(bbox_to_anchor=(1.55, 1))
+plt.show()
+```
+
+
+    
+![png](README_files/README_21_0.png)
+    
 
