@@ -28,7 +28,7 @@ from pysr3.lme.oracles import LinearLMEOracle, LinearLMEOracleSR3
 from pysr3.lme.problems import LMEProblem, FIXED, RANDOM, FIXED_RANDOM
 from pysr3.lme.problems import get_per_group_coefficients
 from pysr3.logger import Logger
-from pysr3.regularizers import Regularizer, L0Regularizer, L1Regularizer, CADRegularizer, SCADRegularizer, \
+from pysr3.regularizers import Regularizer, L0RegularizerLME, L1Regularizer, CADRegularizer, SCADRegularizer, \
     DummyRegularizer, PositiveQuadrantRegularizer, ElasticRegularizer
 from pysr3.solvers import PGDSolver, FakePGDSolver
 
@@ -781,9 +781,9 @@ class L0LmeModel(SimpleLMEModel):
 
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
-        l0_regularizer = L0Regularizer(nnz_tbeta=self.nnz_tbeta,
-                                       nnz_tgamma=self.nnz_tgamma,
-                                       oracle=oracle)
+        l0_regularizer = L0RegularizerLME(nnz_tbeta=self.nnz_tbeta,
+                                          nnz_tgamma=self.nnz_tgamma,
+                                          oracle=oracle)
         elastic_regularizer = ElasticRegularizer(other_regularizer=l0_regularizer, eps=self.elastic_eps)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver
@@ -910,9 +910,9 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
         Tuple of [Oracle, Regularizer, Solver] that correspond to this model
         """
         oracle, regularizer, solver = super().instantiate()
-        l0_regularizer = L0Regularizer(nnz_tbeta=self.nnz_tbeta,
-                                       nnz_tgamma=self.nnz_tgamma,
-                                       oracle=oracle)
+        l0_regularizer = L0RegularizerLME(nnz_tbeta=self.nnz_tbeta,
+                                          nnz_tgamma=self.nnz_tgamma,
+                                          oracle=oracle)
         elastic_regularizer = ElasticRegularizer(other_regularizer=l0_regularizer, eps=self.elastic_eps)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)
         return oracle, regularizer, solver

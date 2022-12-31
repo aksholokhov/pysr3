@@ -6,7 +6,7 @@ from sklearn.metrics import mean_squared_error, explained_variance_score, accura
 from sklearn.utils.estimator_checks import check_estimator
 
 from pysr3.linear.models import SimpleLinearModel, SimpleLinearModelSR3, LinearL1Model, LinearL1ModelSR3, \
-    LinearCADModel, LinearCADModelSR3, LinearSCADModel, LinearSCADModelSR3
+    LinearCADModel, LinearCADModelSR3, LinearSCADModel, LinearSCADModelSR3, LinearL0ModelSR3, LinearL0Model
 from pysr3.linear.problems import LinearProblem
 
 
@@ -15,10 +15,12 @@ class TestLinearModels(unittest.TestCase):
     def test_meeting_sklearn_standards(self):
         models_to_test = {
             "Simple": SimpleLinearModel(),
+            "L0": LinearL0Model(),
             "L1": LinearL1Model(),
             "CAD": LinearCADModel(),
             "SCAD": LinearSCADModel(),
             "Simple_SR3": SimpleLinearModelSR3(),
+            "L0_SR3": LinearL0ModelSR3(),
             "L1_SR3": LinearL1ModelSR3(),
             "CAD_SR3": LinearCADModelSR3(),
             "SCAD_SR3": LinearSCADModelSR3()
@@ -29,24 +31,26 @@ class TestLinearModels(unittest.TestCase):
 
     def test_solving_dense_problem(self):
 
+        problem_parameters = {
+            "num_objects": 100,
+            "num_features": 10,
+            "obs_std": 0.1,
+        }
+
         models_to_test = {
             "Simple": (SimpleLinearModel, {}),
+            "L0": (LinearL0Model, {"nnz": problem_parameters['num_features']}),
             "L1": (LinearL1Model, {}),
             "CAD": (LinearCADModel, {"rho": 0.5}),
             "SCAD": (LinearSCADModel, {"rho": 3.7, "sigma": 0.5}),
             "Simple_SR3": (SimpleLinearModelSR3, {}),
+            "L0_SR3": (LinearL0ModelSR3, {"nnz": problem_parameters['num_features']}),
             "L1_SR3": (LinearL1ModelSR3, {}),
             "CAD_SR3": (LinearCADModelSR3, {"rho": 0.5}),
             "SCAD_SR3": (LinearSCADModelSR3, {"rho": 3.7, "sigma": 0.5})
         }
 
         trials = 3
-
-        problem_parameters = {
-            "num_objects": 100,
-            "num_features": 10,
-            "obs_std": 0.1,
-        }
 
         default_params = {
             "el": 1,
@@ -105,9 +109,12 @@ class TestLinearModels(unittest.TestCase):
     def test_solving_sparse_problem(self):
 
         models_to_test = {
+            "L0": (LinearL0Model, {}),
             "L1": (LinearL1Model, {"lam": 2}),
             "CAD": (LinearCADModel, {"rho": 0.5}),
             "SCAD": (LinearSCADModel, {"lam": 1, "rho": 3.7, "sigma": 2.5}),
+            "L0_SR3": (LinearL0ModelSR3, {}),
+            "L0_SR3P": (LinearL0ModelSR3, {"practical": True}),
             "L1_SR3": (LinearL1ModelSR3, {"lam": 0.1}),
             "L1_SR3P": (LinearL1ModelSR3, {"lam": 0.1, "practical": True}),
             "CAD_SR3": (LinearCADModelSR3, {"rho": 0.5}),
@@ -145,7 +152,6 @@ class TestLinearModels(unittest.TestCase):
                         true_x = np.random.choice(2, size=problem_parameters["num_features"], p=np.array([0.5, 0.5]))
                         if sum(true_x) == 0:
                             true_x[0] = 1
-
                         problem = LinearProblem.generate(**problem_parameters,
                                                          true_x=true_x,
                                                          seed=seed)
@@ -153,6 +159,8 @@ class TestLinearModels(unittest.TestCase):
 
                         model_params = default_params.copy()
                         model_params.update(local_params)
+                        if "L0" in model_name:
+                            model_params["nnz"] = sum(true_x != 0)
 
                         model = model_constructor(**model_params)
                         model.fit_problem(problem)
@@ -163,14 +171,14 @@ class TestLinearModels(unittest.TestCase):
 
                         coefficients = model.coef_
                         maybe_x = coefficients["x"]
-                        selection_accuracy = accuracy_score(true_x, abs(maybe_x) > 1e-2)
+                        selection_accuracy = accuracy_score(true_x, abs(maybe_x) > np.sqrt(model.tol_solver))
 
-                        self.assertGreater(explained_variance, min_explained_variance,
+                        self.assertGreaterEqual(explained_variance, min_explained_variance,
                                            msg=f"{model_name}: Explained variance is too small: {explained_variance} < {min_explained_variance} (seed={seed})")
-                        self.assertGreater(max_mse, mse,
+                        self.assertGreaterEqual(max_mse, mse,
                                            msg=f"{model_name}: MSE is too big: {max_mse} > {mse} (seed={seed})")
-                        self.assertGreater(selection_accuracy, min_selection_accuracy,
-                                           msg=f"{model_name}: Fixed Effects Selection Accuracy is too small: {selection_accuracy} < {min_selection_accuracy}  (seed={seed})")
+                        self.assertGreaterEqual(selection_accuracy, min_selection_accuracy,
+                                           msg=f"{model_name}: Selection Accuracy is too small: {selection_accuracy} < {min_selection_accuracy}  (seed={seed})")
 
         return None
 

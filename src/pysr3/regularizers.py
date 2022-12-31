@@ -86,7 +86,126 @@ class Regularizer:
         pass
 
 
+def _take_only_k_max(x: np.ndarray, k: int):
+    """
+    Returns a vector b which consists of largest k elements of x (at the same places) and zeros everywhere else.
+
+    Parameters
+    ----------
+    x : np.ndarray, shape = [n]
+        Vector from which to take largest k elements.
+    k : int
+        How many elements we take from x
+
+    Returns
+    -------
+    b : np.ndarray, shape = [n]
+        A vector which consists of largest k elements of x (at the same places) and zeros everywhere else.
+    """
+
+    b = np.zeros(len(x))
+    if k > 0:
+        idx_k_max = np.abs(x).argsort()[-k:]
+        b[idx_k_max] = x[idx_k_max]
+    return b
+
+
 class L0Regularizer(Regularizer):
+    """
+    Implements an L0-type regularizer, where the desired number of non-zero coordinates for features is given
+    """
+
+    def __init__(self,
+                 nnz=None):
+        """
+        Create the regularizer.
+
+        Parameters
+        ----------
+        nnz: int
+            desired number of non-zero features
+        """
+        self.nnz = nnz
+        self.weights = None
+        self.participation_in_selection = None
+
+    def instantiate(self, weights, **kwargs):
+        """
+        Attaches weights to the regularizer.
+
+        Parameters
+        ----------
+        weights:
+            regularization weights
+
+        Returns
+        -------
+        None
+
+        """
+        self.weights = weights
+        self.participation_in_selection = weights.astype(bool)
+
+    def forget(self):
+        """
+        Unlinks all problem-dependent information from the regularizer.
+
+        Returns
+        -------
+        None
+        """
+        self.weights = None
+
+    def prox(self, x, alpha):
+        """
+        Return the value of the proximal operator evaluated at the point x and the step parameter alpha.
+
+        Parameters
+        ----------
+        x: ndarray
+            point.
+        alpha:
+            step parameter.
+
+        Returns
+        -------
+        result of the application of the proximal operator to x
+        """
+        if self.nnz is None:
+            nnz = len(x)
+        else:
+            nnz = self.nnz
+        if self.weights is not None:
+            result = np.copy(x)
+
+            result[self.participation_in_selection] = _take_only_k_max(
+                x[self.participation_in_selection],
+                nnz - sum(
+                    ~self.participation_in_selection))
+            return result
+        else:
+            return _take_only_k_max(x, nnz)
+
+    def value(self, x):
+        """
+        Returns the value for the regularizer at the point x
+
+        Parameters
+        ----------
+        x: ndarray
+            point
+
+        Returns
+        -------
+        the value of the regularizer
+        """
+        k = sum(x != 0)
+        if k > self.nnz:
+            return np.infty
+        return 0
+
+
+class L0RegularizerLME(Regularizer):
     """
     Implements an L0-type regularizer, where the desired number of non-zero coordinates for
     fixed and random effects is given
@@ -158,36 +277,12 @@ class L0Regularizer(Regularizer):
         self.beta_participation_in_selection = None
         self.gamma_participation_in_selection = None
 
-    @staticmethod
-    def _take_only_k_max(x: np.ndarray, k: int):
-        """
-        Returns a vector b which consists of k largest elements of x (at the same places) and zeros everywhere else.
-
-        Parameters
-        ----------
-        x : np.ndarray, shape = [n]
-            Vector which we take largest elements from.
-        k : int
-            How many elements we take from x
-
-        Returns
-        -------
-        b : np.ndarray, shape = [n]
-            A vector which consists of k largest elements of x (at the same places) and zeros everywhere else.
-        """
-
-        b = np.zeros(len(x))
-        if k > 0:
-            idx_k_max = np.abs(x).argsort()[-k:]
-            b[idx_k_max] = x[idx_k_max]
-        return b
-
     def optimal_tbeta(self, beta: np.ndarray):
         """
         Returns tbeta which minimizes the loss function with all other variables fixed.
 
         It is a projection of beta on the sparse subspace with no more than k elements, which can be constructed by
-        taking k largest elements from beta and setting the rest to be 0.
+        taking largest k elements from beta and setting the rest to be 0.
 
         Parameters
         ----------
@@ -202,20 +297,20 @@ class L0Regularizer(Regularizer):
         if self.beta_weights is not None:
             result = np.copy(beta)
 
-            result[self.beta_participation_in_selection] = self._take_only_k_max(
+            result[self.beta_participation_in_selection] = _take_only_k_max(
                 beta[self.beta_participation_in_selection],
                 self.nnz_tbeta - sum(
                     ~self.beta_participation_in_selection))
             return result
         else:
-            return self._take_only_k_max(beta, self.nnz_tbeta)
+            return _take_only_k_max(beta, self.nnz_tbeta)
 
     def optimal_tgamma(self, tbeta, gamma):
         """
         Returns tgamma which minimizes the loss function with all other variables fixed.
 
         It is a projection of gamma on the sparse subspace with no more than nnz_gamma elements,
-        which can be constructed by taking nnz_gamma largest elements from gamma and setting the rest to be 0.
+        which can be constructed by taking largest nnz_gamma elements from gamma and setting the rest to be 0.
         In addition, it preserves that for all the elements where tbeta = 0 it implies that tgamma = 0 as well.
 
         Parameters
@@ -237,7 +332,7 @@ class L0Regularizer(Regularizer):
             idx_gamma = [i for i in (idx_gamma[idx_gamma >= 0]).astype(int) if self.gamma_participation_in_selection[i]]
             tgamma[idx_gamma] = 0
 
-        tgamma[self.gamma_participation_in_selection] = self._take_only_k_max(
+        tgamma[self.gamma_participation_in_selection] = _take_only_k_max(
             tgamma[self.gamma_participation_in_selection],
             self.nnz_tgamma - sum(~self.gamma_participation_in_selection))
         return tgamma

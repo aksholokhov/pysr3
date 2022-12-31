@@ -8,7 +8,8 @@ from sklearn.exceptions import DataConversionWarning, NotFittedError
 from pysr3.linear.oracles import LinearOracle, LinearOracleSR3
 from pysr3.linear.problems import LinearProblem
 from pysr3.logger import Logger
-from pysr3.regularizers import L1Regularizer, CADRegularizer, SCADRegularizer, DummyRegularizer, Regularizer
+from pysr3.regularizers import L0Regularizer, L1Regularizer, CADRegularizer
+from pysr3.regularizers import SCADRegularizer, DummyRegularizer, Regularizer
 from pysr3.solvers import PGDSolver, FakePGDSolver
 
 
@@ -344,6 +345,55 @@ class SimpleLinearModelSR3(LinearModel):
             raise ValueError(f"Unknown ic: {ic}")
 
 
+class LinearL0Model(SimpleLinearModel):
+    def __init__(self,
+                 nnz: int = None,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        nnz: int
+            number of non-zero features to select
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior)
+        self.nnz = nnz
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = L0Regularizer(nnz=self.nnz)
+        return oracle, regularizer, solver
+
+
 class LinearL1Model(SimpleLinearModel):
     def __init__(self,
                  lam: float = 0,
@@ -500,6 +550,61 @@ class LinearSCADModel(SimpleLinearModel):
     def instantiate(self):
         oracle, regularizer, solver = super().instantiate()
         regularizer = SCADRegularizer(lam=self.lam, rho=self.rho, sigma=self.sigma)
+        return oracle, regularizer, solver
+
+
+class LinearL0ModelSR3(SimpleLinearModelSR3):
+    def __init__(self,
+                 nnz: int = None,
+                 el: float = 1.,
+                 tol_solver: float = 1e-5,
+                 max_iter_solver: int = 1000,
+                 stepping: str = "line-search",
+                 logger_keys: Set = ('converged',),
+                 fixed_step_len=None,
+                 prior=None,
+                 practical=False,
+                 **kwargs):
+        """
+        Initializes the model
+
+        Parameters
+        ----------
+        nnz: int
+            number of non-zero features that we want to select
+        el: float
+            constant for SR3 relaxation. Bigger values correspond to tighter relaxation.
+        tol_solver: float
+            tolerance for the stop criterion of PGD solver
+        max_iter_solver: int
+            maximal number of iterations for PGD solver
+        stepping: str
+            step-size policy for PGD. Can be either "line-search" or "fixed"
+        logger_keys: List[str]
+            list of keys for the parameters that the logger should track
+        fixed_step_len: float
+            step-size for PGD algorithm. If "linear-search" is used for stepping
+            then the algorithm uses this value as the maximal step possible. Use
+            this parameter if you know the Lipschitz-smoothness constant L for your problem
+            as fixed_step_len=1/L.
+        prior: Optional[Prior]
+            an instance of Prior class. If None then a non-informative prior is used.
+        kwargs:
+            for passing debugging info
+        """
+        super().__init__(el=el,
+                         tol_solver=tol_solver,
+                         max_iter_solver=max_iter_solver,
+                         stepping=stepping,
+                         logger_keys=logger_keys,
+                         fixed_step_len=fixed_step_len,
+                         prior=prior,
+                         practical=practical)
+        self.nnz = nnz
+
+    def instantiate(self):
+        oracle, regularizer, solver = super().instantiate()
+        regularizer = L0Regularizer(nnz=self.nnz)
         return oracle, regularizer, solver
 
 
