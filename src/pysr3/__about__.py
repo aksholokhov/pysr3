@@ -32,7 +32,7 @@ __classifiers__ = [
                       "Operating System :: OS Independent",
                   ],
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 __author__ = "Aleksei Sholokhov"
 __email__ = "aksh@uw.edu"
