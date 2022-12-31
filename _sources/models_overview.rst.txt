@@ -18,6 +18,7 @@ Located in ``pysr3.linear`` submodule
 Regularizer       without SR3           with SR3
 ================= ===================== ========================
 No regularization ``SimpleLinearModel`` ``SimpleLinearModelSR3``
+L0                ``LinearL0Model``     ``LinearL0ModelSR3``
 LASSO             ``LinearL1Model``     ``LinearL1ModelSR3``
 CAD               ``LinearCADModel``    ``LinearCADModelSR3``
 SCAD              ``LinearSCADModel``   ``LinearSCADModelSR3``
@@ -71,6 +72,16 @@ mappings for three of them:
 
 .. image:: models_overview_files/models_overview_3_0.png
 
+
+L0
+~~
+
+This is a regularizer that allows no more than a pre-defined number
+``k`` of parameters to be non-zero:
+
+.. math:: R(x) = \delta (\|x\|_0 \leq k)
+
+where :math:`\delta` is an indicator function.
 
 L1 (LASSO)
 ~~~~~~~~~~

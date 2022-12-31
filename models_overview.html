@@ -98,6 +98,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#regularizers">Regularizers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#l0">L0</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#l1-lasso">L1 (LASSO)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#adaptive-lasso-a-lasso">Adaptive LASSO (A-LASSO)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cad">CAD</a></li>
@@ -202,15 +203,19 @@ your goals.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">SimpleLinearModel</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SimpleLinearModelSR3</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>LASSO</p></td>
+<tr class="row-odd"><td><p>L0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LinearL0Model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LinearL0ModelSR3</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>LASSO</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">LinearL1Model</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">LinearL1ModelSR3</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>CAD</p></td>
+<tr class="row-odd"><td><p>CAD</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">LinearCADModel</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">LinearCADModelSR3</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>SCAD</p></td>
+<tr class="row-even"><td><p>SCAD</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">LinearSCADModel</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">LinearSCADModelSR3</span></code></p></td>
 </tr>
@@ -278,6 +283,14 @@ mappings for three of them:</p>
 </pre></div>
 </div>
 <img alt="_images/models_overview_3_0.png" src="_images/models_overview_3_0.png" />
+<section id="l0">
+<h3>L0<a class="headerlink" href="#l0" title="Permalink to this heading">¶</a></h3>
+<p>This is a regularizer that allows no more than a pre-defined number
+<code class="docutils literal notranslate"><span class="pre">k</span></code> of parameters to be non-zero:</p>
+<div class="math notranslate nohighlight">
+\[R(x) = \delta (\|x\|_0 \leq k)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\delta\)</span> is an indicator function.</p>
+</section>
 <section id="l1-lasso">
 <h3>L1 (LASSO)<a class="headerlink" href="#l1-lasso" title="Permalink to this heading">¶</a></h3>
 <p>This is a well-known sparsity-promoting regularizer that penalizes the
