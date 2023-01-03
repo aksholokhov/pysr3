@@ -4,7 +4,7 @@ Welcome to PySR3 documentation!
 SR3 is a relaxation method designed for accurate feature selection. It
 currently supports:
 
--  Linear Models (LASSO, A-LASSO, CAD, SCAD)
+-  Linear Models (L0, LASSO, A-LASSO, CAD, SCAD)
 -  Linear Mixed-Effect Models (L0, LASSO, A-LASSO, CAD, SCAD)
 
 .. toctree::
