@@ -5,5 +5,5 @@ include requirements.txt
 recursive-include docs *
 prune docs/_build
 
-recursive-include src/skmixed *.py
+recursive-include src/pysr3 *.py
 recursive-include tests *.py
