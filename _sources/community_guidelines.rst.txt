@@ -3,7 +3,8 @@ Community Guidelines
 
 We encourage the broader community to contribute to ``pysr3``! Please
 submit a pull request on GitHub if you fixed a bug or developed an
-extension.
+extension. If you experience any issues please open a new issue on the
+Issues page, and we will do our best to help.
 
 As a community, we follow the list of rules below:
 
