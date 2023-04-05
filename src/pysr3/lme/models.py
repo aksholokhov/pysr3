@@ -834,6 +834,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                  stepping: str = "fixed",
                  ell: float = 40,
                  elastic_eps: float = 1e-4,
+                 central_path_neighbourhood_target=0.5,
                  nnz_tbeta: int = 1,
                  nnz_tgamma: int = 1,
                  logger_keys: Set = ('converged',),
@@ -905,6 +906,7 @@ class L0LmeModelSR3(SimpleLMEModelSR3):
                          fixed_step_len=fixed_step_len,
                          ell=ell,
                          elastic_eps=elastic_eps,
+                         central_path_neighbourhood_target=central_path_neighbourhood_target,
                          prior=prior)
         self.nnz_tbeta = nnz_tbeta
         self.nnz_tgamma = nnz_tgamma
@@ -1020,6 +1022,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                  take_only_positive_part=True,
                  take_expected_value=False,
                  update_prox_every=1,
+                 central_path_neighbourhood_target=0.5,
                  fixed_step_len=None,
                  prior=None,
                  **kwargs):
@@ -1075,6 +1078,7 @@ class L1LmeModelSR3(SimpleLMEModelSR3):
                          warm_start_oracle=warm_start_oracle,
                          practical=practical,
                          take_only_positive_part=take_only_positive_part,
+                         central_path_neighbourhood_target=central_path_neighbourhood_target,
                          take_expected_value=take_expected_value,
                          update_prox_every=update_prox_every,
                          logger_keys=logger_keys,
@@ -1192,6 +1196,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                  rho: float = 0.3,
                  lam: float = 1.0,
                  elastic_eps: float = 1e-4,
+                 central_path_neighbourhood_target: float = 0.5,
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
@@ -1261,6 +1266,7 @@ class CADLmeModelSR3(SimpleLMEModelSR3):
                          fixed_step_len=fixed_step_len,
                          ell=ell,
                          elastic_eps=elastic_eps,
+                         central_path_neighbourhood_target=central_path_neighbourhood_target,
                          prior=prior)
         self.lam = lam
         self.rho = rho
@@ -1378,6 +1384,7 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                  sigma: float = 0.5,  # same
                  lam: float = 1.0,
                  elastic_eps: float = 1e-4,
+                 central_path_neighbourhood_target: float = 0.5,
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
@@ -1449,6 +1456,7 @@ class SCADLmeModelSR3(SimpleLMEModelSR3):
                          fixed_step_len=fixed_step_len,
                          ell=ell,
                          elastic_eps=elastic_eps,
+                         central_path_neighbourhood_target=central_path_neighbourhood_target,
                          prior=prior)
         self.lam = lam
         self.rho = rho
