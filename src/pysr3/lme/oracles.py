@@ -1409,7 +1409,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
             iteration += 1
 
-            if np.linalg.norm(gamma * v - gamma.dot(v) / q) > central_path_neighbourhood_target * gamma.dot(v) / q:
+            if np.linalg.norm(gamma * v - gamma.dot(v) / q) > self.central_path_neighbourhood_target * gamma.dot(v) / q:
                 # do correction steps without tightening the barrier relaxation
                 continue
             else:
