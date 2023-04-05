@@ -582,6 +582,7 @@ class SimpleLMEModelSR3(LMEModel):
                  stepping: str = "fixed",
                  ell: float = 40,
                  elastic_eps: float = 1e-4,
+                 central_path_neighbourhood_target=0.5,
                  logger_keys: Set = ('converged',),
                  warm_start_oracle=True,
                  practical=False,
@@ -610,6 +611,10 @@ class SimpleLMEModelSR3(LMEModel):
             step-size policy for PGD. Can be either "line-search" or "fixed"
         ell: float
             level of SR3-relaxation
+        elastic_eps: float
+            regularizer coefficient for ||beta|| and ||gamma||. Safeguards against infinite solutions.
+        central_path_neighbourhood_target: float
+            how close to the central path MSR3-fast algorithm needs to finish Newton iterations and make a projection
         logger_keys: List[str]
             list of keys for the parameters that the logger should track
         warm_start_oracle: bool
@@ -645,6 +650,7 @@ class SimpleLMEModelSR3(LMEModel):
         self.take_only_positive_part = take_only_positive_part
         self.take_expected_value = take_expected_value
         self.update_prox_every = update_prox_every
+        self.central_path_neighbourhood_target = central_path_neighbourhood_target
 
     def instantiate(self):
         """
@@ -669,7 +675,9 @@ class SimpleLMEModelSR3(LMEModel):
                                     warm_start=self.warm_start_oracle,
                                     take_only_positive_part=self.take_only_positive_part,
                                     take_expected_value=self.take_expected_value,
-                                    prior=self.prior)
+                                    prior=self.prior,
+                                    central_path_neighbourhood_target=self.central_path_neighbourhood_target
+                                    )
         dummy_regularizer = DummyRegularizer()
         elastic_regularizer = ElasticRegularizer(other_regularizer=dummy_regularizer, eps=self.elastic_eps)
         regularizer = PositiveQuadrantRegularizer(other_regularizer=elastic_regularizer)

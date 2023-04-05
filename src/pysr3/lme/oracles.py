@@ -1005,7 +1005,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
        """
 
     def __init__(self, problem: Optional[LMEProblem], lb=0.1, lg=0.1, warm_start=True, take_only_positive_part=True,
-                 take_expected_value=False, **kwargs):
+                 take_expected_value=False, central_path_neighbourhood_target=0.5, **kwargs):
         """
         Creates an oracle on top of the given problem. The problem should be in the form of LinearLMEProblem.
 
@@ -1026,6 +1026,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
         self.warm_start_ip = {}
         self.take_only_positive_part = take_only_positive_part
         self.take_expected_value = take_expected_value
+        self.central_path_neighbourhood_target = central_path_neighbourhood_target
 
     def loss(self, beta: np.ndarray, gamma: np.ndarray, tbeta: np.ndarray = None, tgamma: np.ndarray = None, **kwargs):
         """
@@ -1311,7 +1312,7 @@ class LinearLMEOracleSR3(LinearLMEOracle):
     def find_optimal_parameters_ip(self, beta: np.ndarray, gamma: np.ndarray, tbeta=None, tgamma=None,
                                    regularizer=None, increase_lambdas=False,
                                    line_search=False, prox_step_len=1.0, update_prox_every=1, logger=None,
-                                   central_path_neighbourhood_target=0.5, mu_decay=0.5,
+                                   mu_decay=0.5,
                                    **kwargs):
         losses_kkt = []
         if len(tgamma) == 0:
