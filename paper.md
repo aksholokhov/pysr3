@@ -56,7 +56,7 @@ Many widely-used regularizers have proximal operators that are well known and ei
 
 Each regularizer included in PySR3 can also be used in its relaxed SR3 form [@zheng2018unified]. SR3 preconditions the likelihood, improving the performance of feature selection methods. 
 PGD on the SR3-transformed problem takes fewer iterations to converge, and the features selected 
-are more accurate and have lower false positive rates across simulated examples for both linear regression [@zheng2018unified] and LME [@sholokhov2022relaxation] models, as illustrated on \autoref{fig:lme_summary}.
+are more accurate and have lower false positive rates across simulated examples for both linear regression [@zheng2018unified] and LME [@sholokhov2022relaxation] models, as illustrated on \autoref{fig:lme_summary} (adapted from Figure 1 from  [@sholokhov2022relaxation]).
 
 ![SR3 relaxation makes a problem more well-conditioned which accelerates the optimization.\label{fig:lme_summary}](images/summary_improved.png)
 

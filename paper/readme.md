@@ -1,6 +1,7 @@
 # Datasets for [Sholokhov et. al. 2022 "A Relaxation Approach to Feature Selection for Linear Mixed Effects Models"](https://arxiv.org/abs/2205.06925?context=stat)
 
-This folder contains datasets that we used in Chapter 4 of our paper. 
+## Reproducibility Guide
+The detailed reproducibility guide for all synthetic data, plots, and tables is located [here](https://github.com/aksholokhov/msr3-paper). This folder only contains synthetic datasets that we used in Chapter 4 of our paper. 
 
 ## Chapter 4.1: Experiments on synthetic data 
 The folder `synthetic_data` contains 100 CSV tables. The rows are observations (objects). Each table has the following columns:
