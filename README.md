@@ -4,6 +4,7 @@
 [![](https://img.shields.io/badge/docs-here-green)](https://aksholokhov.github.io/pysr3/)
 [![codecov](https://codecov.io/gh/aksholokhov/pysr3/branch/master/graph/badge.svg?token=WAA8uIQwjK)](https://codecov.io/gh/aksholokhov/pysr3)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b)](https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/pysr3&amp;utm_campaign=Badge_Grade)
+[![status](https://joss.theoj.org/papers/67ea0de9a219ad072073a2304f11f820/status.svg)](https://joss.theoj.org/papers/67ea0de9a219ad072073a2304f11f820)
 
 # Quickstart with `pysr3`
 
@@ -17,7 +18,7 @@ It currently supports:
 
 pysr3 can be installed via
 ```bash
- pip install pysr3
+ pip install pysr3>=0.3.5
 ```
 
 
@@ -27,7 +28,7 @@ print(f"This tutorial was generated using PySR3 v{__version__}\n"
      "You might see slightly different numerical results if you are using a different version of the library.")
 ```
 
-    This tutorial was generated using PySR3 v0.3.2
+    This tutorial was generated using PySR3 v0.3.5
     You might see slightly different numerical results if you are using a different version of the library.
 
 
@@ -89,7 +90,7 @@ model = LinearL1ModelSR3(lam=lam, el=1e5)
 model.fit(a, b)
 ```
 
-    37.4 ms ± 1.79 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+    38.6 ms ± 236 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
 
 
@@ -274,3 +275,8 @@ plt.show()
 ![png](README_files/README_21_0.png)
     
 
+
+
+```python
+
+```
