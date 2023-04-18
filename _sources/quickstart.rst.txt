@@ -1,4 +1,4 @@
-|image0| |image1| |image2| |image3| |codecov| |Codacy Badge|
+|image0| |image1| |image2| |image3| |codecov| |Codacy Badge| |status|
 
 .. |image0| image:: https://img.shields.io/pypi/l/PySR3
 .. |image1| image:: https://img.shields.io/pypi/v/PySR3
@@ -9,6 +9,8 @@
    :target: https://codecov.io/gh/aksholokhov/pysr3
 .. |Codacy Badge| image:: https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b
    :target: https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&utm_medium=referral&utm_content=aksholokhov/pysr3&utm_campaign=Badge_Grade
+.. |status| image:: https://joss.theoj.org/papers/67ea0de9a219ad072073a2304f11f820/status.svg
+   :target: https://joss.theoj.org/papers/67ea0de9a219ad072073a2304f11f820
 
 Quickstart with ``pysr3``
 =========================
@@ -26,7 +28,7 @@ pysr3 can be installed via
 
 .. code:: bash
 
-    pip install pysr3
+    pip install pysr3>=0.3.5
 
 .. code:: ipython3
 
@@ -37,7 +39,7 @@ pysr3 can be installed via
 
 .. parsed-literal::
 
-    This tutorial was generated using PySR3 v0.3.2
+    This tutorial was generated using PySR3 v0.3.5
     You might see slightly different numerical results if you are using a different version of the library.
 
 
@@ -110,7 +112,7 @@ First, let’s fit a model with a fixed parameter lambda:
 
 .. parsed-literal::
 
-    37.4 ms ± 1.79 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+    38.6 ms ± 236 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
 
 .. code:: ipython3
@@ -298,4 +300,5 @@ simultaneous selection of fixed and random effects.
 
 
 .. image:: quickstart_files/quickstart_21_0.png
+
 

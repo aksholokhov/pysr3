@@ -84,7 +84,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <p><img alt="image0" src="https://img.shields.io/pypi/l/PySR3" /> <img alt="image1" src="https://img.shields.io/pypi/v/PySR3" /> <img alt="image2" src="https://img.shields.io/github/actions/workflow/status/aksholokhov/pysr3/testing_and_coverage.yml?branch=master" /> <a class="reference external" href="https://aksholokhov.github.io/pysr3/"><img alt="image3" src="https://img.shields.io/badge/docs-here-green" /></a> <a class="reference external" href="https://codecov.io/gh/aksholokhov/pysr3"><img alt="codecov" src="https://codecov.io/gh/aksholokhov/pysr3/branch/master/graph/badge.svg?token=WAA8uIQwjK" /></a> <a class="reference external" href="https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/pysr3&amp;utm_campaign=Badge_Grade"><img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b" /></a></p>
+  <p><img alt="image0" src="https://img.shields.io/pypi/l/PySR3" /> <img alt="image1" src="https://img.shields.io/pypi/v/PySR3" /> <img alt="image2" src="https://img.shields.io/github/actions/workflow/status/aksholokhov/pysr3/testing_and_coverage.yml?branch=master" /> <a class="reference external" href="https://aksholokhov.github.io/pysr3/"><img alt="image3" src="https://img.shields.io/badge/docs-here-green" /></a> <a class="reference external" href="https://codecov.io/gh/aksholokhov/pysr3"><img alt="codecov" src="https://codecov.io/gh/aksholokhov/pysr3/branch/master/graph/badge.svg?token=WAA8uIQwjK" /></a> <a class="reference external" href="https://www.codacy.com/gh/aksholokhov/pysr3/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aksholokhov/pysr3&amp;utm_campaign=Badge_Grade"><img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/749695b3c6fd43bb9fdb499ec0ace67b" /></a> <a class="reference external" href="https://joss.theoj.org/papers/67ea0de9a219ad072073a2304f11f820"><img alt="status" src="https://joss.theoj.org/papers/67ea0de9a219ad072073a2304f11f820/status.svg" /></a></p>
 <section id="quickstart-with-pysr3">
 <h1>Quickstart with <code class="docutils literal notranslate"><span class="pre">pysr3</span></code><a class="headerlink" href="#quickstart-with-pysr3" title="Permalink to this heading"></a></h1>
 <p>SR3 is a relaxation method designed for accurate feature selection. It
@@ -96,7 +96,7 @@ currently supports:</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>pysr3 can be installed via</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pysr3
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pysr3&gt;<span class="o">=</span><span class="m">0</span>.3.5
 </pre></div>
 </div>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pysr3.__about__</span> <span class="kn">import</span> <span class="n">__version__</span>
@@ -104,7 +104,7 @@ currently supports:</p>
      <span class="s2">&quot;You might see slightly different numerical results if you are using a different version of the library.&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="n">tutorial</span> <span class="n">was</span> <span class="n">generated</span> <span class="n">using</span> <span class="n">PySR3</span> <span class="n">v0</span><span class="mf">.3.2</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="n">tutorial</span> <span class="n">was</span> <span class="n">generated</span> <span class="n">using</span> <span class="n">PySR3</span> <span class="n">v0</span><span class="mf">.3.5</span>
 <span class="n">You</span> <span class="n">might</span> <span class="n">see</span> <span class="n">slightly</span> <span class="n">different</span> <span class="n">numerical</span> <span class="n">results</span> <span class="k">if</span> <span class="n">you</span> <span class="n">are</span> <span class="n">using</span> <span class="n">a</span> <span class="n">different</span> <span class="n">version</span> <span class="n">of</span> <span class="n">the</span> <span class="n">library</span><span class="o">.</span>
 </pre></div>
 </div>
@@ -164,7 +164,7 @@ shown below.</p>
 <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>37.4 ms ± 1.79 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>38.6 ms ± 236 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 </pre></div>
 </div>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">maybe_x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
