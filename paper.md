@@ -13,10 +13,10 @@ authors:
     orcid: 0000-0001-8173-6236
     affiliation: 1
   - name: Peng Zheng
-    orcid: 0000-0002-1875-1801
+    orcid: 0000-0003-3313-215X
     affiliation: 2
   - name: Aleksandr Aravkin
-    orcid: 0000-0003-3313-215X
+    orcid: 0000-0002-1875-1801
     affiliation: "1, 2"
 
 affiliations:
