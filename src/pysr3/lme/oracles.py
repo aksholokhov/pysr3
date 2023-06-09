@@ -15,8 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import Callable
-from typing import Optional
+from typing import Callable, Optional, List
 
 import numpy as np
 import scipy as sp
@@ -510,6 +509,80 @@ class LinearLMEOracle:
             else:
                 probabilities.append(0.5)
         return np.array(probabilities)
+
+    def covariance_beta(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Evaluates covariance of fixed effects given beta and gamma
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [n]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [k]
+            Vector of estimates of random effects, initial point.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        covariance of fixed effects
+        """
+        self._recalculate_cholesky(gamma)
+        hessian = self.hessian_beta(beta=beta, gamma=gamma)
+        cov_beta = np.linalg.inv(hessian)
+        return cov_beta
+
+    def covariance_random_effects(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> List[np.ndarray]:
+        """
+        Evaluates covariance of random effects given beta and gamma
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [n]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [k]
+            Vector of estimates of random effects, initial point.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        covariance of random effects
+        """
+        self._recalculate_cholesky(gamma)
+        diag_gamma = np.diag(gamma)
+        cov_beta = self.covariance_beta(beta, gamma)
+        variances_u = []
+        for (x, y, z, _), el_inv in zip(self.problem, self.omega_cholesky_inv):
+            core = el_inv - el_inv.dot(x).dot(cov_beta).dot(x.T).dot(el_inv)
+            var_u = diag_gamma.dot(z.T).dot(core).dot(z).dot(diag_gamma)
+            variances_u.append(var_u)
+        return variances_u
+
+    def covariance_y(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> List[np.ndarray]:
+        """
+        Evaluates covariance of observations given beta and gamma
+
+        Parameters
+        ----------
+        beta : np.ndarray, shape = [n]
+            Vector of estimates of fixed effects.
+        gamma : np.ndarray, shape = [k]
+            Vector of estimates of random effects, initial point.
+        kwargs :
+            Not used, left for future and for passing debug/experimental parameters
+
+        Returns
+        -------
+        covariance of observations
+        """
+        cov_beta = self.covariance_beta(beta, gamma)
+        cov_us = self.covariance_random_effects(beta=beta, gamma=gamma)
+        cov_ys = []
+        for (x, y, z, lam), cov_u in zip(self.problem, cov_us):
+            var_y = x.dot(cov_beta).dot(x.T) + z.dot(cov_u).dot(z.T) + lam
+            cov_ys.append(var_y)
+        return cov_ys
 
     def hessian_beta_gamma(self, beta: np.ndarray, gamma: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -1472,7 +1545,8 @@ class LinearLMEOracleSR3(LinearLMEOracle):
 
     def muller_hui_2016ic(self, beta, gamma, tolerance=0., **kwargs):
         """
-        Implements Information Criterion (IC) from (Muller, 2018)
+        Implements Information Criterion (IC) from (Hui, Muller, and Welsh, 2018)
+        https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1215989
 
         Parameters
         ----------
